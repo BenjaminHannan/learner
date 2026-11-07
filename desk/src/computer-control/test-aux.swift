@@ -9,6 +9,8 @@ private let outputLock = NSLock()
 private let testTag: Int64 = 0x48414e4453544553
 private let tagLock = NSLock()
 private var allowedTags = Set<Int64>([testTag])
+private var armedTag: Int64 = 0
+private var armedKind = ""
 private func emit(_ row: [String:Any]) {
     outputLock.lock(); defer { outputLock.unlock() }
     guard let data = try? JSONSerialization.data(withJSONObject:row), let s = String(data:data, encoding:.utf8) else { return }
@@ -52,15 +54,37 @@ private func monitor(_ fd: Int32) {
     CFRunLoopRun(); CGEvent.tapEnable(tap:tap,enable:false); CFRunLoopRemoveSource(loop,source,.commonModes); CFMachPortInvalidate(tap)
 }
 private func inject(_ fd: Int32) {
-    guard AXIsProcessTrusted() else { emit(["error":"test sender lacks accessibility permission"]); return }
-    emit(["ready":true])
-    while let line = readCommand(fd) {
-        guard line == "fire", let down = CGEvent(keyboardEventSource:nil,virtualKey:105,keyDown:true), let up = CGEvent(keyboardEventSource:nil,virtualKey:105,keyDown:false) else { break }
-        down.setIntegerValueField(.eventSourceUserData,value:testTag); up.setIntegerValueField(.eventSourceUserData,value:testTag)
-        let sent = DispatchTime.now().uptimeNanoseconds
-        down.post(tap:.cghidEventTap); up.post(tap:.cghidEventTap)
-        emit(["event":"posted", "atNs":sent])
+    guard AXIsProcessTrusted(), CGPreflightListenEventAccess() else { emit(["error":"test sender lacks input permission"]); return }
+    let kinds: [CGEventType] = [.keyDown,.flagsChanged,.leftMouseDown]
+    var mask: CGEventMask = 0; for kind in kinds { mask |= CGEventMask(1) << CGEventMask(kind.rawValue) }
+    let callback: CGEventTapCallBack = { _, kind, event, _ in
+        if kind == .tapDisabledByTimeout || kind == .tapDisabledByUserInput { emit(["event":"injector-disabled"]); return Unmanaged.passUnretained(event) }
+        let tag = event.getIntegerValueField(.eventSourceUserData)
+        tagLock.lock()
+        let trigger = tag == armedTag && armedTag != 0 && ((armedKind == "key" && (kind == .keyDown || kind == .flagsChanged) && event.getIntegerValueField(.keyboardEventKeycode) == 56) || (armedKind == "mouse" && kind == .leftMouseDown))
+        if trigger { armedTag = 0; armedKind = "" }
+        tagLock.unlock()
+        if trigger, let down = CGEvent(keyboardEventSource:nil,virtualKey:105,keyDown:true), let up = CGEvent(keyboardEventSource:nil,virtualKey:105,keyDown:false) {
+            down.setIntegerValueField(.eventSourceUserData,value:testTag); up.setIntegerValueField(.eventSourceUserData,value:testTag)
+            let sent = DispatchTime.now().uptimeNanoseconds
+            down.post(tap:.cghidEventTap); up.post(tap:.cghidEventTap)
+            emit(["event":"posted", "atNs":sent])
+        }
+        return Unmanaged.passUnretained(event)
     }
+    guard let tap = CGEvent.tapCreate(tap:.cgSessionEventTap,place:.headInsertEventTap,options:.listenOnly,eventsOfInterest:mask,callback:callback,userInfo:nil), let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault,tap,0) else { emit(["error":"test sender watcher unavailable"]); return }
+    let loop = CFRunLoopGetCurrent(); CFRunLoopAddSource(loop,source,.commonModes); CGEvent.tapEnable(tap:tap,enable:true)
+    DispatchQueue.global().async {
+        while let command = readCommand(fd) {
+            let parts = command.split(separator:" ")
+            guard parts.count == 3, parts[0] == "arm", let tag = Int64(parts[1]), tag > 0, parts[2] == "key" || parts[2] == "mouse" else { break }
+            tagLock.lock(); armedTag = tag; armedKind = String(parts[2]); tagLock.unlock()
+            emit(["event":"armed","tag":String(tag),"kind":String(parts[2])])
+        }
+        CFRunLoopStop(loop)
+    }
+    emit(["ready":true]); CFRunLoopRun()
+    CGEvent.tapEnable(tap:tap,enable:false); CFRunLoopRemoveSource(loop,source,.commonModes); CFMachPortInvalidate(tap)
 }
 @_cdecl("glim_hands_socket") public func testAux(_ socketPath: UnsafePointer<CChar>?, _ monitorMode: Int32) {
     guard let socketPath = socketPath else { return }

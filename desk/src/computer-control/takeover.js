@@ -49,22 +49,34 @@ class Aux {
 async function main() {
   if (process.env.GLIM_HANDS_TEST !== '1' || process.argv[2] !== '--run') throw Error('explicit test mode and --run required');
   const built = await compile(), dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hands-trial-')); fs.chmodSync(dir, 0o700);
-  const lib = path.join(dir, 'aux.dylib'), windowBin = path.join(dir, 'window');
+  const lib = path.join(dir, 'aux.dylib'), bundle = path.join(dir,'HandsTest.app');
+  const executableDir = path.join(bundle,'Contents','MacOS'), windowBin = path.join(executableDir,'HandsTest');
+  fs.mkdirSync(executableDir,{ recursive:true, mode:0o700 });
+  fs.writeFileSync(path.join(bundle,'Contents','Info.plist'), '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.premonition.hands-test</string><key>CFBundleName</key><string>Glim Hands Safety Test</string><key>CFBundleExecutable</key><string>HandsTest</string><key>CFBundlePackageType</key><string>APPL</string></dict></plist>');
   await run('/usr/bin/xcrun', ['swiftc','-O','-target','arm64-apple-macos13.0','-emit-library','-module-name','HandsTestAux',path.join(__dirname,'test-aux.swift'),'-o',lib], { timeout:60000 });
   await run('/usr/bin/xcrun', ['swiftc','-O','-target','arm64-apple-macos13.0',path.join(__dirname,'test-window.swift'),'-o',windowBin], { timeout:60000 });
   await run('/usr/bin/codesign', ['--force','-s','-',lib], { timeout:15000 });
-  let monitor, injector, window, session; const result = { mode:'separate-process CGEvent simulation', trials:[], probes:[], status:'incomplete' };
+  await run('/usr/bin/codesign', ['--force','-s','-',bundle], { timeout:15000 });
+  let monitor, injector, session, windowStarted = false; const result = { mode:'separate-process CGEvent simulation', trials:[], probes:[], status:'incomplete' };
   try {
     monitor = await Aux.start(lib, built.bridge, true);
     if (monitor.ready.idleSeconds < 300) throw Error('Ben has not been idle for five minutes');
     injector = await Aux.start(lib, built.bridge, false);
     if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled')) throw Error('Ben returned or the monitor stopped');
-    window = spawn(windowBin, [], { stdio:['ignore','pipe','pipe'] }); window.stderr.resume(); window.on('error', () => {});
-    const rows = []; let data = '';
-    window.stdout.on('data', chunk => { data += chunk; let i; while ((i = data.indexOf('\n')) >= 0) { const line=data.slice(0,i); data=data.slice(i+1); try { rows.push(JSON.parse(line)); } catch (_) {} } });
-    for (let i=0; i<100 && !rows.some(r => r.ready); i++) { if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled')) throw Error('Ben returned'); await pause(50); }
+    const output = path.join(dir,'window.stdout'), errors = path.join(dir,'window.stderr');
+    fs.writeFileSync(output,'',{mode:0o600}); fs.writeFileSync(errors,'',{mode:0o600});
+    windowStarted = true;
+    await run('/usr/bin/open',['-n','-a',bundle,'--stdout',output,'--stderr',errors],{ timeout:15000 });
+    const rows = []; let offset = 0, data = '';
+    const refresh = () => {
+      const buffer = fs.readFileSync(output); data += buffer.subarray(offset).toString(); offset = buffer.length;
+      let i; while ((i = data.indexOf('\n')) >= 0) { const line=data.slice(0,i); data=data.slice(i+1); try { rows.push(JSON.parse(line)); } catch (_) {} }
+    };
+    for (let i=0; i<100 && !rows.some(r => r.ready); i++) { refresh(); if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled')) throw Error('Ben returned'); await pause(50); }
+    refresh();
     const ready = rows.find(r => r.ready); if (!ready || !ready.front) throw Error('test window is not in front');
     for (let i=0; i<10; i++) {
+      refresh();
       if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled')) throw Error('Ben returned or the monitor stopped');
       if (rows.some(r => r.event === 'focus-lost')) throw Error('test window lost focus');
       session = await NativeSession.start(); const kind = i % 2 ? 'mouse' : 'key', first = rows.length;
@@ -73,18 +85,21 @@ async function main() {
         const tagged = monitor.next(r => r.event === 'tagged' && r.tag === session.status.tag, 1000);
         monitor.socket.write('tag ' + session.status.tag + '\n'); await tagged;
         if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled') || rows.some(r => r.event === 'focus-lost')) throw Error('Ben returned or the test window lost focus');
+        const armed = injector.next(r => r.event === 'armed' && r.tag === session.status.tag && r.kind === kind, 1000);
+        injector.socket.write('arm ' + session.status.tag + ' ' + kind + '\n'); await armed;
+        const takeover = new Promise((resolve, reject) => { const timer=setTimeout(() => reject(Error('no takeover within 200 ms')),200); session.onRevoke = row => { if (row.reason === 'user input' && row.terminal) { clearTimeout(timer); resolve(row); } }; });
+        const posted = injector.next(row => row.event === 'posted', 1000);
+        takeover.catch(() => {}); posted.catch(() => {}); // a refused grant can exit before these are awaited
         await session.command('grant');
         await session.command('send', kind === 'key' ? {kind:'key',code:56,down:true} : {kind:'mouse',state:'down',button:'left',x:ready.x,y:ready.y});
         if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled') || rows.some(r => r.event === 'focus-lost')) throw Error('Ben returned or the test window lost focus');
-        const takeover = new Promise((resolve, reject) => { const timer=setTimeout(() => reject(Error('no takeover within 200 ms')),200); session.onRevoke = row => { if (row.reason === 'user input' && row.terminal) { clearTimeout(timer); resolve(row); } }; });
-        const posted = injector.next(row => row.event === 'posted', 1000);
-        injector.socket.write('fire\n');
         const [p, revoke] = await Promise.all([posted, takeover]);
         await pause(100);
+        refresh();
         const evidence = rows.slice(first), down = kind === 'key' ? evidence.some(r => r.event === 'flags' && r.shift) : evidence.some(r => r.event === 'mouseDown'), up = kind === 'key' ? evidence.some(r => r.event === 'flags' && !r.shift) : evidence.some(r => r.event === 'mouseUp');
         let rejected = false; try { await session.command('send', {kind:'key',code:56,down:true}); } catch (_) { rejected = true; }
         const ms = (revoke.releaseDoneNs - p.atNs)/1e6;
-        result.trials.push({ trial:i+1, kind, ms, released:revoke.released, down, up, rejected, pass:ms >= 0 && ms <= 200 && revoke.released >= 1 && down && up && rejected });
+        result.trials.push({ trial:i+1, kind, ms, released:revoke.released, down, up, rejected, revocations:session.events, pass:ms >= 0 && ms <= 200 && revoke.released >= 1 && down && up && rejected });
       } catch (e) { result.trials.push({ trial:i+1, kind, pass:false, error:String(e.message || e) }); }
       finally { await session.close(); session = null; }
       if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled')) throw Error('Ben returned or the monitor stopped');
@@ -106,9 +121,10 @@ async function main() {
         { name:'press', action:{type:'press',combo:'a'}, pass:r => r.some(e => e.event === 'keyDown' && e.characters === 'a') }
       ];
       for (const probe of probes) {
+        refresh();
         if (monitor.rows.some(r => r.event === 'real-input' || r.event === 'monitor-disabled') || rows.some(r => r.event === 'focus-lost')) throw Error('Ben returned or the test window lost focus');
         const first = rows.length;
-        try { await execute(session,probe.action,new AbortController().signal); await pause(100); result.probes.push({ name:probe.name, pass:probe.pass(rows.slice(first)) }); }
+        try { await execute(session,probe.action,new AbortController().signal); await pause(100); refresh(); result.probes.push({ name:probe.name, pass:probe.pass(rows.slice(first)) }); }
         catch (e) { result.probes.push({ name:probe.name, pass:false, error:String(e.message || e) }); }
         if (!result.probes.at(-1).pass) break;
       }
@@ -118,7 +134,17 @@ async function main() {
   } catch (error) { result.error = String(error.message || error); result.status = 'incomplete'; }
   finally {
     if (session) await session.close();
-    if (window && window.pid) window.kill(); // the exact process opened above
+    if (windowStarted) {
+      // Find only this private bundle's executable, then stop those exact PIDs.
+      try {
+        const list = await run('/bin/ps',['-axo','pid=,comm='],{timeout:3000});
+        const wanted = fs.realpathSync(windowBin);
+        for (const line of list.stdout.split('\n')) {
+          const match = /^\s*(\d+)\s+(.+?)\s*$/.exec(line); if (!match) continue;
+          try { if (fs.realpathSync(match[2]) === wanted) process.kill(Number(match[1]),'SIGTERM'); } catch (_) {}
+        }
+      } catch (_) {}
+    }
     if (injector) await injector.close(); if (monitor) await monitor.close();
     fs.rmSync(dir, { recursive:true, force:true });
   }
