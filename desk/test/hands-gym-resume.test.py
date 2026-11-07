@@ -1,4 +1,5 @@
 """Deterministic trainer checkpoint and isolated-evaluation regressions."""
+import importlib.util
 from pathlib import Path
 import sys
 import tempfile
@@ -8,6 +9,7 @@ from unittest import mock
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src/hands-gym'))
 
 
+@unittest.skipUnless(importlib.util.find_spec('torch'),'torch not installed')
 class TrainingResumeTests(unittest.IsolatedAsyncioTestCase):
     async def test_browser_replay_validates_observations(self):
         import numpy as np
