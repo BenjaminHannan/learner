@@ -688,7 +688,7 @@ class Agent {
     let stopped = false;
     let failure = null;
     try {
-      if (this.desktopEnabled) this.desktop = this.makeDesktop(signal);
+      if (this.desktopEnabled) { this.desktop = this.makeDesktop(signal); if (typeof this.desktop.init === 'function') await this.desktop.init(); }
       if (this.o.slot) {
         if (this.o.slot.full()) { this.state('queued', { running: this.o.slot.active }); this.emit({ type: 'queued' }); }
         try { this.release = await this.o.slot.acquire(signal); } catch (e) { /* aborted while queued: the loop below sees it */ }

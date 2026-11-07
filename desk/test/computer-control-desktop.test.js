@@ -122,3 +122,27 @@ test('chat exposes only the checked desktop path and passes images back to the m
     assert.ok(gw.requests[1].messages.some(m => Array.isArray(m.content) && m.content.some(part => part.type === 'image_url')));
   } finally { gw.close(); }
 });
+
+test('chat starts its watcher before asking the model to plan', async () => {
+  let started = false;
+  const gw = await startGateway([{ content:'I could not finish.' }]);
+  try {
+    const agent = new Agent({ getSettings:() => ({ gatewayUrl:gw.url, model:'m', maxSteps:2, mode:'hands-off', vision:'off', verify:false }),
+      toolDefs:buildTools({}), tools:{}, safety:new SafetyLevels(), desktopFactory:() => ({ async init() { started = true; }, async close() {} }), emit:() => {} });
+    const run = agent.requestWithBudget.bind(agent);
+    agent.requestWithBudget = (...args) => { assert.equal(started, true); return run(...args); };
+    await agent.run({ id:'t', title:'x', messages:[], items:[] }, 'Open Notes');
+    assert.equal(started, true);
+  } finally { gw.close(); }
+});
+
+test('ordinary chat without a desktop request does not start control', async () => {
+  const gw = await startGateway([{ content:'Hello!' }]);
+  try {
+    let started = false;
+    const agent = new Agent({ getSettings:() => ({ gatewayUrl:gw.url, model:'m', maxSteps:2, mode:'hands-off', vision:'off', verify:false }),
+      toolDefs:buildTools({}), tools:{}, safety:new SafetyLevels(), desktopFactory:() => { started = true; throw Error('unexpected'); }, emit:() => {} });
+    await agent.run({ id:'t', title:'x', messages:[], items:[] }, 'Hello!');
+    assert.equal(started, false);
+  } finally { gw.close(); }
+});
