@@ -14,13 +14,15 @@ function run() {
   const socket = path.join(base, 'premonition-recorder.sock');
   const statePath = path.join(base, 'state.json');
   const statusPath = path.join(base, 'status.json');
+  const lockPath = path.join(base, '.recorder-host.lock');
   const nativeHelper = process.execPath;
   const nativeArgs = ['--glim-recorder-native'];
   let benchmark = null;
   let recorder = null, server = null, closing = false, busy = false, fakeTimer = null;
   fs.mkdirSync(base, { recursive: true, mode: 0o700 });
   fs.chmodSync(base, 0o700);
-  const writeState = () => fs.writeFileSync(statePath, JSON.stringify({ enabled: false }), { mode: 0o600 });
+  const readState = () => { try { return JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch (_) { return { enabled: false }; } };
+  const writeState = (state) => { const tmp = statePath + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(state), { mode: 0o600 }); fs.renameSync(tmp, statePath); };
   const status = () => ({ ...(recorder ? recorder.status() : { enabled: false }),
     hostPid: process.pid, host: 'Premonition', fake: !!recorder?.fake,
     stopped: closing, at: new Date().toISOString() });
@@ -32,10 +34,42 @@ function run() {
       else resolve(stdout.trim());
     });
   });
-  async function stop() {
+  async function acquireLock() {
+    let acquired = false;
+    for (let attempt = 0; attempt < 20 && !acquired; attempt++) {
+      try { fs.mkdirSync(lockPath, { mode: 0o700 }); acquired = true; break; }
+      catch (error) { if (error.code !== 'EEXIST') throw error; }
+      let stat; try { stat = fs.lstatSync(lockPath); } catch (error) { if (error.code === 'ENOENT') continue; throw error; }
+      if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error('Unsafe recorder lock');
+      let pid; try { pid = Number(fs.readFileSync(path.join(lockPath, 'pid'), 'utf8')); } catch (_) {}
+      let live = !Number.isSafeInteger(pid) || pid <= 0 ? Date.now() - stat.mtimeMs < 10000 : false;
+      if (!live && Number.isSafeInteger(pid) && pid > 0) {
+        try { process.kill(pid, 0); live = true; } catch (probe) { if (probe.code !== 'ESRCH') throw probe; }
+      }
+      if (live) { await new Promise(resolve => setTimeout(resolve, 100)); continue; }
+      try { fs.unlinkSync(path.join(lockPath, 'pid')); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+      try { fs.rmdirSync(lockPath); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    }
+    if (!acquired) throw Error('Recorder host already running or starting');
+    fs.writeFileSync(path.join(lockPath, 'pid'), String(process.pid), { mode: 0o600 });
+    if (fs.existsSync(socket)) {
+      if (!fs.lstatSync(socket).isSocket()) throw Error('Unsafe recorder socket');
+      const active = await new Promise((resolve, reject) => {
+        const client = net.createConnection(socket);
+        client.once('connect', () => { client.destroy(); resolve(true); });
+        client.once('error', error => { if (error.code === 'ECONNREFUSED' || error.code === 'ENOENT') resolve(false); else reject(error); });
+      });
+      if (active) throw Error('Recorder socket already in use');
+      if (fs.existsSync(socket)) fs.unlinkSync(socket);
+    }
+  }
+  function releaseLock() {
+    try { if (Number(fs.readFileSync(path.join(lockPath, 'pid'), 'utf8')) === process.pid) { fs.unlinkSync(path.join(lockPath, 'pid')); fs.rmdirSync(lockPath); } } catch (_) {}
+  }
+  async function stop(disable = true) {
     if (closing) return;
     closing = true;
-    writeState();
+    if (disable) writeState({ enabled: false });
     clearInterval(fakeTimer);
     if (recorder) await recorder.off();
     if (benchmark) { benchmark.stop(); await benchmark.done; }
@@ -75,16 +109,18 @@ function run() {
         if (benchmark?.result.enabled) throw Error('Scratch measurement is still running');
         if (recorder?.enabled) return status();
         const fake = request.fake === true;
+        writeState({ enabled: true, fake });
         // A separate lead release file is required for Ben's data. Installation never creates it.
         const release = path.join(base, 'LEAD-RELEASE.json');
         let approved = false;
         try { approved = JSON.parse(fs.readFileSync(release)).approved === true; } catch (_) {}
         if (!fake && !approved) throw Error('Recording Ben is OFF: lead release is still required');
         recorder = new Recorder({ root: path.join(base, fake ? 'premonition-fake-recordings' : 'recordings'),
-          fake, releaseApproved: !fake && approved, nativeHelper, nativeArgs });
+          fake, releaseApproved: !fake && approved, nativeHelper, nativeArgs, shutdownMs: 5000 });
         await recorder.on();
+        if (closing) { await recorder.off(); throw Error('Recorder stopped while starting'); }
         if (fake) fakeTimer = setInterval(() => recorder.event({ type: 'frame', frameId: recorder.frames + 1, t: Date.now() }), 50);
-        fs.writeFileSync(statePath, JSON.stringify({ enabled: true, fake }), { mode: 0o600 });
+        try { app.setLoginItemSettings({ openAtLogin: true }); } catch (error) { console.error('Could not enable login startup:', error.message); }
         saveStatus();
         return status();
       }
@@ -94,11 +130,9 @@ function run() {
       default: throw Error('Unknown recorder command');
     }
   }
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
     app.dock?.hide();
-    // A live socket is never unlinked: no duplicate recorder can bypass the OFF gate.
-    if (fs.existsSync(socket)) throw Error('Recorder socket already exists; run recorderctl stop');
-    writeState();
+    await acquireLock();
     saveStatus();
     server = net.createServer(connection => {
       let data = '', handled = false;
@@ -120,19 +154,41 @@ function run() {
         finally { if (exclusive) busy = false; }
       });
     });
-    server.listen(socket, () => fs.chmodSync(socket, 0o600));
-    server.on('error', error => { console.error(error); stop(); });
+    server.listen(socket, async () => {
+      fs.chmodSync(socket, 0o600);
+      const saved = readState();
+      if (saved.enabled === true) {
+        busy = true;
+        try { await command({ command: 'start', fake: saved.fake === true }); }
+        catch (error) { console.error('Recorder auto-start failed:', error.message); }
+        finally { busy = false; }
+      }
+    });
+    server.on('error', error => { console.error(error); stop(false); });
     const heartbeat = setInterval(saveStatus, 500);
+    const retry = setInterval(async () => {
+      if (closing || busy || readState().enabled !== true) return;
+      busy = true;
+      try {
+        if (recorder?.enabled && recorder.paused && recorder.reason === 'disk backstop' && !recorder.retention.status().paused && !recorder.activeSegment) {
+          recorder.paused = false; recorder.reason = ''; await recorder.segment();
+        } else if (!recorder?.enabled) {
+          if (recorder) await recorder.off();
+          const saved = readState(); await command({ command: 'start', fake: saved.fake === true });
+        }
+      } catch (error) { console.error('Recorder retry failed:', error.message); }
+      finally { busy = false; }
+    }, 30000);
     app.once('will-quit', () => {
-      clearInterval(heartbeat);
+      clearInterval(heartbeat); clearInterval(retry);
       if (fs.existsSync(socket)) fs.unlinkSync(socket);
-      writeState();
+      releaseLock();
     });
   }).catch(error => { console.error(error); app.exit(1); });
   app.on('window-all-closed', () => {});
-  process.on('SIGTERM', () => stop());
-  process.on('SIGINT', () => stop());
-  process.on('uncaughtException', error => { console.error(error); stop(); });
-  process.on('unhandledRejection', error => { console.error(error); stop(); });
+  process.on('SIGTERM', () => stop(false));
+  process.on('SIGINT', () => stop(false));
+  process.on('uncaughtException', error => { console.error(error); stop(false); });
+  process.on('unhandledRejection', error => { console.error(error); stop(false); });
 }
 module.exports = { run };

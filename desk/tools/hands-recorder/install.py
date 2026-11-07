@@ -3,7 +3,8 @@ from pathlib import Path
 import datetime, json, shutil, subprocess, os
 repo = Path(__file__).resolve().parents[2]
 base = Path.home() / 'learner-ops/hands-recorder'
-app = Path('/Applications/Premonition.app/Contents/Resources/app')
+bundle = Path(os.environ.get('HANDS_RECORDER_BUNDLE', '/Applications/Premonition.app'))
+app = bundle / 'Contents/Resources/app'
 resources = app.parent
 base.mkdir(parents=True, exist_ok=True)
 os.chmod(base, 0o700)

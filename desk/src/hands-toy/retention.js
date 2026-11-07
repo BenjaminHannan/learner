@@ -1,7 +1,7 @@
 'use strict';
 // Only our indexed local recordings. No globs, shell deletes, or model decisions.
 const fs=require('node:fs'),path=require('node:path'),{randomUUID}=require('node:crypto');
-const GiB=1024**3,DEFAULTS={total:12*GiB,daily:3*GiB,keep:2*GiB,minFree:10*GiB,ageMs:7*86400000};
+const GiB=1024**3,DEFAULTS={total:12*GiB,daily:6*GiB,keep:2*GiB,minFree:10*GiB,ageMs:7*86400000};
 class Retention {
  constructor(root,{caps={},clock=Date.now,freeBytes}={}){
   fs.mkdirSync(root,{recursive:true,mode:0o700});if(fs.lstatSync(root).isSymbolicLink())throw Error('symlink root');this.root=fs.realpathSync(root);this.caps={...DEFAULTS,...caps};this.clock=clock;this.freeBytes=freeBytes||(()=>{const s=fs.statfsSync(this.root);return Number(s.bavail)*Number(s.bsize);});this.index=path.join(this.root,'clip-index.json');this.log=path.join(this.root,'retention.log');this.lock=path.join(this.root,'.retention-lock');

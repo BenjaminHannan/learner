@@ -2678,6 +2678,16 @@ app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) { 
 
 app.whenReady().then(async () => {
   if (!gotLock) return;
+  // Resume Ben's recorder when its saved switch is on, including after login.
+  if (process.platform === 'darwin' && app.isPackaged && !E2E) {
+    try {
+      const state = JSON.parse(require('fs').readFileSync(path.join(require('os').homedir(), 'learner-ops/hands-recorder/state.json'), 'utf8'));
+      if (state.enabled === true) {
+        const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
+        require('child_process').execFile('/usr/bin/open', ['-n', '-g', '/Applications/Premonition.app', '--args', '--glim-recorder-host'], { env }, (error) => { if (error) console.error('[recorder] could not resume:', error.message); });
+      }
+    } catch (_) { /* No saved switch means recording stays off. */ }
+  }
   applyPresetDefaults(Platform.defaultPreset(process.platform, PLATFORM_OPTS));
   store = new Store(app.getPath('userData'));
   // connect-20261105 #3: notes kept past 6,000 chars and chosen by closeness to Ben's message (settings.notesByRelevance, default on)
