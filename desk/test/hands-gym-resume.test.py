@@ -16,8 +16,9 @@ class TrainingResumeTests(unittest.IsolatedAsyncioTestCase):
         from hands_gym.train import observation_hash, restore_environments
 
         class Environment:
-            async def reset(self,kind,seed):
+            async def reset(self,kind,seed,start_k=None):
                 self.episode={};self.actions=[]
+                self.start_k=start_k
                 return observation
 
             async def step(self,action):
@@ -33,11 +34,20 @@ class TrainingResumeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(environment.actions,task['actions'])
         self.assertEqual(environment.episode['max_steps'],8)
         self.assertEqual(observation_hash(result[0]),task['observation_sha256'])
+        task['start_k']=2
+        await restore_environments([environment],[task],8)
+        self.assertEqual(environment.start_k,2)
         task['observation_sha256']='not-the-saved-screen'
         with self.assertRaisesRegex(RuntimeError,'screenshot mismatch'):
             await restore_environments([environment],[task],8)
 
     async def test_interrupted_training_resumes_without_extra_steps(self):
+        await self.check_interrupted_training(None)
+
+    async def test_reverse_curriculum_resumes_identical_weights_and_stages(self):
+        await self.check_interrupted_training(1)
+
+    async def check_interrupted_training(self,start_k):
         import argparse
         import numpy as np
         import torch
@@ -48,7 +58,7 @@ class TrainingResumeTests(unittest.IsolatedAsyncioTestCase):
             def __init__(self,browser,max_steps):self.max_steps=max_steps
             async def start(self):pass
             async def close(self):pass
-            async def reset(self,kind,seed):
+            async def reset(self,kind,seed,start_k=None):
                 self.episode={'kind':kind,'seed':seed,'instruction':'Close the popup.'}
                 self.steps=0
                 self.observation={'overview':np.zeros((32,32,3),dtype=np.uint8),
@@ -59,16 +69,17 @@ class TrainingResumeTests(unittest.IsolatedAsyncioTestCase):
                 done=self.steps==self.max_steps
                 return self.observation,float(done),done,{'success':done}
 
-        async def evaluate(net,envs,device,episodes,seed,max_steps):
+        async def evaluate(net,envs,device,episodes,seed,max_steps,**kwargs):
             torch.manual_seed(seed)
             return {'per_task':{'close_popup':{'rate':0.5}},'overall':0.5,'steps':0}
 
         with tempfile.TemporaryDirectory(prefix='hands-gym-resume-') as directory:
             args=argparse.Namespace(device='cpu',native_checkpoint=None,resume_checkpoint=None,
                 resume_training=None,output=directory,seeds=[11],envs=2,remote_endpoints=[],
-                max_steps=3,eval_episodes=1,updates=2,rollout=2,epochs=1,minibatch=2,
-                lr=0.0003,entropy=0.005,self_imitation_weight=0.1,
-                success_buffer_episodes=2,eval_every=1)
+                max_steps=1 if start_k else 3,eval_episodes=1,updates=2,rollout=2,epochs=1,minibatch=2,
+                lr=0.0003,entropy=0.005,self_imitation_weight=0.0 if start_k else 0.1,
+                success_buffer_episodes=2,eval_every=1,start_k=start_k,
+                task_families=['type_text'] if start_k else None)
             original_save=train.save_training
 
             def interrupt_after_first(state,path):
@@ -88,6 +99,11 @@ class TrainingResumeTests(unittest.IsolatedAsyncioTestCase):
                 await train.run_seed(args,11,None)
                 uninterrupted=torch.load(Path(args.output)/'seed-11/final.pt',weights_only=True)
                 for key,value in final_state.items():torch.testing.assert_close(value,uninterrupted[key],rtol=0,atol=0)
+                if start_k:
+                    resumed_state=torch.load(checkpoint,weights_only=False)
+                    full_state=torch.load(Path(args.output)/'seed-11/training-state.pt',weights_only=False)
+                    self.assertEqual(resumed_state['reverse_curriculum'],full_state['reverse_curriculum'])
+                    self.assertTrue(resumed_state['reverse_curriculum']['pending']['type_text'])
                 args.output=str(Path(directory)/'without-interim-evaluation');args.eval_every=0
                 await train.run_seed(args,11,None)
                 without_eval=torch.load(Path(args.output)/'seed-11/final.pt',weights_only=True)

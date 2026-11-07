@@ -10,6 +10,8 @@ browser and behave identically on Windows and macOS. Every task is randomised
 (layout, labels, colours, values) but always solvable with real mouse and
 keyboard input.
 """
+import json
+import math
 import random
 
 VIEW_WIDTH = 640
@@ -373,18 +375,75 @@ _BUILDERS = {
 }
 
 
-def build(kind, seed):
+MULTI_STEP_TYPES = (KIND_FORM_FILL, KIND_MENU_SELECT, KIND_DROPDOWN,
+                   KIND_TYPE_TEXT, KIND_DRAG_SLIDER)
+
+
+def progress_units(kind, spec):
+    if kind == KIND_TYPE_TEXT:
+        return len(spec['target']) + 2
+    if kind == KIND_FORM_FILL:
+        return len(spec['name']) + len(spec['city']) + 3
+    if kind in (KIND_DROPDOWN, KIND_MENU_SELECT):
+        return 2
+    if kind == KIND_DRAG_SLIDER:
+        return math.ceil(abs(spec['start'] - spec['target']) / 10)
+    return 1
+
+
+def maximum_progress_units(kind):
+    if kind == KIND_TYPE_TEXT:
+        return max(map(len, TYPE_WORDS)) + 2
+    if kind == KIND_FORM_FILL:
+        return max(map(len, NAME_WORDS)) + max(map(len, CITY_WORDS)) + 3
+    if kind == KIND_DRAG_SLIDER:
+        return 9
+    return 2 if kind in (KIND_DROPDOWN, KIND_MENU_SELECT) else 1
+
+
+def _start_script(kind, spec, start_k):
+    total = progress_units(kind, spec)
+    if start_k >= total:
+        return ''
+    if kind in (KIND_TYPE_TEXT, KIND_FORM_FILL):
+        fields = [('text', spec['target'])] if kind == KIND_TYPE_TEXT else [
+            ('name', spec['name']), ('city', spec['city'])]
+        steps = []
+        for field, value in fields:
+            element = 'document.getElementById(%s)' % json.dumps(field)
+            steps.append(element + '.focus();')
+            for length in range(1, len(value) + 1):
+                steps.append(element + '.value=' + json.dumps(value[:length]) + ';')
+        return ''.join(steps[:total - start_k])
+    if kind == KIND_DROPDOWN:
+        return '__gym.toggle();'
+    if kind == KIND_MENU_SELECT:
+        return '__gym.toggleMenu();'
+    if kind == KIND_DRAG_SLIDER:
+        direction = 1 if spec['start'] > spec['target'] else -1
+        value = spec['target'] + direction * start_k * 10
+        return '__gym.sliderValue=%d;paint();' % value
+    return ''
+
+
+def build(kind, seed, start_k=None):
     """Build one deterministic task instance."""
     if kind not in _BUILDERS:
         raise ValueError('unknown task kind: %r' % (kind,))
     if type(seed) is not int:
         raise ValueError('seed must be an int')
+    if start_k is not None and (type(start_k) is not int or start_k < 1):
+        raise ValueError('start_k must be a positive int or None')
     rng = random.Random('hands-gym:%s:%d' % (kind, seed))
     hue = rng.randrange(360)
     instruction, html, spec = _BUILDERS[kind](rng, hue)
     spec = dict(spec)
     spec['kind'] = kind
     spec['seed'] = seed
+    if start_k is not None and kind in MULTI_STEP_TYPES:
+        initializer = _start_script(kind, spec, start_k)
+        if initializer:
+            html = html.replace('</script></body>', initializer + '</script></body>')
     return {
         'kind': kind,
         'seed': seed,

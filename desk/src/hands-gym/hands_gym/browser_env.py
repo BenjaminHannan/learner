@@ -41,8 +41,8 @@ class BrowserEnv:
         )
         self.page = await self.context.new_page()
 
-    async def reset(self, kind, seed):
-        episode = tasks.build(kind, seed)
+    async def reset(self, kind, seed, start_k=None):
+        episode = tasks.build(kind, seed, start_k=start_k)
         episode['max_steps'] = self.max_steps
         await self.page.set_content(episode['html'])
         self.episode = episode

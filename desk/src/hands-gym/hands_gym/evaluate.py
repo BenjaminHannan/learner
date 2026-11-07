@@ -10,6 +10,7 @@ from .browser_env import BrowserEnv
 from .model import GymPolicy
 from .train import evaluate
 from .gpu_gate import Lease
+from . import tasks
 
 
 async def audit(args):
@@ -31,7 +32,8 @@ async def audit(args):
                     path=root/('seed-'+str(seed))/(phase+'.pt')
                     net.load_state_dict(torch.load(path,map_location=args.device,weights_only=True));net.eval()
                     trace=out/('seed-%d-%s.jsonl'%(seed,phase))
-                    result=await evaluate(net,envs,args.device,args.episodes,seed+700,args.max_steps,trace_path=trace)
+                    result=await evaluate(net,envs,args.device,args.episodes,seed+700,args.max_steps,
+                                          trace_path=trace,task_families=args.task_families)
                     result['checkpoint_sha256']=hashlib.sha256(path.read_bytes()).hexdigest()
                     result['checkpoint_path']=str(path.resolve())
                     result['trace_sha256']=hashlib.sha256(trace.read_bytes()).hexdigest()
@@ -53,6 +55,7 @@ def main():
     p.add_argument('--envs',type=int,default=8)
     p.add_argument('--max-steps',type=int,default=8)
     p.add_argument('--device',default='cuda')
+    p.add_argument('--task-families',nargs='+',choices=tasks.TASK_TYPES)
     args=p.parse_args()
     if args.device=='cuda':
         with Lease(Path.cwd()):asyncio.run(audit(args))

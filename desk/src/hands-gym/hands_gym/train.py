@@ -19,6 +19,7 @@ from .browser_env import BrowserEnv
 from .model import GymPolicy, batch, native_actions
 from .gpu_gate import Lease, inspect, foreign_clients
 from .remote import RemoteEnv
+from .curriculum import ReverseCurriculum
 
 
 class SuccessBuffer:
@@ -77,10 +78,16 @@ def observation_hash(observation):
                                  for key in ('overview','detail'))).hexdigest()
 
 
+async def reset_task(environment,task):
+    if task.get('start_k') is not None:
+        return await environment.reset(task['kind'],task['seed'],start_k=task['start_k'])
+    return await environment.reset(task['kind'],task['seed'])
+
+
 async def restore_environments(envs,live_tasks,max_steps):
     observations=[]
     for environment,task in zip(envs,live_tasks):
-        observation=await environment.reset(task['kind'],task['seed'])
+        observation=await reset_task(environment,task)
         environment.episode['max_steps']=max_steps
         for action in task['actions']:
             observation,_,done,_=await environment.step(action)
@@ -98,10 +105,10 @@ def save(net,path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-async def evaluate(net,envs,device,episodes,seed,max_steps,trace_path=None):
+async def evaluate(net,envs,device,episodes,seed,max_steps,trace_path=None,task_families=None):
     """Fixed, disjoint task seeds. Stochastic policy with paired action RNG."""
     torch.manual_seed(seed)
-    results={k:[] for k in tasks.TASK_TYPES[:7]}
+    results={k:[] for k in (task_families or tasks.TASK_TYPES[:7])}
     traces=[]
     steps=0
     started=time.monotonic()
@@ -130,7 +137,7 @@ async def evaluate(net,envs,device,episodes,seed,max_steps,trace_path=None):
                 alive=nxt
             results[kind].extend(success)
             for i,e in enumerate(active):
-                traces.append({'kind':kind,'task_seed':10_000_000+seed*1000+offset+i,
+                traces.append({'kind':kind,'task_seed':10_000_000+seed*1000+offset+i,'start_k':None,
                     'instruction':instructions[i],'success':success[i],'steps':e.t,
                     'initial_overview_sha256':initial_hashes[i],
                     'final_overview_sha256':hashlib.sha256(obs[i]['overview'].tobytes()).hexdigest(),
@@ -160,6 +167,8 @@ async def run_seed(args,seed,browser):
         net.load_state_dict(resume['net']);opt.load_state_dict(resume['optimizer'])
     initial_hash=resume['initial_sha256'] if resume else save(net,out/'initial.pt')
     buffer=SuccessBuffer(args.envs,args.success_buffer_episodes,seed+1700) if args.self_imitation_weight else None
+    curriculum=ReverseCurriculum(args.start_k) if getattr(args,'start_k',None) else None
+    family_options={'task_families':args.task_families} if getattr(args,'task_families',None) else {}
     envs=[]
     for endpoint in args.remote_endpoints:
         host,port=endpoint.rsplit(':',1)
@@ -175,7 +184,7 @@ async def run_seed(args,seed,browser):
             evaluation_envs=[BrowserEnv(browser,max_steps=args.max_steps) for _ in range(args.envs)]
             await asyncio.gather(*[environment.start() for environment in evaluation_envs])
         baseline=resume['baseline'] if resume else await evaluate(
-            net,envs,device,args.eval_episodes,seed+700,args.max_steps)
+            net,envs,device,args.eval_episodes,seed+700,args.max_steps,**family_options)
         if not resume:
             print(json.dumps({'seed':seed,'phase':'baseline',**baseline}),flush=True)
             (out/'baseline.json').write_text(json.dumps(baseline,indent=2))
@@ -185,13 +194,19 @@ async def run_seed(args,seed,browser):
             nonlocal episode_serial
             episode_serial+=1
             # Unique low seeds, evaluation uses a separate high range.
-            kind='close_popup' if update<args.updates*0.7 else rng.choices(
-                ['close_popup','click_button','click_link','dropdown','menu_select','drag_slider','type_text'],
-                weights=[70,10,5,5,4,4,2])[0]
-            return kind,seed*100000+episode_serial
+            if family_options:
+                kind=rng.choice(args.task_families)
+            else:
+                kind='close_popup' if update<args.updates*0.7 else rng.choices(
+                    ['close_popup','click_button','click_link','dropdown','menu_select','drag_slider','type_text'],
+                    weights=[70,10,5,5,4,4,2])[0]
+            task={'kind':kind,'seed':seed*100000+episode_serial,'actions':[]}
+            if curriculum:task['start_k']=curriculum.for_kind(kind)
+            return task
         held_out_curve=resume['held_out_curve'] if resume else [
             {'update':0,'environment_steps':0,'checkpoint_sha256':initial_hash,**baseline}]
         if resume:
+            if curriculum:curriculum.load_state_dict(resume['reverse_curriculum'])
             episode_serial=resume['episode_serial'];rng.setstate(resume['task_rng'])
             live_tasks=resume['live_tasks']
             obs=await restore_environments(envs,live_tasks,args.max_steps)
@@ -202,8 +217,8 @@ async def run_seed(args,seed,browser):
             if device.type=='cuda':torch.cuda.set_rng_state(resume['cuda_rng'],device)
         else:
             scheduled=[new_task(0) for _ in envs]
-            live_tasks=[{'kind':kind,'seed':task_seed,'actions':[]} for kind,task_seed in scheduled]
-            obs=await asyncio.gather(*[environment.reset(*task) for environment,task in zip(envs,scheduled)])
+            live_tasks=scheduled
+            obs=await asyncio.gather(*[reset_task(environment,task) for environment,task in zip(envs,scheduled)])
             for environment in envs:environment.episode['max_steps']=args.max_steps
             curve=[];env_steps=0;completed=[]
         (out/'held-out-curve.json').write_text(json.dumps(held_out_curve,indent=2))
@@ -226,11 +241,15 @@ async def run_seed(args,seed,browser):
                 obs=[r[0] for r in replies]
                 reset_ids=[i for i,r in enumerate(replies) if r[2]]
                 for i in reset_ids:completed.append(replies[i][3]['success'])
+                if curriculum:
+                    for index in reset_ids:
+                        task=live_tasks[index]
+                        curriculum.record(task['kind'],task.get('start_k'),replies[index][3]['success'])
                 scheduled=[new_task(update) for _ in reset_ids]
-                resets=await asyncio.gather(*[envs[index].reset(*task) for index,task in zip(reset_ids,scheduled)])
-                for index,observation,(kind,task_seed) in zip(reset_ids,resets,scheduled):
+                resets=await asyncio.gather(*[reset_task(envs[index],task) for index,task in zip(reset_ids,scheduled)])
+                for index,observation,task in zip(reset_ids,resets,scheduled):
                     obs[index]=observation;envs[index].episode['max_steps']=args.max_steps
-                    live_tasks[index]={'kind':kind,'seed':task_seed,'actions':[]}
+                    live_tasks[index]=task
                 env_steps+=len(envs)
             with torch.no_grad():_,next_value=net(*batch(obs,[e.episode['instruction'] for e in envs],device))
             gae=torch.zeros(args.envs);returns=[];advantages=[]
@@ -266,14 +285,18 @@ async def run_seed(args,seed,browser):
                      'steps_per_second':env_steps/(prior_seconds+time.monotonic()-started),
                      'gpu_allocated_mb':torch.cuda.max_memory_allocated()/2**20 if device.type=='cuda' else 0,
                      'loss':float(loss.detach()),'success_buffer_episodes':len(buffer.episodes) if buffer else 0}
+                if curriculum:row['reverse_curriculum']=curriculum.state_dict()
                 curve.append(row)
                 print(json.dumps(row),flush=True)
                 (out/'curve.json').write_text(json.dumps(curve,indent=2))
                 save(net,out/'latest.pt')
             if args.eval_every and (update%args.eval_every==0 or update==args.updates):
                 checkpoint_hash=save(net,out/('update-%04d.pt'%update))
+                evaluation_options=dict(family_options)
+                if family_options and update==args.updates:
+                    evaluation_options['trace_path']=out/'final-trace.jsonl'
                 with torch.random.fork_rng(devices=[torch.cuda.current_device()] if device.type=='cuda' else []):
-                    measured=await evaluate(net,evaluation_envs,device,args.eval_episodes,seed+700,args.max_steps)
+                    measured=await evaluate(net,evaluation_envs,device,args.eval_episodes,seed+700,args.max_steps,**evaluation_options)
                 point={'update':update,'environment_steps':env_steps,'checkpoint_sha256':checkpoint_hash,**measured}
                 held_out_curve.append(point)
                 (out/'held-out-curve.json').write_text(json.dumps(held_out_curve,indent=2))
@@ -286,6 +309,7 @@ async def run_seed(args,seed,browser):
                        'curve':curve,'held_out_curve':held_out_curve,'completed':completed,
                        'episode_serial':episode_serial,'task_rng':rng.getstate(),'live_tasks':live_tasks,
                        'success_buffer':buffer.state_dict() if buffer else None,
+                       'reverse_curriculum':curriculum.state_dict() if curriculum else None,
                        'python_rng':random.getstate(),'numpy_rng':np.random.get_state(),
                        'torch_rng':torch.get_rng_state(),
                        'cuda_rng':torch.cuda.get_rng_state(device) if device.type=='cuda' else None,
@@ -300,12 +324,13 @@ async def run_seed(args,seed,browser):
         train_seconds=prior_seconds+time.monotonic()-started
         final_hash=save(net,out/'final.pt')
         final=held_out_curve[-1] if args.eval_every else await evaluate(
-            net,envs,device,args.eval_episodes,seed+700,args.max_steps)
+            net,envs,device,args.eval_episodes,seed+700,args.max_steps,**family_options)
         result={'seed':seed,'starting_policy':args.resume_checkpoint or args.native_checkpoint or 'fresh HANDS NativeActionPolicy architecture + categorical RL positions',
                 'initial_sha256':initial_hash,'final_sha256':final_hash,'baseline':baseline,'final':final,
                 'curve':curve,'held_out_curve':held_out_curve,'train_steps':env_steps,'train_seconds':train_seconds,
                 'train_steps_per_second':env_steps/train_seconds,'args':vars(args),
                 'parameters':sum(p.numel() for p in net.parameters())}
+        if curriculum:result['reverse_curriculum']=curriculum.state_dict()
         (out/'result.json').write_text(json.dumps(result,indent=2))
         print(json.dumps({'seed':seed,'phase':'final',**final}),flush=True)
         return result
@@ -341,6 +366,8 @@ def main():
     p.add_argument('--self-imitation-weight',type=float,default=0.0)
     p.add_argument('--success-buffer-episodes',type=int,default=128)
     p.add_argument('--eval-every',type=int,default=0)
+    p.add_argument('--task-families',nargs='+',choices=tasks.TASK_TYPES)
+    p.add_argument('--start-k',type=int,default=None)
     p.add_argument('--device',default='cuda')
     initialization=p.add_mutually_exclusive_group()
     initialization.add_argument('--native-checkpoint')
@@ -353,6 +380,9 @@ def main():
         p.error('--self-imitation-weight must be finite and nonnegative')
     if a.success_buffer_episodes<1 or a.eval_every<0:p.error('invalid buffer capacity or evaluation interval')
     if a.resume_training and len(a.seeds)!=1:p.error('--resume-training requires exactly one seed')
+    if a.start_k is not None and a.start_k<1:p.error('--start-k must be positive')
+    if a.start_k is not None and a.remote_endpoints:p.error('--start-k requires local browser environments')
+    if a.task_families and len(set(a.task_families))!=len(a.task_families):p.error('duplicate task family')
     Path(a.output).mkdir(parents=True,exist_ok=True)
     if a.device=='cuda':
         with Lease(Path.cwd()):asyncio.run(main_async(a))
