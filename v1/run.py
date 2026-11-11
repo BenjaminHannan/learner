@@ -306,6 +306,8 @@ def main(argv=None) -> int:
     ap.add_argument("--spend-cap", type=float, default=20.0)
     ap.add_argument("--max-tokens", type=int, default=MAX_TOKENS)
     ap.add_argument("--no-sleep", action="store_true")
+    ap.add_argument("--dream2", type=int, default=0, help="creative sleep: N dream rows (random 1-2 step B2 programs, creative/dream2.py) added to each night's W records; 0 = off = today's behaviour")
+    ap.add_argument("--dream2-max-steps", type=int, default=2)
     ap.add_argument("--eval-visits", type=int, default=DEV_EVAL_VISITS, help="dev visits per periodic eval (tests use fewer)")
     ap.add_argument("--val-every-eval", action=argparse.BooleanOptionalAction, default=True,
                     help="also score the held-out `validation` split at every periodic eval (reporting only: RNG, bridge and weights restored)")
@@ -503,6 +505,7 @@ def main(argv=None) -> int:
         info = creative_sleep.run_creative(str(out / "creative"), raw_ckpt, skills_train, a.skills, device=a.device, seed=SEED,
                                            g1_factory=g1_factory, on_stage=on_stage, attach=bridge.attach_creative,
                                            updates_cap=a.sleep_cap, pool_limit=a.pool_limit, dev_limit=a.dev_limit,
+                                           dream2=a.dream2, dream2_max_steps=a.dream2_max_steps,
                                            n1=(4 if a.sleep_cap else 32), n2=(8 if a.sleep_cap else 480))
     except AbortRule as ar:
         return finish_after_abort(ar, "sleep")

@@ -32,12 +32,25 @@ def _sleep_stage(base, recs, replay, extra, vocab, cfg, device, guard):
     return m, r
 
 
+def add_dreams(recs: list, counts: dict, pool: list, dream2: int, seed: int, night: int, max_steps: int = 2):
+    """Dream rows (creative/dream2.py): `dream2` extra records appended to a night's W records. dream2 == 0 returns `recs` itself and imports nothing
+    (the flag-off path is today's code path exactly). Dreams avoid every warm/pool/dev prompt (and the pool prompts passed here). -> (records, info)."""
+    if not dream2:
+        return recs, None
+    from creative import dream2 as D
+    dreams = D.dream_rows_c2(dream2, seed, [r['prompt'] for r in pool], night=night, max_steps=max_steps)
+    return list(recs) + dreams, dict(n=len(dreams), seed=seed, night=night, max_steps=max_steps, by_length={L: sum(d['dream']['length'] == L for d in dreams) for L in range(1, max_steps + 1)})
+
+
 def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, device: str = "cpu", seed: int = 0,
                  g1_factory: Optional[Callable[[Any, Any], Any]] = None, pool_limit: Optional[int] = None,
                  dev_limit: Optional[int] = None, n1: int = N1, n2: int = N2, T: Optional[float] = None,
                  on_stage: Optional[Callable[[str, dict], None]] = None,
-                 attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None) -> dict[str, Any]:
-    """updates_cap: smoke tests only (caps every stage's update count; never set for an arm). -> info dict (also out/train.json). `g1_factory(parent_model, replay_rows)` returns a G1 object (or None for no guard)."""
+                 attach: Optional[Callable[[Any], None]] = None, updates_cap: Optional[int] = None, dream2: int = 0,
+                 dream2_max_steps: int = 2) -> dict[str, Any]:
+    """dream2: N dream rows (random 1..dream2_max_steps-step programs over B2's executor, creative/dream2.py) added to EACH night's W records; 0 = off = today's behaviour exactly.
+    They count in the night's record total, so the existing visit cap (VISITS visits per record, max_visits) applies to them like any other record.
+    updates_cap: smoke tests only (caps every stage's update count; never set for an arm). -> info dict (also out/train.json). `g1_factory(parent_model, replay_rows)` returns a G1 object (or None for no guard)."""
     os.makedirs(out, exist_ok=True)
     P = lambda f: os.path.join(out, f)
     done = lambda f: os.path.exists(P(f))
@@ -125,7 +138,13 @@ def run_creative(out: str, ckpt: str, skills_train: str, skills_data: str, devic
         if not done(f"rec_W{night}.pt"):
             tries, fit1, fit, drawn = c2_stuck.search(base, pool, vocab, device, seeds[night], Tt, n1, n2)
             Wn, cn = c2_stuck.w_records(pool, tries, seed + night, arm=f"W{night}")
-            save_recs(P(f"rec_W{night}.pt"), Wn, counts=cn, info=night_info(pool, drawn, Wn, cn, fit1, fit))
+            ninfo = night_info(pool, drawn, Wn, cn, fit1, fit)                # W-only numbers (the search check reads these)
+            Wn, dinfo = add_dreams(Wn, cn, pool, dream2, seed, night, dream2_max_steps)
+            if dinfo:
+                info.setdefault("dream2", {})[str(night)] = dinfo
+                ninfo["dream2"] = dinfo
+                save()
+            save_recs(P(f"rec_W{night}.pt"), Wn, counts=cn, info=ninfo)
             stage(f"night{night}_records", time.time() - ts)
         d = load_recs(P(f"rec_W{night}.pt"))
         recs = d["records"]
