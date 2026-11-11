@@ -6,7 +6,7 @@ guard in `waitlog`, stop-then-pull with sha256 checks, destroy only after a pass
 DRAFT until the V1 review passes. The agent proxy adds the vast key; this script never reads or prints a key.
 Nothing here rents by itself: `create` prints the request and sends it only with --yes, and every rental needs Ben's own click.
 
-  pack    --kind gs|arm --dph D --cap C --out DIR     code at HEAD (git-tracked: premonition learnlab memorylab v1 custom_io creative
+  pack    --kind gs|arm|state --dph D --cap C --out DIR     code at HEAD (git-tracked: premonition learnlab memorylab v1 custom_io creative
                                                       mainbrain domain skills_curriculum + tokenizer + pattern bank + data hashes)
                                                       as pack.tar.xz + args.json; the box script is v1/box/<kind>.sh from the pack
   search  [--n 12] [--max-dph 0.8] [--gpu "RTX 4090"] [--min-ram 23000]
@@ -34,8 +34,9 @@ API = "https://console.vast.ai/api/v0"
 PINS = json.loads((REPO / "v1/PINS.json").read_text())
 IMAGE = PINS["image"]
 LABEL_PREFIX = "claude-v1-"
-STAGES = ("gs", "gs2", "gs3", "arm")
-STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec)
+STAGES = ("gs", "gs2", "gs3", "arm", "state")
+STATE_ARMS = ("base", "inject", "reg16", "mq4", "lastloss", "reg16mq4", "all3")      # v1/state_lab.py ARMS
+STAGE_CAP_DEFAULT = {"gs": 1.50, "gs2": 1.00, "gs3": 0.40, "arm": 20.0, "state": 3.00}      # coordinator ruling: Gate S GPU run <= $1.50; an arm <= $20 (spec); a state-lab box <= $3 (hard)
 HARD_STOP = dict(STAGE_CAP_DEFAULT)
 SAFETY = 0.9
 EXPORT_SECONDS = 900
@@ -70,9 +71,9 @@ finish() {   # $1 = DONE, FAIL or GATE; the closing mark waitlog stops the box o
   cd "$J"
   say "EXPORT start"
   rm -rf export/* b64
-  (cd "$ROOT/out" 2>/dev/null && tar -czf "$J/export/out.tar.gz" --exclude=wake-ckpt --exclude='*.pt' . -C "$J" checks) 2>/dev/null
+  (cd "$ROOT/out" 2>/dev/null && tar -czf "$J/export/out.tar.gz" --exclude=wake-ckpt --exclude=ckpt --exclude='*.pt' . -C "$J" checks) 2>/dev/null
   [ -f export/out.tar.gz ] || tar -czf export/out.tar.gz -C "$J" checks 2>/dev/null
-  (cd "$ROOT/out" 2>/dev/null && { find . \( -name D-final.pt -o -name W2.pt -o -name W1.pt -o -name Nprime.pt \) -not -path './*/wake-ckpt/*'; for lt in $(ls -t ./*/wake-ckpt/step-*.pt 2>/dev/null | head -1); do echo "$lt"; echo "$lt.sha256"; done; } | tar -czf "$J/export/ckpt.tar.gz" -T -) 2>/dev/null
+  (cd "$ROOT/out" 2>/dev/null && { find . \( -name D-final.pt -o -name W2.pt -o -name W1.pt -o -name Nprime.pt \) -not -path './*/wake-ckpt/*' -not -path './*/ckpt/*'; for lt in $(ls -t ./*/wake-ckpt/step-*.pt ./*/ckpt/step-*.pt 2>/dev/null | head -1); do echo "$lt"; echo "$lt.sha256"; done; } | tar -czf "$J/export/ckpt.tar.gz" -T -) 2>/dev/null
   say "EXPORT tarred"
   (cd export && sha256sum out.tar.gz ckpt.tar.gz 2>/dev/null > MANIFEST.sha256)
   mkdir -p b64/big b64/small
@@ -259,8 +260,12 @@ def make_job(pack_sha, kind, dph):
 
 def pack(a):
     kind = a.kind
-    if kind == "arm" and not a.arm:
+    if kind == "arm" and a.arm not in ("floor", "full"):
         raise SystemExit("--arm floor|full is required for kind arm")
+    if kind == "state" and a.arm not in STATE_ARMS:
+        raise SystemExit(f"--arm {'|'.join(STATE_ARMS)} is required for kind state")
+    if kind == "state" and not 0 < a.cap <= STAGE_CAP_DEFAULT["state"]:
+        raise SystemExit(f"a state box is capped at ${STAGE_CAP_DEFAULT['state']:.2f}")
     HARD_STOP[kind] = float(a.cap)
     deadline = run_deadline(a.dph, kind)
     files = listed() + [f"v1/box/{kind}.sh"]
@@ -280,7 +285,8 @@ def pack(a):
             return i
         for f in files:
             t.add(REPO / f, arcname=f, filter=norm)
-        extra = [("ARM.env", f"ARM={a.arm}\nSTEPS={a.steps}\nCAP={a.cap}\n")] if kind == "arm" else []
+        extra = [("ARM.env", f"ARM={a.arm}\nSTEPS={a.steps}\nCAP={a.cap}\n" + (f"SEED={a.seed}\n" if kind == "state" else ""))] \
+            if kind in ("arm", "state") else []
         for name, content in (("SEAL-pack.sha256.txt", seal), ("COMMIT", head + "\n")) + tuple(extra):
             info = tarfile.TarInfo(name)
             info.size, info.mtime = len(content.encode()), 0
@@ -326,7 +332,7 @@ def search(a):
 
 
 def job_stage(args):
-    m = re.search(r"^STAGE=(gs3|gs2|gs|arm)$", args[2], re.M) if len(args) > 2 else None
+    m = re.search(r"^STAGE=(gs3|gs2|gs|arm|state)$", args[2], re.M) if len(args) > 2 else None
     if not m:
         raise SystemExit("args.json does not look like this controller's pack (no STAGE= line)")
     return m.group(1)
@@ -433,7 +439,7 @@ def status(a):
 def stage_of(label, given=None):
     if given:
         return given
-    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs3|gs2|gs|arm)[a-z0-9-]*", label or "")
+    m = re.fullmatch(re.escape(LABEL_PREFIX) + r"(gs3|gs2|gs|arm|state)[a-z0-9-]*", label or "")
     if not m:
         raise SystemExit(f"cannot tell the stage from label {label!r}; pass --stage")
     return m.group(1)
@@ -594,7 +600,7 @@ def exec_cat(i, path, tries=3):
         if not url:
             time.sleep(10)
             continue
-        for _ in range(36):
+        for _ in range(72):                 # some hosts take ~2 min to upload a command result
             time.sleep(5)
             try:
                 return get(url, 300)
@@ -748,7 +754,8 @@ def main(argv=None):
     p.add_argument("--kind", choices=STAGES, required=True)
     p.add_argument("--dph", type=float, required=True, help="the offer's $/h (sets the run's deadline)")
     p.add_argument("--cap", type=float, required=True, help="this box's dollars")
-    p.add_argument("--arm", choices=("floor", "full"), default=None)
+    p.add_argument("--arm", choices=("floor", "full") + STATE_ARMS, default=None)
+    p.add_argument("--seed", type=int, default=0, help="kind state only: the training seed (base --seed 1 is the noise arm)")
     p.add_argument("--steps", type=int, default=12000)
     p.add_argument("--out", required=True)
     p = add("search", search)
@@ -792,6 +799,8 @@ def main(argv=None):
 def set_cap(stage, cap):
     if not 0 < cap <= 40.0:
         raise SystemExit(f"cap must be in (0, 40] dollars, got {cap}")
+    if stage == "state" and cap > STAGE_CAP_DEFAULT["state"]:
+        raise SystemExit(f"a state box is capped at ${STAGE_CAP_DEFAULT['state']:.2f}, got {cap}")
     HARD_STOP[stage] = float(cap)
 
 
