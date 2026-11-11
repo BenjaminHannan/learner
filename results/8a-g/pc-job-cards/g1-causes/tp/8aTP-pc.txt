@@ -1,0 +1,9 @@
+# BensPC RTX 5070 Ti: test T-P (G1-OTHER-CAUSES-RANKED-2026-10-12 section 3, cause 3). B2 (EGE) seed 400 at 3M, otherwise exactly G1's 3M B2 (8aG1d-3M-s400): same pool p10-rung30-s400-a64 (reused: same rows and order), caps_g.json, 12 rounds, lr 1e-3, 24,000 updates of 256 rows, B2 only, accum 4 (G1's).
+# ONE change: self_prog 8. On training rows with no parsed program, mode GEN and an integer gold answer the NOOP op target gets weight 0 and each update samples K = 8 programs per such row from the model's own op/operand heads (temperature 1), runs them on the calculator and trains op/operand/mode (NUM -> that result slot) on the shortest sampled program whose result equals the gold answer; rows with no hit keep their GEN target. No new parameters (3,544,913 trained, as G1).
+# Code: src-tp = G1's src-8ag (custom_io at 612f5c5b01 + the caps fix) with models\ledger.py adding self_prog only (install_tp.ps1). Run by waiter v3e as an inserted job (WORK\insert\46-tp.txt). Marks (sealed): pass = four families >= 38.4% AND pooled-5 >= 72.5 AND chain-5 >= 99; proved wrong = four families <= 32.4%; between -> seed 401.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aTP-3M-s400 --rung 3M --seed 400 --arms B2 --b2-extra '{"eg_embed": true, "self_prog": 8}' --accum B2=4
