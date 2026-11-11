@@ -1,0 +1,108 @@
+{
+ "with_prog": [
+  "arith_bare",
+  "backward_solve",
+  "chain_ops",
+  "chain_story2",
+  "compare_numbers",
+  "distance_units",
+  "div_exact",
+  "percent_rate",
+  "state_update",
+  "story_addsub",
+  "story_chain3",
+  "table_calc",
+  "var_chain",
+  "verify_claim"
+ ],
+ "partial": [
+  "list_stats"
+ ],
+ "none": [
+  "cipher_map",
+  "copy_word",
+  "digits_parity",
+  "fewshot_number_rule",
+  "group_induct",
+  "kin_chain",
+  "letter_ops",
+  "list_index",
+  "object_track",
+  "odd_one_out",
+  "order_chain",
+  "passage_qa",
+  "prop_eval",
+  "rule_apply",
+  "seq_cycle",
+  "seq_next",
+  "syllogism",
+  "table_lookup",
+  "word_filter"
+ ],
+ "params": {
+  "total": 3302481,
+  "by_group": {
+   "talker heads (mode, ans ptr, word ptr + keys, GEN readout bias/ln, copy)": 88560,
+   "reader (char conv + embeddings; tok table also = GEN readout)": 742400,
+   "workspace / value codes (vcode, stype, ordinal, op_emb, step_emb, src, ctrl, res_from_z)": 101632,
+   "core (2 controller blocks, looped 8x)": 2317208,
+   "program heads (op_head, q_a, q_b, k_slot, ln_k, ln_z)": 52681
+  }
+ },
+ "reach": {
+  "clock_date": {
+   "n": 40,
+   "non_numeric": 40,
+   "non_numeric_all_chars_in_prompt": 14
+  },
+  "op_define": {
+   "n": 40,
+   "numeric": 40,
+   "in_prompt": 0,
+   "reach_1op": 10,
+   "reach_le2op": 37
+  },
+  "string_transform": {
+   "n": 40,
+   "non_numeric": 40,
+   "non_numeric_all_chars_in_prompt": 40
+  },
+  "unit_convert": {
+   "n": 40,
+   "numeric": 40,
+   "in_prompt": 0,
+   "reach_1op": 30,
+   "reach_le2op": 40
+  }
+ },
+ "dev_family_cov": {
+  "clock_date": {
+   "n": 40,
+   "prog": 0.0,
+   "NUM": 0.0,
+   "WORD": 2.5,
+   "GEN": 97.5
+  },
+  "op_define": {
+   "n": 40,
+   "prog": 0.0,
+   "NUM": 0.0,
+   "WORD": 0.0,
+   "GEN": 100.0
+  },
+  "string_transform": {
+   "n": 40,
+   "prog": 0.0,
+   "NUM": 0.0,
+   "WORD": 2.5,
+   "GEN": 97.5
+  },
+  "unit_convert": {
+   "n": 40,
+   "prog": 100.0,
+   "NUM": 100.0,
+   "WORD": 0.0,
+   "GEN": 0.0
+  }
+ }
+}
