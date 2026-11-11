@@ -163,6 +163,11 @@ def mini_hand_count(config, batch: VisitBatch, question_loops: int, training: bo
         per_loop += 2 * d * dk + 2 * d + 2 * dk * (lines + 1)
     per_loop += answer_len * (8 + 2 + 2 + 4 * config.decoder_mlp) * d * d + 4 * rows * d * d
     per_loop_attention += 4 * answer_len * answer_len * d + 4 * answer_len * rows * d
+    if config.decoder_reader_kv and batch.q_visit.numel():
+        memory = int(batch.q_span[:, 1].max())                     # reader states up to the last "[answer]"
+        dense += visits * memory * 4 * d * d
+        per_loop += answer_len * 4 * d * d
+        per_loop_attention += 4 * answer_len * memory * d
     questions = max(batch.q_visit.shape[0], 1)
     dense += question_loops * per_loop + question_loops / questions * answer_tokens * 2 * v * d
     attention += question_loops * per_loop_attention
