@@ -1,0 +1,13 @@
+#!/bin/bash
+# launchd entrypoint: read the environment ID and key from the Keychain and serve the queue.
+# caffeinate -i keeps the Mac from idle-sleeping while the worker runs (closing the lid still sleeps it).
+set -euo pipefail
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+ANTHROPIC_ENVIRONMENT_ID="$(security find-generic-password -s learner-pc-worker -a env-id -w)"
+ANTHROPIC_ENVIRONMENT_KEY="$(security find-generic-password -s learner-pc-worker -a env-key -w)"
+export ANTHROPIC_ENVIRONMENT_ID ANTHROPIC_ENVIRONMENT_KEY
+unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN
+WORK="$HOME/learner-ops/worker"
+mkdir -p "$WORK/status" "$WORK/log"
+cd "$WORK"
+exec caffeinate -i ant beta:worker poll --workdir "$WORK"
