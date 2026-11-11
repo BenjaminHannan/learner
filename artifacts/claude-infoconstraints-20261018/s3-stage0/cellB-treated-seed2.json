@@ -1,0 +1,130 @@
+{
+ "cell": "B",
+ "arm": "treated",
+ "seed": 2,
+ "threads": 1,
+ "pool": "facts",
+ "steps_run": 800,
+ "finite": true,
+ "seconds": 190.77026945300076,
+ "torch": "2.14.1+cpu",
+ "parameters": 80933,
+ "card_address": true,
+ "decoder_raw_cards": true,
+ "history": [
+  {
+   "step": 1,
+   "loss": 5.8501,
+   "seconds": 0.3
+  },
+  {
+   "step": 100,
+   "loss": 1.6338,
+   "seconds": 23.9
+  },
+  {
+   "step": 200,
+   "loss": 1.39,
+   "seconds": 47.9
+  },
+  {
+   "step": 300,
+   "loss": 1.3269,
+   "seconds": 71.6
+  },
+  {
+   "step": 400,
+   "loss": 1.3083,
+   "seconds": 95.5
+  },
+  {
+   "step": 500,
+   "loss": 1.2433,
+   "seconds": 119.8
+  },
+  {
+   "step": 600,
+   "loss": 1.2478,
+   "seconds": 143.0
+  },
+  {
+   "step": 700,
+   "loss": 1.1683,
+   "seconds": 166.8
+  },
+  {
+   "step": 800,
+   "loss": 1.0667,
+   "seconds": 190.8
+  }
+ ],
+ "gold": {
+  "correct": 332,
+  "n": 1024,
+  "acc": 0.32421875,
+  "wilson95": [
+   0.2963,
+   0.3535
+  ],
+  "distinct_256": 11,
+  "distinct_1024": 11,
+  "first_n": 256
+ },
+ "nocard": {
+  "correct": 61,
+  "n": 1024,
+  "acc": 0.0595703125,
+  "wilson95": [
+   0.0467,
+   0.0758
+  ],
+  "distinct_256": 1,
+  "distinct_1024": 1,
+  "first_n": 256
+ },
+ "d2": {
+  "n_distractors": 2,
+  "facts_only": true,
+  "correct": 202,
+  "n": 1024,
+  "acc": 0.197265625,
+  "wilson95": [
+   0.174,
+   0.2228
+  ],
+  "predicts_distractor_value": 360,
+  "distinct_256": 15,
+  "distinct_1024": 15,
+  "copy_a_random_card_rate": 0.3333333333333333
+ },
+ "d2_other_pool": {
+  "n_distractors": 2,
+  "facts_only": false,
+  "correct": 162,
+  "n": 1024,
+  "acc": 0.158203125,
+  "wilson95": [
+   0.1371,
+   0.1818
+  ],
+  "predicts_distractor_value": 130,
+  "distinct_256": 15,
+  "distinct_1024": 15,
+  "copy_a_random_card_rate": 0.3333333333333333
+ },
+ "pool_mass": {
+  "writer": {
+   "ENT": 0.0666136062706452,
+   "REL": 0.06730407770373859,
+   "VAL": 0.6733365688317766,
+   "other": 0.19274574724840932
+  },
+  "address": {
+   "ENT": 0.13903862423224686,
+   "REL": 0.14299989254989973,
+   "VAL": 0.3035469770741959,
+   "other": 0.41441450574590516
+  },
+  "fact_lines": 768
+ }
+}

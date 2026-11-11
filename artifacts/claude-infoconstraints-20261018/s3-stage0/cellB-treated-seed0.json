@@ -1,0 +1,130 @@
+{
+ "cell": "B",
+ "arm": "treated",
+ "seed": 0,
+ "threads": 1,
+ "pool": "facts",
+ "steps_run": 800,
+ "finite": true,
+ "seconds": 187.70512849499937,
+ "torch": "2.14.1+cpu",
+ "parameters": 80933,
+ "card_address": true,
+ "decoder_raw_cards": true,
+ "history": [
+  {
+   "step": 1,
+   "loss": 6.2091,
+   "seconds": 0.3
+  },
+  {
+   "step": 100,
+   "loss": 1.5942,
+   "seconds": 23.9
+  },
+  {
+   "step": 200,
+   "loss": 1.3679,
+   "seconds": 47.2
+  },
+  {
+   "step": 300,
+   "loss": 1.2927,
+   "seconds": 71.0
+  },
+  {
+   "step": 400,
+   "loss": 1.2638,
+   "seconds": 94.5
+  },
+  {
+   "step": 500,
+   "loss": 1.2125,
+   "seconds": 117.8
+  },
+  {
+   "step": 600,
+   "loss": 1.1918,
+   "seconds": 140.9
+  },
+  {
+   "step": 700,
+   "loss": 1.047,
+   "seconds": 164.4
+  },
+  {
+   "step": 800,
+   "loss": 0.9878,
+   "seconds": 187.7
+  }
+ ],
+ "gold": {
+  "correct": 628,
+  "n": 1024,
+  "acc": 0.61328125,
+  "wilson95": [
+   0.5831,
+   0.6426
+  ],
+  "distinct_256": 11,
+  "distinct_1024": 11,
+  "first_n": 256
+ },
+ "nocard": {
+  "correct": 63,
+  "n": 1024,
+  "acc": 0.0615234375,
+  "wilson95": [
+   0.0484,
+   0.0779
+  ],
+  "distinct_256": 2,
+  "distinct_1024": 2,
+  "first_n": 256
+ },
+ "d2": {
+  "n_distractors": 2,
+  "facts_only": true,
+  "correct": 242,
+  "n": 1024,
+  "acc": 0.236328125,
+  "wilson95": [
+   0.2113,
+   0.2633
+  ],
+  "predicts_distractor_value": 399,
+  "distinct_256": 15,
+  "distinct_1024": 15,
+  "copy_a_random_card_rate": 0.3333333333333333
+ },
+ "d2_other_pool": {
+  "n_distractors": 2,
+  "facts_only": false,
+  "correct": 183,
+  "n": 1024,
+  "acc": 0.1787109375,
+  "wilson95": [
+   0.1565,
+   0.2034
+  ],
+  "predicts_distractor_value": 146,
+  "distinct_256": 15,
+  "distinct_1024": 15,
+  "copy_a_random_card_rate": 0.3333333333333333
+ },
+ "pool_mass": {
+  "writer": {
+   "ENT": 0.055284139741464365,
+   "REL": 0.05449832408097185,
+   "VAL": 0.730574045330286,
+   "other": 0.15964348896523006
+  },
+  "address": {
+   "ENT": 0.11730321773211472,
+   "REL": 0.11333504018451397,
+   "VAL": 0.4268275712383911,
+   "other": 0.34253417221286026
+  },
+  "fact_lines": 768
+ }
+}

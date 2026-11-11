@@ -1,0 +1,284 @@
+{
+ "probe": "S1-P0",
+ "seed": 0,
+ "torch": "2.14.1+cpu",
+ "spec": {
+  "entities": 6,
+  "relations": 3,
+  "values": 16,
+  "fillers": 24,
+  "facts": 12,
+  "questions": 4,
+  "distractors": 4,
+  "gap": 128
+ },
+ "chance": 0.0625,
+ "train_seconds": 148.684281418,
+ "steps_run": 425,
+ "train_toy_validation": {
+  "accuracy": 0.07421875,
+  "accuracy_gold_cards": 0.07421875,
+  "gold_recall_at_4": 0.90234375,
+  "asked_rate": 1.0,
+  "loops_mean": 8.0,
+  "halt_rate": 0.0
+ },
+ "conditions": [
+  {
+   "condition": "own",
+   "questions": 256,
+   "accuracy": 0.07421875,
+   "loops_mean": 8.0,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 0.90234375,
+    "any_gold_fetched": 0.90234375,
+    "multi_gold_full_fetched": null,
+    "questions_multi_gold": 0,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 0,
+    "fifo_gold_evicted_questions": 0,
+    "ans_early_weight_share": 0.21044921875,
+    "ans_never_full_weight": 0.09765625
+   },
+   "raw": {
+    "questions": 256,
+    "told": 256,
+    "multi_gold": 0,
+    "big_gold": 0,
+    "any_gold": 231,
+    "full_gold": 231,
+    "multi_full": 0,
+    "overflow": 0,
+    "gold_evicted": 0,
+    "early_terms": 431,
+    "answer_terms": 2048,
+    "never_full": 25
+   }
+  },
+  {
+   "condition": "own_L4",
+   "questions": 256,
+   "accuracy": 0.07421875,
+   "loops_mean": 4.0,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 0.90234375,
+    "any_gold_fetched": 0.90234375,
+    "multi_gold_full_fetched": null,
+    "questions_multi_gold": 0,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 0,
+    "fifo_gold_evicted_questions": 0,
+    "ans_early_weight_share": 0.3232421875,
+    "ans_never_full_weight": 0.09765625
+   },
+   "raw": {
+    "questions": 256,
+    "told": 256,
+    "multi_gold": 0,
+    "big_gold": 0,
+    "any_gold": 231,
+    "full_gold": 231,
+    "multi_full": 0,
+    "overflow": 0,
+    "gold_evicted": 0,
+    "early_terms": 331,
+    "answer_terms": 1024,
+    "never_full": 25
+   }
+  },
+  {
+   "condition": "gold",
+   "questions": 256,
+   "accuracy": 0.07421875,
+   "loops_mean": 8.0,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 1.0,
+    "any_gold_fetched": 1.0,
+    "multi_gold_full_fetched": null,
+    "questions_multi_gold": 0,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 0,
+    "fifo_gold_evicted_questions": 0,
+    "ans_early_weight_share": 0.0,
+    "ans_never_full_weight": 0.0
+   },
+   "raw": {
+    "questions": 256,
+    "told": 256,
+    "multi_gold": 0,
+    "big_gold": 0,
+    "any_gold": 256,
+    "full_gold": 256,
+    "multi_full": 0,
+    "overflow": 0,
+    "gold_evicted": 0,
+    "early_terms": 0,
+    "answer_terms": 2048,
+    "never_full": 0
+   }
+  },
+  {
+   "condition": "gold_L4",
+   "questions": 256,
+   "accuracy": 0.07421875,
+   "loops_mean": 4.0,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 1.0,
+    "any_gold_fetched": 1.0,
+    "multi_gold_full_fetched": null,
+    "questions_multi_gold": 0,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 0,
+    "fifo_gold_evicted_questions": 0,
+    "ans_early_weight_share": 0.0,
+    "ans_never_full_weight": 0.0
+   },
+   "raw": {
+    "questions": 256,
+    "told": 256,
+    "multi_gold": 0,
+    "big_gold": 0,
+    "any_gold": 256,
+    "full_gold": 256,
+    "multi_full": 0,
+    "overflow": 0,
+    "gold_evicted": 0,
+    "early_terms": 0,
+    "answer_terms": 1024,
+    "never_full": 0
+   }
+  },
+  {
+   "condition": "gold_noask_L1",
+   "questions": 256,
+   "accuracy": 0.07421875,
+   "loops_mean": 1.0,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 1.0,
+    "any_gold_fetched": 1.0,
+    "multi_gold_full_fetched": null,
+    "questions_multi_gold": 0,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 0,
+    "fifo_gold_evicted_questions": 0,
+    "ans_early_weight_share": 0.0,
+    "ans_never_full_weight": 0.0
+   },
+   "raw": {
+    "questions": 256,
+    "told": 256,
+    "multi_gold": 0,
+    "big_gold": 0,
+    "any_gold": 256,
+    "full_gold": 256,
+    "multi_full": 0,
+    "overflow": 0,
+    "gold_evicted": 0,
+    "early_terms": 0,
+    "answer_terms": 256,
+    "never_full": 0
+   }
+  },
+  {
+   "condition": "gold_noask_L2",
+   "questions": 256,
+   "accuracy": 0.07421875,
+   "loops_mean": 2.0,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 1.0,
+    "any_gold_fetched": 1.0,
+    "multi_gold_full_fetched": null,
+    "questions_multi_gold": 0,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 0,
+    "fifo_gold_evicted_questions": 0,
+    "ans_early_weight_share": 0.0,
+    "ans_never_full_weight": 0.0
+   },
+   "raw": {
+    "questions": 256,
+    "told": 256,
+    "multi_gold": 0,
+    "big_gold": 0,
+    "any_gold": 256,
+    "full_gold": 256,
+    "multi_full": 0,
+    "overflow": 0,
+    "gold_evicted": 0,
+    "early_terms": 0,
+    "answer_terms": 512,
+    "never_full": 0
+   }
+  },
+  {
+   "condition": "gold_noask_L4",
+   "questions": 256,
+   "accuracy": 0.07421875,
+   "loops_mean": 4.0,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 1.0,
+    "any_gold_fetched": 1.0,
+    "multi_gold_full_fetched": null,
+    "questions_multi_gold": 0,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 0,
+    "fifo_gold_evicted_questions": 0,
+    "ans_early_weight_share": 0.0,
+    "ans_never_full_weight": 0.0
+   },
+   "raw": {
+    "questions": 256,
+    "told": 256,
+    "multi_gold": 0,
+    "big_gold": 0,
+    "any_gold": 256,
+    "full_gold": 256,
+    "multi_full": 0,
+    "overflow": 0,
+    "gold_evicted": 0,
+    "early_terms": 0,
+    "answer_terms": 1024,
+    "never_full": 0
+   }
+  },
+  {
+   "condition": "gold_noask_L8",
+   "questions": 256,
+   "accuracy": 0.07421875,
+   "loops_mean": 8.0,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 1.0,
+    "any_gold_fetched": 1.0,
+    "multi_gold_full_fetched": null,
+    "questions_multi_gold": 0,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 0,
+    "fifo_gold_evicted_questions": 0,
+    "ans_early_weight_share": 0.0,
+    "ans_never_full_weight": 0.0
+   },
+   "raw": {
+    "questions": 256,
+    "told": 256,
+    "multi_gold": 0,
+    "big_gold": 0,
+    "any_gold": 256,
+    "full_gold": 256,
+    "multi_full": 0,
+    "overflow": 0,
+    "gold_evicted": 0,
+    "early_terms": 0,
+    "answer_terms": 2048,
+    "never_full": 0
+   }
+  }
+ ]
+}

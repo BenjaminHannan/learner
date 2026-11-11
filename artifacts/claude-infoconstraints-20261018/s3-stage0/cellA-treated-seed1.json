@@ -1,0 +1,130 @@
+{
+ "cell": "A",
+ "arm": "treated",
+ "seed": 1,
+ "threads": 1,
+ "pool": "facts",
+ "steps_run": 800,
+ "finite": true,
+ "seconds": 188.77149744300004,
+ "torch": "2.14.1+cpu",
+ "parameters": 80933,
+ "card_address": true,
+ "decoder_raw_cards": true,
+ "history": [
+  {
+   "step": 1,
+   "loss": 5.7516,
+   "seconds": 0.3
+  },
+  {
+   "step": 100,
+   "loss": 1.5492,
+   "seconds": 24.3
+  },
+  {
+   "step": 200,
+   "loss": 0.9532,
+   "seconds": 48.7
+  },
+  {
+   "step": 300,
+   "loss": 0.6572,
+   "seconds": 72.0
+  },
+  {
+   "step": 400,
+   "loss": 0.4582,
+   "seconds": 94.9
+  },
+  {
+   "step": 500,
+   "loss": 0.2279,
+   "seconds": 118.3
+  },
+  {
+   "step": 600,
+   "loss": 0.0575,
+   "seconds": 141.4
+  },
+  {
+   "step": 700,
+   "loss": 0.0066,
+   "seconds": 165.4
+  },
+  {
+   "step": 800,
+   "loss": 0.0025,
+   "seconds": 188.8
+  }
+ ],
+ "gold": {
+  "correct": 1024,
+  "n": 1024,
+  "acc": 1.0,
+  "wilson95": [
+   0.9963,
+   1.0
+  ],
+  "distinct_256": 16,
+  "distinct_1024": 16,
+  "first_n": 256
+ },
+ "nocard": {
+  "correct": 68,
+  "n": 1024,
+  "acc": 0.06640625,
+  "wilson95": [
+   0.0527,
+   0.0833
+  ],
+  "distinct_256": 1,
+  "distinct_1024": 1,
+  "first_n": 256
+ },
+ "d2": {
+  "n_distractors": 2,
+  "facts_only": true,
+  "correct": 332,
+  "n": 1024,
+  "acc": 0.32421875,
+  "wilson95": [
+   0.2963,
+   0.3535
+  ],
+  "predicts_distractor_value": 534,
+  "distinct_256": 14,
+  "distinct_1024": 15,
+  "copy_a_random_card_rate": 0.3333333333333333
+ },
+ "d2_other_pool": {
+  "n_distractors": 2,
+  "facts_only": false,
+  "correct": 267,
+  "n": 1024,
+  "acc": 0.2607421875,
+  "wilson95": [
+   0.2348,
+   0.2885
+  ],
+  "predicts_distractor_value": 198,
+  "distinct_256": 12,
+  "distinct_1024": 14,
+  "copy_a_random_card_rate": 0.3333333333333333
+ },
+ "pool_mass": {
+  "writer": {
+   "ENT": 0.08904543602936126,
+   "REL": 0.09001715680642519,
+   "VAL": 0.5602293572737835,
+   "other": 0.2607080479695772
+  },
+  "address": {
+   "ENT": 0.05129391035006847,
+   "REL": 0.05237796645330187,
+   "VAL": 0.7473412212954523,
+   "other": 0.14898690181144048
+  },
+  "fact_lines": 768
+ }
+}

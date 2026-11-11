@@ -1,0 +1,130 @@
+{
+ "cell": "A",
+ "arm": "treated",
+ "seed": 2,
+ "threads": 1,
+ "pool": "facts",
+ "steps_run": 800,
+ "finite": true,
+ "seconds": 196.04763343100058,
+ "torch": "2.14.1+cpu",
+ "parameters": 80933,
+ "card_address": true,
+ "decoder_raw_cards": true,
+ "history": [
+  {
+   "step": 1,
+   "loss": 5.8496,
+   "seconds": 0.3
+  },
+  {
+   "step": 100,
+   "loss": 1.6314,
+   "seconds": 24.5
+  },
+  {
+   "step": 200,
+   "loss": 1.0927,
+   "seconds": 49.0
+  },
+  {
+   "step": 300,
+   "loss": 0.5364,
+   "seconds": 73.9
+  },
+  {
+   "step": 400,
+   "loss": 0.1175,
+   "seconds": 98.5
+  },
+  {
+   "step": 500,
+   "loss": 0.0129,
+   "seconds": 122.5
+  },
+  {
+   "step": 600,
+   "loss": 0.0056,
+   "seconds": 147.3
+  },
+  {
+   "step": 700,
+   "loss": 0.003,
+   "seconds": 171.6
+  },
+  {
+   "step": 800,
+   "loss": 0.0017,
+   "seconds": 196.0
+  }
+ ],
+ "gold": {
+  "correct": 1024,
+  "n": 1024,
+  "acc": 1.0,
+  "wilson95": [
+   0.9963,
+   1.0
+  ],
+  "distinct_256": 16,
+  "distinct_1024": 16,
+  "first_n": 256
+ },
+ "nocard": {
+  "correct": 0,
+  "n": 1024,
+  "acc": 0.0,
+  "wilson95": [
+   0.0,
+   0.0037
+  ],
+  "distinct_256": 1,
+  "distinct_1024": 1,
+  "first_n": 256
+ },
+ "d2": {
+  "n_distractors": 2,
+  "facts_only": true,
+  "correct": 288,
+  "n": 1024,
+  "acc": 0.28125,
+  "wilson95": [
+   0.2546,
+   0.3096
+  ],
+  "predicts_distractor_value": 422,
+  "distinct_256": 15,
+  "distinct_1024": 15,
+  "copy_a_random_card_rate": 0.3333333333333333
+ },
+ "d2_other_pool": {
+  "n_distractors": 2,
+  "facts_only": false,
+  "correct": 672,
+  "n": 1024,
+  "acc": 0.65625,
+  "wilson95": [
+   0.6266,
+   0.6847
+  ],
+  "predicts_distractor_value": 238,
+  "distinct_256": 16,
+  "distinct_1024": 16,
+  "copy_a_random_card_rate": 0.3333333333333333
+ },
+ "pool_mass": {
+  "writer": {
+   "ENT": 0.04540654281784858,
+   "REL": 0.04536582782263091,
+   "VAL": 0.7794937357539311,
+   "other": 0.12973389151738957
+  },
+  "address": {
+   "ENT": 0.06834105478386239,
+   "REL": 0.06806791888569326,
+   "VAL": 0.6728762969529877,
+   "other": 0.19071473221022947
+  },
+  "fact_lines": 768
+ }
+}

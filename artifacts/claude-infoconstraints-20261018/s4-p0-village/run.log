@@ -1,0 +1,10 @@
+command: python3 -B scripts/info_s4_p0_village.py --work /tmp/claude-0/-home-user-learner/c8cd5c78-a7b9-5d8c-b820-42c80e8edf61/scratchpad/village-build --out artifacts/claude-infoconstraints-20261018/s4-p0-village --train-visits 512 --valid-visits 1024 --visits-per-shard 256 --workers 4
+toy: questions 1024, mean 2.2920 (expect 2.29), ceiling 0.4852 (expect 0.485), matches True
+shards: train 512, validation 1024 visits under /tmp/claude-0/-home-user-learner/c8cd5c78-a7b9-5d8c-b820-42c80e8edf61/scratchpad/village-build (23.7s)
+detector 2a5f0ac49f28: pool names it misses 0 of 4614
+cache validation [label-free]: 1024 visits, 8882 questions, 1192084 tokens; stats {"answer_max": 30, "answers_over_max": 0, "gold_max": 15, "gold_over_max": 0, "knowable_without_gold": 0, "label_only_names": 0, "line_ents_over_max": 0, "names_max": 12, "question_max": 27, "target_names_unbound": 0, "visit_tokens_max": 1823, "visits_with_label_only_names": 0}
+village: questions 8882 (told 8333), mean n 1.781, median 0.0, p90 6.0, max 41, share >=8 0.0812
+village ceilings (told): {"baseline_uniform_over_all_eligible_cards": 0.03195589761024957, "ceiling_E_1_over_n_single_gold_given_matched": 0.2570768758763542, "ceiling_E_h_over_n_all_told_zero_when_no_match": 0.03224397228606119, "ceiling_E_h_over_n_given_gold_matched": 0.26708650204746315, "ceiling_fallback_to_all_eligible_when_no_match": 0.056144706281396305, "gold_matched_questions": 1006, "single_gold_matched_questions": 569}
+village not told: {"histogram": {"0": 415, "1": 20, "17+": 4, "2": 24, "3": 25, "4": 12, "5": 11, "6": 7, "7": 8, "8": 6, "9-16": 17}, "max": 25, "mean": 1.1785063752276868, "median": 0.0, "min": 0, "n": 549, "p90": 4.0, "share_ge_8": 0.04918032786885246, "zeros": 415}
+checks: spelled pool names in spans 0; label_free rule leaves counts unchanged True; gold missing from store 0; b equals a True
+wrote artifacts/claude-infoconstraints-20261018/s4-p0-village/summary.json and artifacts/claude-infoconstraints-20261018/s4-p0-village/village_per_question.json (29.1s)
