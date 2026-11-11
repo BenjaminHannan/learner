@@ -1,0 +1,124 @@
+{
+  "attempt1_reported_updates": 3170,
+  "attempt2_final_inflight_update_unknown": true,
+  "attempts": [
+    {
+      "attempt": "original",
+      "batchdir_created_utc": "2026-10-01T05:18:58.592858+00:00",
+      "batchdir_creation_to_driver_end_seconds": "670.450907",
+      "batchdir_creation_to_runner_seconds": "0.631668",
+      "driver_ended_utc": "2026-10-01T05:30:09.043765+00:00",
+      "queue_to_driver_end_charged_seconds": "768.784591",
+      "queue_to_runner_seconds": "98.965352",
+      "queued_utc": "2026-10-01T05:17:20.259174+00:00",
+      "runner_started_utc": "2026-10-01T05:18:59.224526+00:00",
+      "runner_wall_seconds": "669.810695",
+      "saved_optimizer_records": 3169
+    },
+    {
+      "attempt": "retry-v5",
+      "batchdir_created_utc": "2026-10-01T05:47:34.769746+00:00",
+      "batchdir_creation_to_driver_end_seconds": "701.000652",
+      "batchdir_creation_to_runner_seconds": "0.662683",
+      "driver_ended_utc": "2026-10-01T05:59:15.770398+00:00",
+      "queue_to_driver_end_charged_seconds": "763.986294",
+      "queue_to_runner_seconds": "63.648325",
+      "queued_utc": "2026-10-01T05:46:31.784104+00:00",
+      "runner_started_utc": "2026-10-01T05:47:35.432429+00:00",
+      "runner_wall_seconds": "700.337969",
+      "saved_optimizer_records": 3613
+    }
+  ],
+  "charging_convention": "Charge each saved queued_utc through terminal driver_ended_utc, including staging/delivery/idle; this safely exceeds execute-entry wall and includes startup/guard. The exact execute-entry cumulative wall cannot be recovered from saved receipts. Do not label queued delay as optimizer time.",
+  "conservative_charged_seconds": "1532.770885",
+  "conservative_remaining_seconds": "8067.229115",
+  "dev_unconsumed": true,
+  "dispatch_allowed": false,
+  "exact_execute_entry_monotonic_timestamps_persisted": false,
+  "exact_failed_optimizer_runtime_saved": false,
+  "forecast": [
+    {
+      "diverse512_runtime_not_observed": true,
+      "excludes_future_endpoint_CE_save_reload_and_guard_cost": true,
+      "projected_four_arm_wall_seconds": 8657.445903187125,
+      "projected_one_arm_wall_seconds": 2164.361475796781,
+      "rate_source": "original",
+      "remaining_after_fit_projection_seconds": -590.2167881871253,
+      "updates_per_runner_wall_second": 4.731187518586875
+    },
+    {
+      "diverse512_runtime_not_observed": true,
+      "excludes_future_endpoint_CE_save_reload_and_guard_cost": true,
+      "projected_four_arm_wall_seconds": 7939.61893446997,
+      "projected_one_arm_wall_seconds": 1984.9047336174924,
+      "rate_source": "retry-v5",
+      "remaining_after_fit_projection_seconds": 127.61018053003045,
+      "updates_per_runner_wall_second": 5.158937769944043
+    }
+  ],
+  "future_launcher_required_pin": "receipt_io.py in launcher_sha256",
+  "future_runner_required_pin": "train_mixture_receipt_repair.py and updated storage_snapshot.py",
+  "future_status_reader": "receipt_io.read_json on Windows uses FILE_SHARE_DELETE",
+  "known_runner_wall_sum_seconds": "1370.148664",
+  "model_calls": 0,
+  "original_WinError5_holder_known": false,
+  "original_total_fit_cap_seconds": "9600",
+  "parents_unchanged_verified": [
+    {
+      "allocated_bytes": 109584384,
+      "bytes": 109582647,
+      "seed": 0,
+      "sha256": "2a9e06a1af2b63855d65401a4e08ce839398749c03ab0ffe675658bc1bfb7b4a"
+    },
+    {
+      "allocated_bytes": 109584384,
+      "bytes": 109582711,
+      "seed": 1,
+      "sha256": "2f3a2e0828f6040d4d75bdc4c8456ebd9e1db57b69c0f6217295515a9bd9fd11"
+    }
+  ],
+  "prospective_driver_not_deployed_or_executed": true,
+  "release_blockers": [
+    "Aggregate fit timing not certified from observed rates plus endpoint overhead.",
+    "Midpoint maximum reservations exceed matrix cap; do not add until reconciled.",
+    "No new dispatch authorized in this operational repair task."
+  ],
+  "repair_source_sha256": {
+    "mixture_receipt_pc_driver.py": "c4a8ad102f9e1c0d4a2c01b15e20926a1bcfa06796682fec63284cc567da356f",
+    "receipt_io.py": "df74e760afa6068ce3c5a1455ec1659fdb66b91c3593adcdd0ca79b9c67723ae",
+    "storage_snapshot.py": "8029e778b279005e07e30c2bab436fa75dbf793862916e4a0f65e9f0f32900b4",
+    "train_mixture_receipt_repair.py": "6561f3de2d123c06a1b04c00a285c826f47c5f9f2f26ced6d862615733d46de6"
+  },
+  "schema": "cap256.receipt-repair.resource-plan.v6",
+  "scientific_protocol_unchanged": true,
+  "storage": {
+    "actual_free_bytes": 14769577984,
+    "actual_project_allocated_bytes": 4168511488,
+    "cap_bytes": 1140850688,
+    "eight_checkpoint_plus_raw_global_failed_reservation_bytes": 1231540224,
+    "eight_source_size_estimate_plus_raw_global_failed_bytes": 1034473472,
+    "excess_over_cap_bytes": 90689536,
+    "extra_one_full_atomic_reservation_if_required_bytes": 1365757952,
+    "free_reserve_bytes": 1073741824,
+    "max_checkpoint_bytes_each": 134217728,
+    "midpoint_model": "One additional durable fullstate per arm, four midpoint plus four final. No overwrite. During final save, final-resume.pt.tmp occupies the eighth checkpoint slot; it is not an additional ninth simultaneous file. Existing midpoints remain. Conservative traversal may additionally reserve a vanished tempfile.",
+    "midpoints_added": false,
+    "probe_bytes_in_project_global_allowance": 69632,
+    "project_cap_bytes": 107374182400,
+    "required_before_midpoint_addition": "Verify a tighter per-checkpoint serialization bound and explicit atomic/reservation accounting within unchanged outputcap; current maxima do not fit. No midpoint implemented.",
+    "retained_failed_outputs_and_receipts_bytes": 6803456,
+    "source_size_estimate_is_not_certified_new_checkpoint_bound": true
+  },
+  "tests": {
+    "command": "python3 -m unittest tests.test_receipt_io tests.test_storage_snapshot tests.test_train_mixture tests.test_cap256_launch",
+    "focused_pass_count": 33,
+    "syntax_checked": [
+      "receipt_io.py",
+      "storage_snapshot.py",
+      "train_mixture_receipt_repair.py",
+      "mixture_receipt_pc_driver.py"
+    ]
+  },
+  "time_readiness": "Not certified: latest projection leaves about128seconds for unmeasured2048endpointCEcalls/saves/reloads/guards, and slower observed attempt projection exceeds remaining. No borrowing final-evaluation1200second allowance.",
+  "windows_probe_pass": true
+}

@@ -1,0 +1,78 @@
+{
+  "CLAIM.json": {
+    "calls_expected": 48,
+    "job": "cap256-notebook48-20261001T022240Z",
+    "learned_writer_claim": false,
+    "no_retries": true,
+    "optimizer_updates": 0,
+    "plan_sha256": "70be90d2d94f5f8627fd9d7f6ba28b68230e101075d6a721e5c5cfd3c3501b83",
+    "schema": "cap256.notebook48.identity.v1",
+    "training_eligible": false,
+    "utc": "2026-10-01T02:22:49.011726+00:00"
+  },
+  "EXIT.json": {
+    "CLOSED": null,
+    "commit": "f0b9ea9a9a20e08a2c504c43abe0a8f71471a85f",
+    "driver_pid": 17336,
+    "driver_started_utc": "2026-10-01T02:22:48.273611+00:00",
+    "job_id": "cap256-notebook48-20261001T022240Z",
+    "optimizer_updates": 0,
+    "returncode": 1,
+    "runner_ended_utc": "2026-10-01T02:22:53.683610+00:00",
+    "runner_pid": 24844,
+    "runner_started_utc": "2026-10-01T02:22:48.678831+00:00",
+    "runner_wall_seconds": 5.004779,
+    "status": "failed",
+    "stderr_sha256": "ae8ec1ec6f0184ff8d1099f0dd832e3898e6bcb6c16d51d9e63e477df6b92bc2",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "FAILURE.json": {
+    "error": "No module named 'sol_cloud_chat_nosleep_v1'",
+    "error_type": "ModuleNotFoundError",
+    "job": "cap256-notebook48-20261001T022240Z",
+    "learned_writer_claim": false,
+    "native_calls": 0,
+    "optimizer_updates": 0,
+    "plan_sha256": "70be90d2d94f5f8627fd9d7f6ba28b68230e101075d6a721e5c5cfd3c3501b83",
+    "schema": "cap256.notebook48.identity.v1",
+    "training_eligible": false,
+    "utc": "2026-10-01T02:22:50.412705+00:00",
+    "wall_seconds": 1.3910000000032596
+  },
+  "PROGRESS.json": {
+    "elapsed_seconds": 0.001999,
+    "expected": 48,
+    "optimizer_updates": 0,
+    "saved_native_calls": 0,
+    "utc": "2026-10-01T02:22:48.680830+00:00"
+  },
+  "RUNNER-ARGV.json": {
+    "argv": [
+      "C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe",
+      "-X",
+      "utf8",
+      "-B",
+      "C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\scripts\\cap256_launch\\notebook_poc.py",
+      "--root",
+      "C:\\Users\\benja\\sol-cloud-numeric-capability-v1",
+      "--plan",
+      "C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\artifacts\\cap256-launch\\notebook48-v1\\PLAN.json",
+      "--plan-sha256",
+      "70be90d2d94f5f8627fd9d7f6ba28b68230e101075d6a721e5c5cfd3c3501b83"
+    ]
+  },
+  "STATE.json": {
+    "commit": "f0b9ea9a9a20e08a2c504c43abe0a8f71471a85f",
+    "driver_pid": 17336,
+    "driver_started_utc": "2026-10-01T02:22:48.273611+00:00",
+    "job_id": "cap256-notebook48-20261001T022240Z",
+    "optimizer_updates": 0,
+    "returncode": 1,
+    "runner_ended_utc": "2026-10-01T02:22:53.683610+00:00",
+    "runner_pid": 24844,
+    "runner_started_utc": "2026-10-01T02:22:48.678831+00:00",
+    "runner_wall_seconds": 5.004779,
+    "status": "failed"
+  },
+  "stderr_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\scripts\\cap256_launch\\notebook_poc.py\", line 90, in <module>\n    p=argparse.ArgumentParser();p.add_argument('--root',required=True);p.add_argument('--plan',required=True);p.add_argument('--plan-sha256',required=True);run(p.parse_args())\n  File \"C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\scripts\\cap256_launch\\notebook_poc.py\", line 77, in run\n    sys.argv=argv;dev.main();assert calls-before==24\n  File \"C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\scripts\\sol_nextdemo_dev_v1.py\", line 257, in main\n    runtime = Runtime(args.manifest, args.manifest_sha256)\n  File \"C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\scripts\\cap256_launch\\notebook_poc.py\", line 56, in tracked_init\n    initial_init(self,*args,**kwargs);m=self.manifest;cl=read(m['continuation']['closed']['path'])\n  File \"C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\scripts\\sol_nextdemo_runtime_v1.py\", line 165, in __init__\n    from sol_cloud_chat_nosleep_v1 import load_joined\nModuleNotFoundError: No module named 'sol_cloud_chat_nosleep_v1'\n"
+}
