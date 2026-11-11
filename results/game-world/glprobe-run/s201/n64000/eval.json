@@ -1,0 +1,129 @@
+{
+ "heldout": 2000,
+ "subset": 1491,
+ "train_n": 64000,
+ "checkpoints": {
+  "student": {
+   "ckpt": "/tmp/claude-0/-home-user-learner/a35c4c05-cfae-5dd3-a5ce-480213b76700/scratchpad/glprobe/run/s201/n64000/checkpoint.pt",
+   "accuracy_all": 0.6935,
+   "accuracy_subset": 0.6479,
+   "per_word_subset": {
+    "left": {
+     "count": 255,
+     "accuracy": 0.6
+    },
+    "right": {
+     "count": 270,
+     "accuracy": 0.6111
+    },
+    "up": {
+     "count": 292,
+     "accuracy": 0.5171
+    },
+    "down": {
+     "count": 264,
+     "accuracy": 0.6439
+    },
+    "do": {
+     "count": 405,
+     "accuracy": 0.7951
+    },
+    "plant": {
+     "count": 5,
+     "accuracy": 1.0
+    }
+   },
+   "top_confusions_subset": [
+    {
+     "label": "up",
+     "predicted": "down",
+     "count": 46
+    },
+    {
+     "label": "right",
+     "predicted": "down",
+     "count": 42
+    },
+    {
+     "label": "left",
+     "predicted": "down",
+     "count": 39
+    },
+    {
+     "label": "up",
+     "predicted": "right",
+     "count": 36
+    },
+    {
+     "label": "do",
+     "predicted": "left",
+     "count": 35
+    }
+   ]
+  },
+  "parent": {
+   "ckpt": "/tmp/claude-0/-home-user-learner/a35c4c05-cfae-5dd3-a5ce-480213b76700/scratchpad/glprobe/run/parents/s201.pt",
+   "accuracy_all": 0.202,
+   "accuracy_subset": 0.2703,
+   "per_word_subset": {
+    "left": {
+     "count": 255,
+     "accuracy": 0.0
+    },
+    "right": {
+     "count": 270,
+     "accuracy": 0.0
+    },
+    "up": {
+     "count": 292,
+     "accuracy": 0.0034
+    },
+    "down": {
+     "count": 264,
+     "accuracy": 0.0
+    },
+    "do": {
+     "count": 405,
+     "accuracy": 0.9926
+    },
+    "plant": {
+     "count": 5,
+     "accuracy": 0.0
+    }
+   },
+   "top_confusions_subset": [
+    {
+     "label": "up",
+     "predicted": "do",
+     "count": 291
+    },
+    {
+     "label": "right",
+     "predicted": "do",
+     "count": 269
+    },
+    {
+     "label": "down",
+     "predicted": "do",
+     "count": 261
+    },
+    {
+     "label": "left",
+     "predicted": "do",
+     "count": 253
+    },
+    {
+     "label": "plant",
+     "predicted": "do",
+     "count": 4
+    }
+   ]
+  }
+ },
+ "baseline": {
+  "word_subset": "do",
+  "accuracy_subset": 0.2716,
+  "word_all": "do",
+  "accuracy_all": 0.2025
+ }
+}

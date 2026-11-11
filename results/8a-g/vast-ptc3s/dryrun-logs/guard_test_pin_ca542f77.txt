@@ -1,0 +1,19 @@
+case fast (0.45 s/update, 0.38 USD/h, cap 4, MAXH 6): expect rc 0
+GUARD step=1000 sec_per_update=0.450 train_total_h=3.00 up_h=0.50 projected_total_h=3.88 dph=0.380 projected_usd=1.47 cap_usd=4.00
+fast rc=0
+case slow (4 s/update): expect rc 3 over the dollar cap
+GUARD step=1000 sec_per_update=4.000 train_total_h=26.67 up_h=0.50 projected_total_h=26.56 dph=0.380 projected_usd=10.09 cap_usd=4.00
+GUARD STOP projected 10.09 USD > cap 4.00 USD
+slow rc=3
+case mid (2 s/update, 0.10 USD/h): cheap but 13.5 h > MAXH 6: expect rc 3
+GUARD step=1000 sec_per_update=2.000 train_total_h=13.33 up_h=0.50 projected_total_h=13.78 dph=0.100 projected_usd=1.38 cap_usd=4.00
+GUARD STOP projected 13.78 h > MAXH 6.00 h
+mid rc=3
+case mid with MAXH 0 (off): expect rc 0
+GUARD step=1000 sec_per_update=2.000 train_total_h=13.33 up_h=0.50 projected_total_h=13.78 dph=0.100 projected_usd=1.38 cap_usd=4.00
+mid-nomaxh rc=0
+case early (no update 1000 yet): expect rc 4
+early rc=4
+case missing log: expect rc 4
+missing rc=4
+guard output identical to the one of the previous pin

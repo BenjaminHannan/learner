@@ -1,0 +1,16 @@
+[    8.4s] world: arm B3G2 model b3g2 (4,023,302 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3g2.json device cuda eg real
+[    8.4s] === section breakdown
+[    9.0s] breakdown: 5 warmup + 30 timed updates (variant baseline, accum 32, hooks top)
+[   59.7s]   breakdown update 1/30: wall 7778 ms  fetch 4 h2d 0 fwd 4324 bwd 3393 opt 1
+[   96.5s]   breakdown update 6/30: wall 7399 ms  fetch 4 h2d 0 fwd 4167 bwd 3166 opt 1
+[  142.4s]   breakdown update 12/30: wall 8313 ms  fetch 3 h2d 0 fwd 4543 bwd 3701 opt 1
+[  191.1s]   breakdown update 18/30: wall 6874 ms  fetch 4 h2d 0 fwd 4014 bwd 2799 opt 1
+[  235.6s]   breakdown update 24/30: wall 6315 ms  fetch 4 h2d 1 fwd 3620 bwd 2637 opt 1
+[  279.9s]   breakdown update 30/30: wall 6975 ms  fetch 3 h2d 0 fwd 3909 bwd 3001 opt 1
+[  280.3s] === section throughput
+[  545.4s] throughput: 7.5913 s/update (0.13 updates/s), accum 32, variant baseline
+[  545.8s] === section padding
+[  547.3s] === section syncs
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:1270: UserWarning: Synchronization debug mode is a prototype feature and does not yet detect all synchronizing operations (Triggered internally at /pytorch/torch/csrc/cuda/Module.cpp:1003.)
+  torch._C._cuda_set_sync_debug_mode(debug_mode)
+[  604.0s] done /job/profraw/b3g2_profile.json /job/profraw/b3g2_profile.md

@@ -1,0 +1,40 @@
+job: g2c3s (group 2's plain control at 3M with worked steps on every row: arm PTS at caps_b3s.json on the B3 pool p10-rung30-s400-a64-L, the partner of B3 group 2 at 3M; seed 400)
+queue: 8aG2C3S
+next_queue: 8aG2C3Sb
+owner: Whole-model roadmap thread for the big-run thread (gate G2, big-run PLAN.md sec. 5 and its 10-10 addenda; spec design/8a-g-gemma-growth-2026-10-08.md addendum R)
+gpu: yes
+started: @STARTED@
+log: C:\Users\benja\custom-io\work\q8aG2C3S.log
+stall_minutes: 600
+paths: SRC = C:\Users\benja\custom-io\src-b3g2 (custom_io of claude/learner-new-g2 at 1acfde9a73, same as 9dbcbb579c; never edit it)   WORK = C:\Users\benja\custom-io\work   Q = <queue> above
+starts_when: started by the post-G1 chain waiter (C:\Users\benja\custom-io\q8aPost3_wait.ps1, log WORK\q8aPost-waiter.log),
+  after B3 group 1 3M seed 400 and its readout (big-run PLAN.md addendum 10-10 8:55 AM ET, option A).
+  Accum PTS=16 (cautious: long rows pad micro-batches to up to 2,000 letters).
+launch: for a manual relaunch only: as fc100.md's launch steps 1-4 (SRC src-b3g2 and its caps.py hash, step 6 below), with 8aG2C3S in place
+  of 8aFC and g2c3s.md in place of fc100.md.
+stall_check: Windows does not refresh LastWriteTime of a file that is still open, so never use it. The live log is the
+  running job's PTS\stdout.txt under WORK\results\Q-pc\ (before it exists the job is building the pool: look for a
+  python process with custom_io.g8a.job in its command line). Stalled = its last "step" is the same as in the
+  previous status while a custom_io.train process runs -> report only.
+alive: a python process whose command line contains Q-pc.txt (the queue runner)
+done_when: the log prints "queue Q-pc done"; then WORK\results\Q-pc\8aG2C3S-3M-s400\RESULT.json says "status": "ok" (else report)
+on_spill: a custom_io.train process with shared GPU memory over 1024 MiB, or "CUDA out of memory" in PTS\stdout.txt:
+  0. Guard: if SRC\custom_io\queue_local\<next_queue>-pc.txt (or a later letter) exists, someone already relaunched: report only.
+  1. New-Item WORK\STOP (the runner then starts nothing new).
+  2. Stop by exact PID, after checking each command line: the custom_io.train process, its custom_io.g8a.job
+     parent, and the custom_io.local_runner process whose command line has Q-pc.txt.
+  3. Edit C:\Users\benja\GPU-BUSY.txt: remove only the lines that contain " Q-pc/".
+  4. A leftover WORK\g8a\pools\*.lock: rename it to <name>.stale-<yyyyMMdd-HHmm>.
+  5. Write SRC\custom_io\queue_local\<next_queue>-pc.txt: Q-pc.txt with Q-... renamed to <next_queue>-... and --accum PTS
+     doubled (16->32->64). Already 64: stop, NEEDS ATTENTION.
+  6. Get-FileHash SRC\custom_io\g8a\caps.py must be 32862AE2D4E6E401FCAD5BB6C5E54B0B8845019202DEA73E2CB4C7EFE5EEA03E. Else stop.
+  7. Move-Item WORK\STOP to WORK\STOP.used-<yyyyMMdd-HHmm>.
+  8. Launch <next_queue> as in fc100.md's launch steps 2-3 (q<next_queue>_run.cmd, log WORK\q<next_queue>.log).
+  9. Save a copy of this card as g2c3sb.md (queue <next_queue>, next_queue 8aG2C3Sc, log WORK\q<next_queue>.log, started now);
+     move this card to done\. Log it in actions.md.
+on_refuse: a job that stops at start because a row is over its pinned caps prints the rows: report only, never edit caps
+on_crash: report only (any Traceback, "rows touch the global caps", an arm rc not 0, or the runner gone before done)
+max_restarts: 2
+next: the chain waiter starts B3 group 2 at 3M seed 400 (card b3g2.md) itself when this queue ends
+never: change seed, data, caps, marks, steps, learning rate, the custom_io code or any setting not named above;
+  never touch G1's results, pools or checkpoints; never run two queues at once

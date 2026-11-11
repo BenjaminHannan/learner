@@ -1,0 +1,31 @@
+[    2.7s] world: arm PTC model plain_tf_steps_g (4,023,976 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3s.json device cuda eg real
+[    2.7s] === section bench
+[    2.7s] bench round 1/2: baseline
+[   89.3s] throughput: 0.6188 s/update (1.62 updates/s), accum 16, variant baseline
+[   89.7s] bench round 1/2: eg_once
+[  139.6s] throughput: 0.4137 s/update (2.42 updates/s), accum 16, variant eg_once
+[  140.0s] bench round 1/2: sortpad,oldw
+[  209.1s] throughput: 0.5693 s/update (1.76 updates/s), accum 16, variant sortpad,oldw
+[  209.5s] bench round 1/2: sortpad,bigmb,oldw
+[  255.9s] throughput: 0.3834 s/update (2.61 updates/s), accum 8, variant bigmb,sortpad,oldw
+[  256.2s] bench round 1/2: eg_once,sortpad,oldw
+[  308.3s] throughput: 0.4354 s/update (2.30 updates/s), accum 16, variant sortpad,oldw,eg_once
+[  308.7s] bench round 1/2: eg_once,sortpad,bigmb,oldw,prefetch
+[  356.3s] throughput: 0.3956 s/update (2.53 updates/s), accum 8, variant bigmb,sortpad,oldw,eg_once,prefetch
+[  356.8s] bench round 1/2: tf32
+[  432.0s] throughput: 0.6156 s/update (1.62 updates/s), accum 16, variant tf32
+[  432.4s] bench round 2/2: baseline
+[  536.0s] throughput: 0.9109 s/update (1.10 updates/s), accum 16, variant baseline
+[  536.4s] bench round 2/2: eg_once
+[  588.4s] throughput: 0.4245 s/update (2.36 updates/s), accum 16, variant eg_once
+[  588.9s] bench round 2/2: sortpad,oldw
+[  676.1s] throughput: 0.6338 s/update (1.58 updates/s), accum 16, variant sortpad,oldw
+[  676.4s] bench round 2/2: sortpad,bigmb,oldw
+[  722.8s] throughput: 0.3827 s/update (2.61 updates/s), accum 8, variant bigmb,sortpad,oldw
+[  723.2s] bench round 2/2: eg_once,sortpad,oldw
+[  774.2s] throughput: 0.4182 s/update (2.39 updates/s), accum 16, variant sortpad,oldw,eg_once
+[  774.5s] bench round 2/2: eg_once,sortpad,bigmb,oldw,prefetch
+[  814.1s] throughput: 0.3277 s/update (3.05 updates/s), accum 8, variant bigmb,sortpad,oldw,eg_once,prefetch
+[  814.5s] bench round 2/2: tf32
+[  892.8s] throughput: 0.6443 s/update (1.55 updates/s), accum 16, variant tf32
+[  893.2s] done /job/profraw/bench.json /job/profraw/bench.md

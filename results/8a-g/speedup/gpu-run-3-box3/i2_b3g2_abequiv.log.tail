@@ -1,0 +1,21 @@
+[   11.9s] world: arm B3G2 model b3g2 (4,023,302 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3g2.json device cuda eg real
+[   11.9s] === section abequiv
+[   12.0s] abequiv: stochastic parts pinned (gap_p 0, ans_drill 0, rounds K0=8 where the model has them); reference accum 4, variants ['nosync', 'pad64p', 'pad64', 'tf32', 'unfused']
+[   23.3s] abequiv fp32: reference loss 22.686007; rerun noise floor: grad cos 1.0000000000, bit exact False
+[   27.5s] abequiv bf16: reference loss 22.686195; rerun noise floor: grad cos 0.9999999546, bit exact False
+[   30.1s] abequiv nosync fp32: rel loss 0.000e+00 grad cos 1.0000000000 rel L2 6.710e-07 step cos 0.9999999924 bit exact False
+[   32.2s] abequiv nosync bf16: rel loss 0.000e+00 grad cos 0.9999999552 rel L2 2.995e-04 step cos 0.9999804447 bit exact False
+[   32.2s] abequiv nosync: mark 6 holds [bf16_bar_only] (bar in bf16: True, rel loss 0.00e+00 / grad cos 0.9999999552, rerun floor 0.00e+00 / 0.9999999546; CPU fp32 clause bit_exact: None, bit exact on CPU fp32: None): CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run
+[   34.3s] abequiv pad64p fp32: rel loss 0.000e+00 grad cos 1.0000000000 rel L2 6.539e-07 step cos 0.9999999932 bit exact False
+[   36.1s] abequiv pad64p bf16: rel loss 0.000e+00 grad cos 0.9999996657 rel L2 8.177e-04 step cos 0.9999716415 bit exact False
+[   36.1s] abequiv pad64p: mark 6 holds [bf16_bar_only] (bar in bf16: True, rel loss 0.00e+00 / grad cos 0.9999996657, rerun floor 0.00e+00 / 0.9999999546; CPU fp32 clause equal_to_rounding: None, bit exact on CPU fp32: None): CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run
+[   38.3s] abequiv pad64 fp32: rel loss 0.000e+00 grad cos 0.9999999501 rel L2 3.162e-04 step cos 0.9999420230 bit exact False
+[   40.1s] abequiv pad64 bf16: rel loss 3.111e-06 grad cos 0.9999992830 rel L2 1.201e-03 step cos 0.9998487366 bit exact False
+[   40.1s] abequiv pad64: mark 6 holds [bf16_bar_only] (bar in bf16: True, rel loss 3.11e-06 / grad cos 0.9999992830, rerun floor 0.00e+00 / 0.9999999546; CPU fp32 clause equal_to_rounding: None, bit exact on CPU fp32: None): CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run
+[   42.6s] abequiv tf32 fp32: rel loss 8.744e-06 grad cos 0.9999998219 rel L2 6.261e-04 step cos 0.9997954813 bit exact False
+[   44.6s] abequiv tf32 bf16: rel loss 1.766e-06 grad cos 0.9999995609 rel L2 9.391e-04 step cos 0.9998610244 bit exact False
+[   44.6s] abequiv tf32: mark 6 holds [bf16_bar_only] (bar in bf16: True, rel loss 1.77e-06 / grad cos 0.9999995609, rerun floor 0.00e+00 / 0.9999999546; CPU fp32 clause bar_only: None, bit exact on CPU fp32: None): CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run
+[   47.2s] abequiv unfused fp32: rel loss 0.000e+00 grad cos 1.0000000000 rel L2 6.704e-07 step cos 0.9999999670 bit exact False
+[   49.2s] abequiv unfused bf16: rel loss 0.000e+00 grad cos 0.9999999534 rel L2 3.054e-04 step cos 0.9999815576 bit exact False
+[   49.2s] abequiv unfused: mark 6 holds [bf16_bar_only] (bar in bf16: True, rel loss 0.00e+00 / grad cos 0.9999999534, rerun floor 0.00e+00 / 0.9999999546; CPU fp32 clause bar_only: None, bit exact on CPU fp32: None): CPU fp32 exactness is checked by test_prof.py off the box (Amendment 1), not on this run
+[   49.3s] done /job/profraw/b3g2_abequiv.json /job/profraw/b3g2_abequiv.md

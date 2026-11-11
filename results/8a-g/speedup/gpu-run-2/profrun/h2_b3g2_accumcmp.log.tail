@@ -1,0 +1,10 @@
+[   12.1s] world: arm B3G2 model b3g2 (4,023,302 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3g2.json device cuda eg real
+[   12.1s] === section accumcmp
+[   12.2s] accumcmp: stochastic parts pinned (gap_p 0, ans_drill 0, rounds K0=8 where the model has them); reference accum 32, candidates [16, 8, 4]
+[   35.4s] accumcmp fp32: accum 32 vs 16: |dloss| 3.815e-06 (rel 1.682e-07), grad cos 0.99999987, rel L2 5.014e-04; rerun floor: cos 1.00000000
+[   38.2s] accumcmp fp32: accum 32 vs 8: |dloss| 1.907e-06 (rel 8.408e-08), grad cos 0.99999987, rel L2 5.137e-04; rerun floor: cos 1.00000000
+[   40.7s] accumcmp fp32: accum 32 vs 4: |dloss| 0.000e+00 (rel 0.000e+00), grad cos 0.99999988, rel L2 4.889e-04; rerun floor: cos 1.00000000
+[   57.7s] accumcmp bf16: accum 32 vs 16: |dloss| 1.278e-04 (rel 5.633e-06), grad cos 0.99999949, rel L2 1.011e-03; rerun floor: cos 0.99999999
+[   60.1s] accumcmp bf16: accum 32 vs 8: |dloss| 9.670e-04 (rel 4.263e-05), grad cos 0.99999909, rel L2 1.349e-03; rerun floor: cos 0.99999999
+[   62.1s] accumcmp bf16: accum 32 vs 4: |dloss| 2.480e-05 (rel 1.093e-06), grad cos 0.99999854, rel L2 1.713e-03; rerun floor: cos 0.99999999
+[   62.1s] done /job/profraw/b3g2_accumcmp.json /job/profraw/b3g2_accumcmp.md

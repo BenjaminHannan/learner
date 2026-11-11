@@ -1,0 +1,70 @@
+extracted mkcmd_at.py: 12 lines, sha256 e16aa6958e3179fe
+extracted atcmd.py: 12 lines, sha256 1a0fd298e1258cda
+extracted at_report.py: 63 lines, sha256 6f33d430c1ec265c
+extracted at_pick.py: 24 lines, sha256 f84241a94efcd9f6
+--- pick 1: 16 and 8 both fit; 8 is faster -> expect 8
+PROF-AT pick: accum 32: 7.2 s/update, peak 1.5 GB, oom False (not eligible); accum 16: 4.1 s/update, peak 2.9 GB, oom False; accum 8: 3.0 s/update, peak 5.0 GB, oom False; accum 4: 2.9 s/update, peak 11.2 GB, oom False (not eligible)
+PROF-AT pick: accum 8 is the fastest swept accum other than 32 with peak allocated <= 10 GB (3.000 s/update, 5.00 GB)
+8
+--- pick 2: accum 4 is fastest and fits (9.9 GB) -> expect 4
+PROF-AT pick: accum 32: 7.2 s/update, peak 1.5 GB, oom False (not eligible); accum 16: 4.1 s/update, peak 2.9 GB, oom False; accum 8: 3.0 s/update, peak 5.0 GB, oom False; accum 4: 2.0 s/update, peak 9.9 GB, oom False
+PROF-AT pick: accum 4 is the fastest swept accum other than 32 with peak allocated <= 10 GB (2.000 s/update, 9.90 GB)
+4
+--- pick 3: nothing but 32 qualifies (others over 10 GB, OOM or no number) -> expect 8 (the default)
+PROF-AT pick: accum 32: 7.2 s/update, peak 1.5 GB, oom False (not eligible); accum 16: 4.1 s/update, peak 10.4 GB, oom False (not eligible); accum 8: None s/update, peak None GB, oom True (not eligible); accum 4: None s/update, peak 3.0 GB, oom False (not eligible)
+PROF-AT pick: no swept accum other than 32 qualifies (fits in 10 GB with a speed): accum 8 (the default)
+8
+--- pick 4: the sweep section failed (an error record, no points) -> expect 8
+PROF-AT pick: the sweep json is missing, failed or has no points (KeyError: 'points'): accum 8 (the default)
+8
+--- pick 5: the file is missing -> expect 8
+PROF-AT pick: the sweep json is missing, failed or has no points (FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e): accum 8 (the default)
+8
+--- pick 6: not json -> expect 8
+PROF-AT pick: the sweep json is missing, failed or has no points (JSONDecodeError: Expecting value: line 1 column 1 (char 0)): accum 8 (the default)
+8
+--- pick 7: a speed number but memory unknown (CPU run) for every accum -> expect 8
+PROF-AT pick: accum 32: 0.5 s/update, peak None GB, oom False (not eligible); accum 16: 0.4 s/update, peak None GB, oom False (not eligible)
+PROF-AT pick: no swept accum other than 32 qualifies (fits in 10 GB with a speed): accum 8 (the default)
+8
+--- atcmd: edits --out, the accum and appends --steps / --train-extra; refuses a queue line that is not AT=32
+PROF-AT cmd: python -m custom_io.g8a.job 8aAT-3M-s400 --work /w/g8a --out /o/at_g2 --arms AT --accum AT=8 --b2-extra '{"eg_embed": true}' --steps 300 --train-extra '--log-every 20'
+#!/bin/bash
+cd /code || exit 1
+exec python -m custom_io.g8a.job 8aAT-3M-s400 --work /w/g8a --out /o/at_g2 --arms AT --accum AT=8 --b2-extra '{"eg_embed": true}' --steps 300 --train-extra '--log-every 20'
+AT=16 line:
+AssertionError: the queue line is not accum AT=32: AT=16
+--- at_report: synthetic AT log (steps 20..120, log-every 20; elapsed with a slow start), RESULT.json missing = a timeout
+PROF-AT at_g1 train step=20 loss=2.8 lr=0.001 elapsed_s=400.0
+PROF-AT at_g1 train step=40 loss=2.6 lr=0.001 elapsed_s=520.0
+PROF-AT at_g1 train step=60 loss=2.4 lr=0.001 elapsed_s=640.0
+PROF-AT at_g1 train step=80 loss=2.2 lr=0.001 elapsed_s=770.0
+PROF-AT at_g1 train step=100 loss=2.0 lr=0.001 elapsed_s=890.0
+PROF-AT at_g1 train step=120 loss=1.8 lr=0.001 elapsed_s=1010.0
+PROF-AT at_g1 accum AT=32: ended=TIMEOUT (rc 124); last step reached 120 of 300
+PROF-AT at_g1 SPEED: 6.0 s/update = median of 4 consecutive differences of the log lines from step 40 on (600 updates/hour)
+PROF-AT at_g1 PEAK: no RESULT.json (training did not finish); nvidia-smi highest used memory 9456 MiB (includes cached memory: an upper bound, not the allocated peak)
+PROF-AT at_g1 RATIO to B3G2 on this box at the same accum 32: 1.20x (B3G2 5.000 s/update from the harness sweep, a free-running mean over its timed updates; AT from train.py log lines; different timers, suggested comparison)
+exit 0 (0 = a speed number)
+median of intervals 40-60 6.0, 60-80 6.5, 80-100 6.0, 100-120 6.0 -> expect 6.0; json keys:
+{'median_s_per_update': 6.0, 'n_intervals': 4, 'last_step': 120, 'peak_alloc_gb': None, 'gpu_used_max_mib_nvidia_smi': 9456, 'ratio_at_over_b3g2_same_accum': 1.2}
+--- at_report: RESULT.json present (finished) with peak 4096 MiB
+PROF-AT at_g2 train step=100 loss=2.0 lr=0.001 elapsed_s=890.0
+PROF-AT at_g2 train step=120 loss=1.8 lr=0.001 elapsed_s=1010.0
+PROF-AT at_g2 accum AT=16: ended=training finished, job stopped by the box before its final evaluation (rc 143); last step reached 120 of 300
+PROF-AT at_g2 SPEED: 6.0 s/update = median of 4 consecutive differences of the log lines from step 40 on (600 updates/hour)
+PROF-AT at_g2 PEAK: 4.00 GB allocated (torch max_memory_allocated, RESULT.json peak_mem_mib 4096.0; reserved 5000.0 MiB)
+exit 0
+--- at_report: no train lines, an OOM in the job log -> exit 1 and a clear line
+PROF-AT at_g2 accum AT=8: ended=ended (rc 1); last step reached None of 300
+PROF-AT at_g2 NO SPEED: fewer than 2 train log lines at or after step 40 (log lines found: 0)
+PROF-AT at_g2 PEAK: no RESULT.json (training did not finish); nvidia-smi highest used memory None MiB (includes cached memory: an upper bound, not the allocated peak)
+PROF-AT at_g2 FAILED, no speed (0 train lines): CUDA out of memory. Last lines of the job log:
+  | RuntimeError: CUDA out of memory. Tried to allocate 2.00 GiB
+exit 1 (1 = no speed)
+--- at_report: one log line only after step 40 (not enough for a difference) -> exit 1
+PROF-AT at_g1 FAILED, no speed (2 train lines): not classified. Last lines of the job log:
+  | log
+  | {"event": "train", "step": 20, "loss": 3.0, "lr": 0.001, "elapsed": 100.0, "cap_hits": 0}
+  | {"event": "train", "step": 40, "loss": 2.9, "lr": 0.001, "elapsed": 200.0, "cap_hits": 0}
+exit 1

@@ -1,0 +1,32 @@
+[    2.9s] world: arm PTC model plain_tf_steps_g (4,023,976 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3s.json device cuda eg real
+[    2.9s] === section equiv
+[    3.0s] equiv: stochastic parts pinned (gap_p 0, ans_drill 0, rounds K0=8 where the model has them)
+[   10.2s] E1 (torch.bfloat16, cuda, eg real): min position cos 0.528807, min row-mean cos 0.996825, max row gap once 3.175e-03 vs old spread 1.446e-03 -> FAIL
+[   54.0s] E2 (real Gemma, fp32, cpu (a second copy loaded for this)): max abs diff 5.722e-04 (registered limit 0.0001) -> FAIL; revised relative rule (1e-05 x max |H|) -> PASS (seed 400)
+[   58.6s] equiv fp32: baseline loss 4.729222; rerun cos 1.00000000; accum=1 cos OOM
+[   63.0s] equiv bf16: baseline loss 4.729199; rerun cos 1.00000000; accum=1 cos OOM
+[   64.2s] equiv eg_once fp32: |dloss| 0.000e+00 rel 0.000e+00 grad cos 0.99999818 relL2 1.909e-03
+[   65.0s] equiv eg_once bf16: |dloss| 0.000e+00 rel 0.000e+00 grad cos 0.99999781 relL2 2.097e-03
+[   65.1s] E3 eg_once: loss rel 0.00e+00 (limit 1e-05), grad cos 0.99999818 (limit 0.99999), weighting: weights unchanged -> PASS
+[   66.1s] equiv sortpad,oldw fp32: |dloss| 0.000e+00 rel 0.000e+00 grad cos 0.99999824 relL2 1.878e-03
+[   67.0s] equiv sortpad,oldw bf16: |dloss| 2.384e-05 rel 5.041e-06 grad cos 0.99999730 relL2 2.325e-03
+[   67.2s] E3 sortpad,oldw: loss rel 0.00e+00 (limit 1e-05), grad cos 0.99999824 (limit 0.99999), weighting: per-token weights restored by oldw -> PASS
+[   68.7s] equiv sortpad,bigmb,oldw fp32: |dloss| 4.768e-07 rel 1.008e-07 grad cos 0.99999813 relL2 1.933e-03
+[   69.5s] equiv sortpad,bigmb,oldw bf16: |dloss| 3.147e-05 rel 6.655e-06 grad cos 0.99999708 relL2 2.417e-03
+[   69.6s] E3 sortpad,bigmb,oldw: loss rel 1.01e-07 (limit 1e-05), grad cos 0.99999813 (limit 0.99999), weighting: per-token weights restored by oldw -> PASS
+[   70.4s] equiv eg_once,sortpad,oldw fp32: |dloss| 0.000e+00 rel 0.000e+00 grad cos 0.99999818 relL2 1.909e-03
+[   71.2s] equiv eg_once,sortpad,oldw bf16: |dloss| 2.384e-05 rel 5.041e-06 grad cos 0.99999723 relL2 2.357e-03
+[   71.3s] E3 eg_once,sortpad,oldw: loss rel 0.00e+00 (limit 1e-05), grad cos 0.99999818 (limit 0.99999), weighting: per-token weights restored by oldw -> PASS
+[   72.3s] equiv sortpad fp32: |dloss| 6.236e-03 rel 1.319e-03 grad cos 0.95268086 relL2 3.112e-01
+[   73.3s] equiv sortpad bf16: |dloss| 6.236e-03 rel 1.319e-03 grad cos 0.95254392 relL2 3.116e-01
+[   73.4s] E3 sortpad: loss rel 1.32e-03 (limit 1e-05), grad cos 0.95268086 (limit 0.99999), weighting: NOT EXACT: the variant changes the per-token weights (token- -> NOT EXACT (token-mean weighting changes)
+[   74.5s] equiv bigmb fp32: |dloss| 3.433e-05 rel 7.260e-06 grad cos 0.99990798 relL2 1.369e-02
+[   75.3s] equiv bigmb bf16: |dloss| 6.008e-05 rel 1.270e-05 grad cos 0.99990638 relL2 1.383e-02
+[   75.4s] E3 bigmb: loss rel 7.26e-06 (limit 1e-05), grad cos 0.99990798 (limit 0.99999), weighting: NOT EXACT: the variant changes the per-token weights (token- -> NOT EXACT (token-mean weighting changes)
+[   76.4s] equiv tf32 fp32: |dloss| 6.199e-06 rel 1.311e-06 grad cos 0.99999982 relL2 5.965e-04
+[   77.3s] equiv tf32 bf16: |dloss| 0.000e+00 rel 0.000e+00 grad cos 1.00000000 relL2 2.622e-07
+[   77.5s] E3 tf32: loss rel 1.31e-06 (limit 1e-05), grad cos 0.99999982 (limit 0.99999), weighting: weights unchanged -> PASS
+[   78.5s] equiv prefetch fp32: |dloss| 0.000e+00 rel 0.000e+00 grad cos 1.00000000 relL2 1.737e-08
+[   79.4s] equiv prefetch bf16: |dloss| 0.000e+00 rel 0.000e+00 grad cos 1.00000000 relL2 3.868e-07
+[   79.5s] E3 prefetch: loss rel 0.00e+00 (limit 1e-05), grad cos 1.00000000 (limit 0.99999), weighting: weights unchanged -> PASS
+[   79.6s] done /job/profraw/equiv_gpu.json /job/profraw/equiv_gpu.md

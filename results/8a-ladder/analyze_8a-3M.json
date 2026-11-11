@@ -1,0 +1,454 @@
+{
+ "verdict": "incomplete",
+ "marks": [
+  {
+   "id": 1,
+   "desc": "B2 grows: pooled-5 gain >= +3.0 (CI above 0) 3M->10M and 10M->30M",
+   "value": {
+    "gain_3_10": {
+     "n": 0,
+     "mean": null,
+     "sd": null,
+     "ci": null,
+     "pos": 0,
+     "per_seed": {}
+    },
+    "gain_10_30": {
+     "n": 0,
+     "mean": null,
+     "sd": null,
+     "ci": null,
+     "pos": 0,
+     "per_seed": {}
+    }
+   },
+   "ok": "n/a"
+  },
+  {
+   "id": 2,
+   "desc": "lead holds: mean (B2 - PT) at 30M >= that at 3M - 1.0",
+   "value": {
+    "lead_3M": 6.103752759381898,
+    "lead_30M": null
+   },
+   "ok": "n/a"
+  },
+  {
+   "id": 3,
+   "desc": "still ahead at 30M: B2 - PT >= +3.0 on >= 5 of 6 seeds",
+   "value": {
+    "seeds_ok": 0,
+    "seeds": 0,
+    "per_seed": {
+     "400": null,
+     "401": null,
+     "402": null,
+     "403": null,
+     "404": null,
+     "405": null
+    }
+   },
+   "ok": "n/a"
+  },
+  {
+   "id": 4,
+   "desc": "starts good: 3M B2 pooled-5 mean >= 72.0",
+   "value": 72.33995584988962,
+   "ok": true
+  },
+  {
+   "id": 5,
+   "desc": "ends good: 30M B2 - public model >= +2.0, CI lower bound above 0",
+   "value": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "ok": "n/a"
+  },
+  {
+   "id": "guard",
+   "desc": "B2 chain-5 >= 99 at every rung (rung mean; seeds under 99 listed)",
+   "value": {
+    "mean": {
+     "3M": 99.95,
+     "10M": null,
+     "30M": null
+    },
+    "seeds_under_99": {
+     "3M": [],
+     "10M": [],
+     "30M": []
+    }
+   },
+   "ok": "n/a"
+  }
+ ],
+ "proved_wrong": [],
+ "stop_rules": {
+  "stop_before_10M": false,
+  "no_30M": null
+ },
+ "reported": {
+  "splits": {
+   "3M": {
+    "B2": {
+     "in_dist": 87.45098039215686,
+     "answer": 72.43055555555556,
+     "frame": 86.29901960784314,
+     "vocab": 85.10416666666667,
+     "variant": 34.570707070707066
+    },
+    "PT": {
+     "in_dist": 82.24264705882352,
+     "answer": 61.02777777777778,
+     "frame": 78.97058823529413,
+     "vocab": 82.85416666666667,
+     "variant": 31.287878787878785
+    },
+    "LLM": {
+     "in_dist": 58.68872549019608,
+     "answer": 35.25,
+     "frame": 54.509803921568626,
+     "vocab": 65.0,
+     "variant": 25.25252525252525
+    },
+    "PUB": {
+     "in_dist": null,
+     "answer": null,
+     "frame": null,
+     "vocab": null,
+     "variant": null
+    }
+   },
+   "10M": {
+    "B2": {
+     "in_dist": null,
+     "answer": null,
+     "frame": null,
+     "vocab": null,
+     "variant": null
+    },
+    "PT": {
+     "in_dist": null,
+     "answer": null,
+     "frame": null,
+     "vocab": null,
+     "variant": null
+    },
+    "LLM": {
+     "in_dist": null,
+     "answer": null,
+     "frame": null,
+     "vocab": null,
+     "variant": null
+    },
+    "PUB": {
+     "in_dist": null,
+     "answer": null,
+     "frame": null,
+     "vocab": null,
+     "variant": null
+    }
+   },
+   "30M": {
+    "B2": {
+     "in_dist": null,
+     "answer": null,
+     "frame": null,
+     "vocab": null,
+     "variant": null
+    },
+    "PT": {
+     "in_dist": null,
+     "answer": null,
+     "frame": null,
+     "vocab": null,
+     "variant": null
+    },
+    "LLM": {
+     "in_dist": null,
+     "answer": null,
+     "frame": null,
+     "vocab": null,
+     "variant": null
+    },
+    "PUB": {
+     "in_dist": null,
+     "answer": null,
+     "frame": null,
+     "vocab": null,
+     "variant": null
+    }
+   }
+  },
+  "leak_loops0": {
+   "3M": 6.3235294117647065,
+   "10M": null,
+   "30M": null
+  },
+  "donor_drop": {
+   "3M": 83.71323529411765,
+   "10M": null,
+   "30M": null
+  },
+  "pooled5": {
+   "3M/B2": {
+    "n": 6,
+    "mean": 72.33995584988962,
+    "sd": 1.106657326164655,
+    "ci": [
+     71.17840128778049,
+     73.50151041199875
+    ],
+    "pos": 6,
+    "per_seed": {
+     "400": 71.58940397350993,
+     "401": 73.21192052980132,
+     "402": 74.13907284768212,
+     "403": 71.50662251655629,
+     "404": 72.16887417218543,
+     "405": 71.42384105960265
+    }
+   },
+   "3M/PT": {
+    "n": 6,
+    "mean": 66.23620309050773,
+    "sd": 0.39785655843386686,
+    "ci": [
+     65.8186103184836,
+     66.65379586253185
+    ],
+    "pos": 6,
+    "per_seed": {
+     "400": 66.65562913907284,
+     "401": 66.2251655629139,
+     "402": 66.42384105960265,
+     "403": 65.51324503311258,
+     "404": 66.45695364238411,
+     "405": 66.14238410596026
+    }
+   },
+   "3M/LLM": {
+    "n": 6,
+    "mean": 46.61975717439294,
+    "sd": 2.43032409931159,
+    "ci": [
+     44.068873555574214,
+     49.17064079321166
+    ],
+    "pos": 6,
+    "per_seed": {
+     "400": 46.42384105960265,
+     "401": 47.913907284768214,
+     "402": 48.69205298013245,
+     "403": 47.996688741721854,
+     "404": 46.72185430463576,
+     "405": 41.97019867549669
+    }
+   },
+   "3M/PUB": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "10M/B2": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "10M/PT": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "10M/LLM": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "10M/PUB": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "30M/B2": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "30M/PT": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "30M/LLM": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "30M/PUB": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   }
+  },
+  "b2_minus_llm": {
+   "3M": {
+    "n": 6,
+    "mean": 25.720198675496686,
+    "sd": 1.9727639262925496,
+    "ci": [
+     23.649573121974168,
+     27.790824229019204
+    ],
+    "pos": 6,
+    "per_seed": {
+     "400": 25.16556291390728,
+     "401": 25.298013245033104,
+     "402": 25.447019867549663,
+     "403": 23.509933774834437,
+     "404": 25.447019867549663,
+     "405": 29.45364238410596
+    }
+   },
+   "10M": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "30M": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   }
+  },
+  "b2_minus_pt": {
+   "3M": {
+    "n": 6,
+    "mean": 6.103752759381898,
+    "sd": 1.0570990013298793,
+    "ci": [
+     4.994214929951725,
+     7.213290588812071
+    ],
+    "pos": 6,
+    "per_seed": {
+     "400": 4.933774834437088,
+     "401": 6.986754966887418,
+     "402": 7.715231788079464,
+     "403": 5.993377483443709,
+     "404": 5.7119205298013185,
+     "405": 5.28145695364239
+    }
+   },
+   "10M": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   },
+   "30M": {
+    "n": 0,
+    "mean": null,
+    "sd": null,
+    "ci": null,
+    "pos": 0,
+    "per_seed": {}
+   }
+  },
+  "public_with_calculator": {
+   "n": 0,
+   "mean": null,
+   "sd": null,
+   "ci": null,
+   "pos": 0,
+   "per_seed": {}
+  },
+  "b2_minus_public_with_calculator": {
+   "n": 0,
+   "mean": null,
+   "sd": null,
+   "ci": null,
+   "pos": 0,
+   "per_seed": {}
+  },
+  "params": {
+   "3M/B2": 3346513,
+   "3M/PT": 3297536,
+   "3M/LLM": 3297536,
+   "3M/PUB": null,
+   "10M/B2": null,
+   "10M/PT": null,
+   "10M/LLM": null,
+   "10M/PUB": null,
+   "30M/B2": null,
+   "30M/PT": null,
+   "30M/LLM": null,
+   "30M/PUB": null
+  },
+  "hours": {
+   "3M": 0.0,
+   "10M": 0.0,
+   "30M": 0.0
+  },
+  "cost_usd": {
+   "3M": 0,
+   "10M": 0,
+   "30M": 0
+  },
+  "leak_flag_30M_over_3M_by_5": null,
+  "caps": {
+   "3M": null,
+   "10M": null,
+   "30M": null
+  }
+ },
+ "seeds": [
+  400,
+  401,
+  402,
+  403,
+  404,
+  405
+ ],
+ "skipped": []
+}

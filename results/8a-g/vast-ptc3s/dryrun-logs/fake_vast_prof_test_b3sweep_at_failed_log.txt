@@ -1,0 +1,97 @@
+kit vast.py sha256: b68462f7374176783a138f34edef8a9396adde958c05c46e63f34f04cf6675cd
+A create printed: {"success": true, "new_contract": 4242, "error": null, "msg": null, "at": "2026-10-14T10:05:47Z"}
+A exports line: export MAXPAR=5 QSUB= PROFILE=1 PROF_PLAN=b3sweep MAXH=3 DPH=0.46 END_SLEEP=300 FAIL_SLEEP=300
+A script after the exports line is the box script byte for byte: True | script bytes 72310 | whole args[2] bytes 72405 | body json bytes 74293
+A args[0:2] ['bash', '-c'] | args[3] cio
+B tail printed 14 lines, any R| line: False; last lines:
+B    REND|profjob
+B    RBEGIN|profrun|f9237b6d36eaffef4bc1c39454c703f2ee9d4299bc4b5538a97513ba4baf4adf|7410
+B    REND|profrun
+B    === PROF RESULT PRINTED blocks=profjob,profrun r_lines=115 (the Vast log read window is 20000 lines) failed=[ at_g1(no-speed,rc2) at_g2(no-speed,rc124)] skipped=[] 2026-10-14T09:53:51Z
+B    === PROF-STEPS (name rc seconds timeout_s): 2026-10-14T09:53:51Z
+B    job 0 423 1200
+B    h1_b3g2_accumsweep 0 37 2700
+B    h2_b3g2_accumcmp 0 13 900
+B    at_g1 2 2 120
+B    at_g2 124 120 120
+B    === STAGE failed 2026-10-14T09:53:51Z
+B    === PROF DONE failed=[ at_g1(no-speed,rc2) at_g2(no-speed,rc124)] skipped=[] maxh_hit=no up_min=14 2026-10-14T09:53:51Z
+B    === CIO-FAIL PROFILE: a step failed or MAXH was reached (the results above are what exists). Collect them, then destroy the box 2026-10-14T09:53:51Z
+B    run_dry exit 1
+C collect printed: {"profjob": "ok", "profrun": "ok"}
+C 58 files extracted:
+C    profjob/PTC/RESULT.json 17660
+C    profjob/PTC/stdout.events.txt 2269
+C    profjob/PTC/stdout.tail.txt 2269
+C    profjob/RESULT.json 2839
+C    profjob/box/PTC-SETUP-OK.txt 1108
+C    profjob/box/at_g1.cmd.log 700
+C    profjob/box/at_g1.report.log 991
+C    profjob/box/at_g2.cmd.log 699
+C    profjob/box/at_g2.report.log 429
+C    profjob/box/at_pick.log 430
+C    profjob/box/at_pins.txt 889
+C    profjob/box/box.txt 118
+C    profjob/box/build.log 4320
+C    profjob/box/build_big.log 4338
+C    profjob/box/cmd.at.txt 626
+C    profjob/box/cmd.data.txt 413
+C    profjob/box/cmd.job.txt 630
+C    profjob/box/code_files.sha256 11428
+C    profjob/box/code_files_lf.sha256 11428
+C    profjob/box/code_hash_lf.txt 11
+C    profjob/box/code_identity.txt 119
+C    profjob/box/eg_check.log 4932
+C    profjob/box/eg_dl.log 138
+C    profjob/box/get_data.log 6474
+C    profjob/box/guard.out 0
+C    profjob/box/mkcmd.log 1398
+C    profjob/box/mkcmd_at.log 657
+C    profjob/box/pip.log 122
+C    profjob/box/prof_env.txt 1214
+C    profjob/box/profcmd.log 701
+C    profjob/box/ptccheck.log 28744
+C    profjob/box/versions.txt 209
+C    profjob/box.json 2720
+C    profjob/caps.json 685
+C    profjob/caps_report.json 934
+C    profjob/cmd.prof.sh.txt 767
+C    profjob/pool_MANIFEST.json 3342
+C    profjob/result.tgz.sha256 65
+C    profjob/stdout.events.txt 0
+C    profjob/stdout.tail.txt 108
+C    profrun/at_g1.json 434
+C    profrun/at_g1.log.tail 959
+C    profrun/at_g1.train.log.tail 0
+C    profrun/at_g2.json 435
+C    profrun/at_g2.log.tail 0
+C    profrun/at_g2.train.log.tail 0
+C    profrun/at_setup.md 1663
+C    profrun/b3g2_accumcmp.json 4022
+C    profrun/b3g2_accumcmp.md 972
+C    profrun/b3g2_accumsweep.json 6912
+C    profrun/b3g2_accumsweep.md 1783
+C    profrun/h1_b3g2_accumsweep.log.tail 965
+C    profrun/h2_b3g2_accumcmp.log.tail 886
+C    profrun/prof_env.txt 1214
+C    profrun/prof_status.txt 225
+C    profrun/prof_steps.txt 102
+C    profrun/result.tgz.sha256 65
+C    profrun/stages.txt 6077
+C expect b3g2_accumsweep.json PASS
+C expect b3g2_accumsweep.md PASS
+C expect b3g2_accumcmp.json PASS
+C expect b3g2_accumcmp.md PASS
+C expect at_g1.json PASS
+C expect at_g2.json PASS
+C expect at_setup.md PASS
+C expect prof_status.txt PASS
+C expect at_g1.log.tail PASS
+C expect at_g2.log.tail PASS
+C expect h1_b3g2_accumsweep.log.tail PASS
+C expect h2_b3g2_accumcmp.log.tail PASS
+C expect prof_steps.txt PASS
+C expect stages.txt PASS
+C grep prof_status.txt 'plan=b3sweep' PASS
+C grep prof_status.txt 'at_g2_accum=8' PASS
+C grep at_setup.md '6e72a5fae514a343c217c4d95cde37bc3b587c8e' PASS

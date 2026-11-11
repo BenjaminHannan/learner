@@ -1,0 +1,215 @@
+2026-10-14 20:46:34 STARTED runner MAIN-pc pid 3185: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpa_tn79ee/work --queue /tmp/tmpa_tn79ee/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpa_tn79ee/GPU-BUSY.txt --steps 1500 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:46:40 KILLED MAIN-pc: planned kill-and-resume test at update 150 (Ben's go line; big-run R4)
+2026-10-14 20:46:40 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:46:40 STARTED runner MAIN-pc pid 3187: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpa_tn79ee/work --queue /tmp/tmpa_tn79ee/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpa_tn79ee/GPU-BUSY.txt --steps 1500 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:46:45 TRACE A: PASS []
+2026-10-14 20:46:45 STARTED runner BASE-pc pid 3189: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpa_tn79ee/work --queue /tmp/tmpa_tn79ee/src/custom_io/queue_local/BASE-pc.txt --busy /tmp/tmpa_tn79ee/GPU-BUSY.txt --steps 1500 --step-s 0.02 --ckpt-every 100 --job BASE-3M
+2026-10-14 20:46:54 KILLED BASE-pc: baseline reached update 304
+2026-10-14 20:46:54 GPU-BUSY: removed 1 line(s) of BASE-pc
+2026-10-14 20:46:54 COMPARE accum 4 vs 32: PASS (GO) diff of means 0.0 last-n 0.0
+2026-10-14 20:47:09 DONE g2fa4: {'steps': 1500, 'steps_per_s': 50.0, 'train_s': 27.999999999999492, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
+2026-10-14 20:47:09 ALL DONE
+ok happy path: killed at update 150, newest checkpoint step-100.pt | trace A PASS | compare PASS | resume {'resumed_step': 100, 'n_redone': 50, 'first_diff': 0.0, 'mean_abs': 0.0, 'max_abs': 0.0}
+2026-10-14 20:47:09 STARTED runner MAIN-pc pid 3195: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpejavmmjl/work --queue /tmp/tmpejavmmjl/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpejavmmjl/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 450
+2026-10-14 20:47:15 KILLED MAIN-pc: planned kill-and-resume test at update 151 (Ben's go line; big-run R4)
+2026-10-14 20:47:15 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:47:15 STARTED runner MAIN-pc pid 3197: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpejavmmjl/work --queue /tmp/tmpejavmmjl/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpejavmmjl/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 450
+2026-10-14 20:47:20 TRACE A: PASS []
+2026-10-14 20:47:20 STARTED runner BASE-pc pid 3199: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpejavmmjl/work --queue /tmp/tmpejavmmjl/src/custom_io/queue_local/BASE-pc.txt --busy /tmp/tmpejavmmjl/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job BASE-3M
+2026-10-14 20:47:23 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-14 20:47:26 KILLED BASE-pc: the main run died while the baseline shared the card
+2026-10-14 20:47:26 GPU-BUSY: removed 1 line(s) of BASE-pc
+2026-10-14 20:47:26 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpejavmmjl/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-204726
+2026-10-14 20:47:26 STARTED runner MAIN-pc pid 3204: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpejavmmjl/work --queue /tmp/tmpejavmmjl/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpejavmmjl/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 450
+2026-10-14 20:47:37 DONE g2fa4: {'steps': 900, 'steps_per_s': 50.0, 'train_s': 9.999999999999876, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
+2026-10-14 20:47:37 ALL DONE
+ok crash with a job-level arm_failed RESULT.json: relaunched, finished; restarts 3 asides 1
+2026-10-14 20:47:37 STARTED runner MAIN-pc pid 3216: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmps4sxk1bs/work --queue /tmp/tmps4sxk1bs/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmps4sxk1bs/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:47:37 job-level RESULT.json (arm_failed) moved aside: /tmp/tmps4sxk1bs/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-204737
+2026-10-14 20:47:37 STARTED runner MAIN-pc pid 3218: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmps4sxk1bs/work --queue /tmp/tmps4sxk1bs/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmps4sxk1bs/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:47:38 job-level RESULT.json (arm_failed) moved aside: /tmp/tmps4sxk1bs/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-204738
+2026-10-14 20:47:38 STARTED runner MAIN-pc pid 3220: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmps4sxk1bs/work --queue /tmp/tmps4sxk1bs/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmps4sxk1bs/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:47:39 STOPPED job g2fa4: 2 restarts in a row with no new update (stuck at 9)
+ok crash loop stops: 2 restarts in a row with no new update (stuck at 9)
+2026-10-14 20:47:39 STARTED runner MAIN-pc pid 3222: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp0k52023l/work --queue /tmp/tmp0k52023l/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp0k52023l/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --nan-at 200
+2026-10-14 20:47:45 KILLED MAIN-pc: planned kill-and-resume test at update 150 (Ben's go line; big-run R4)
+2026-10-14 20:47:45 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:47:45 STARTED runner MAIN-pc pid 3224: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp0k52023l/work --queue /tmp/tmp0k52023l/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp0k52023l/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --nan-at 200
+2026-10-14 20:47:47 STOPPED job g2fa4: train.py finished with status "nonfinite_loss" (RESULT.json): not restarted
+ok NaN stops the job (no restart): train.py finished with status "nonfinite_loss" (RESULT.json): not restarted
+2026-10-14 20:47:47 STARTED runner MAIN-pc pid 3226: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp6hp7i68p/work --queue /tmp/tmp6hp7i68p/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp6hp7i68p/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:47:54 KILLED MAIN-pc: planned kill-and-resume test at update 154 (Ben's go line; big-run R4)
+2026-10-14 20:47:54 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:47:54 STARTED runner MAIN-pc pid 3232: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp6hp7i68p/work --queue /tmp/tmp6hp7i68p/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp6hp7i68p/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:47:58 TRACE A: FAIL ['GPU memory in use peaked at 13000 MiB, over the 12288 MiB limit']
+2026-10-14 20:48:01 KILLED MAIN-pc: trace A failed
+2026-10-14 20:48:01 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:48:01 STOPPED job g2fa4: trace A FAILED: GPU memory in use peaked at 13000 MiB, over the 12288 MiB limit (registered fallback: accum 8, then 32; a new run name each)
+ok memory over the limit fails trace A and stops the run: trace A FAILED: GPU memory in use peaked at 13000 MiB, over the 12288 MiB limit (registered fallback: accum 8,
+2026-10-14 20:48:01 STARTED runner MAIN-pc pid 3242: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp9d0mnc1l/work --queue /tmp/tmp9d0mnc1l/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp9d0mnc1l/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --seg2-offset 0.3
+2026-10-14 20:48:07 KILLED MAIN-pc: planned kill-and-resume test at update 155 (Ben's go line; big-run R4)
+2026-10-14 20:48:07 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:48:07 STARTED runner MAIN-pc pid 3248: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp9d0mnc1l/work --queue /tmp/tmp9d0mnc1l/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp9d0mnc1l/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --seg2-offset 0.3
+2026-10-14 20:48:12 TRACE A: FAIL ['first redone update differs by 0.3000 (limit 0.01)', 'redone updates differ by 0.3000 on average (limit 0.02)', 'redone updates differ by up to 0.3000 (limit 0.1)']
+2026-10-14 20:48:15 KILLED MAIN-pc: trace A failed
+2026-10-14 20:48:15 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:48:15 STOPPED job g2fa4: trace A FAILED: first redone update differs by 0.3000 (limit 0.01); redone updates differ by 0.3000 on average (limit 0.02); redone updates differ by up to 0.3000 (limit 0.1) (registered fallback: accum 8, then 32; a new run name each)
+ok a resume that does not match fails trace A: trace A FAILED: first redone update differs by 0.3000 (limit 0.01); redone updates differ by 0.3000 on average (limit 0.
+2026-10-14 20:48:15 STARTED runner MAIN-pc pid 3252: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpcthsp5qk/work --queue /tmp/tmpcthsp5qk/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpcthsp5qk/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:48:21 KILLED MAIN-pc: planned kill-and-resume test at update 150 (Ben's go line; big-run R4)
+2026-10-14 20:48:21 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:48:21 STARTED runner MAIN-pc pid 3266: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpcthsp5qk/work --queue /tmp/tmpcthsp5qk/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpcthsp5qk/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:48:25 TRACE A: PASS []
+2026-10-14 20:48:25 STARTED runner BASE-pc pid 3276: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpcthsp5qk/work --queue /tmp/tmpcthsp5qk/src/custom_io/queue_local/BASE-pc.txt --busy /tmp/tmpcthsp5qk/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job BASE-3M --offset -0.3
+2026-10-14 20:48:35 KILLED BASE-pc: baseline reached update 303
+2026-10-14 20:48:35 GPU-BUSY: removed 1 line(s) of BASE-pc
+2026-10-14 20:48:35 COMPARE accum 4 vs 32: FAIL (NO-GO: fall back to accum 8, then 32 (big-run)) diff of means 0.30000000000000027 last-n 0.2999999999999994
+2026-10-14 20:48:38 DONE g2fa4: {'steps': 900, 'steps_per_s': 50.0, 'train_s': 15.999999999999748, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
+2026-10-14 20:48:38 ALL DONE
+ok a failing compare is reported and the main run goes on to the end: {'verdict': 'FAIL', 'read_as': 'NO-GO: fall back to accum 8, then 32 (big-run)', 'why': None}
+2026-10-14 20:48:38 STARTED runner MAIN-pc pid 3278: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp0torictw/work --queue /tmp/tmp0torictw/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp0torictw/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:48:44 KILLED MAIN-pc: planned kill-and-resume test at update 151 (Ben's go line; big-run R4)
+2026-10-14 20:48:44 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:48:44 STARTED runner MAIN-pc pid 3290: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp0torictw/work --queue /tmp/tmp0torictw/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp0torictw/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:48:48 TRACE A: PASS []
+2026-10-14 20:48:48 STARTED runner BASE-pc pid 3292: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp0torictw/work --queue /tmp/tmp0torictw/src/custom_io/queue_local/BASE-pc.txt --busy /tmp/tmp0torictw/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job BASE-3M --offset -0.045
+2026-10-14 20:48:58 KILLED BASE-pc: baseline reached update 300
+2026-10-14 20:48:58 GPU-BUSY: removed 1 line(s) of BASE-pc
+2026-10-14 20:48:58 COMPARE accum 4 vs 32: UNCLEAR (GO) diff of means 0.04500000000000304 last-n 0.04499999999999993
+2026-10-14 20:49:01 DONE g2fa4: {'steps': 900, 'steps_per_s': 50.0, 'train_s': 15.999999999999748, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
+2026-10-14 20:49:01 ALL DONE
+ok a diff of 0.045 is UNCLEAR, read as GO
+2026-10-14 20:49:01 STARTED runner MAIN-pc pid 3307: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpp4mb4jp3/work --queue /tmp/tmpp4mb4jp3/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpp4mb4jp3/GPU-BUSY.txt --steps 1500 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:49:07 KILLED MAIN-pc: planned kill-and-resume test at update 150 (Ben's go line; big-run R4)
+2026-10-14 20:49:07 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:49:07 STARTED runner MAIN-pc pid 3311: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpp4mb4jp3/work --queue /tmp/tmpp4mb4jp3/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpp4mb4jp3/GPU-BUSY.txt --steps 1500 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:49:11 TRACE A: PASS []
+2026-10-14 20:49:11 STARTED runner BASE-pc pid 3331: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpp4mb4jp3/work --queue /tmp/tmpp4mb4jp3/src/custom_io/queue_local/BASE-pc.txt --busy /tmp/tmpp4mb4jp3/GPU-BUSY.txt --steps 1500 --step-s 0.02 --ckpt-every 100 --job BASE-3M
+2026-10-14 20:49:22 KILLED BASE-pc: the main run died while the baseline shared the card
+2026-10-14 20:49:22 GPU-BUSY: removed 1 line(s) of BASE-pc
+2026-10-14 20:49:22 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:49:22 STARTED runner MAIN-pc pid 3363: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpp4mb4jp3/work --queue /tmp/tmpp4mb4jp3/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpp4mb4jp3/GPU-BUSY.txt --steps 1500 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:49:41 DONE g2fa4: {'steps': 1500, 'steps_per_s': 50.0, 'train_s': 17.999999999999705, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
+2026-10-14 20:49:41 ALL DONE
+ok adopted a live run; after a "reboot" resumed from checkpoint 600 and finished (resumes at [100, 600] )
+2026-10-14 20:49:41 WAITING for the GPU: 688 MiB free, need 9500; other GPU users seen: unknown
+2026-10-14 20:49:41 STARTED runner MAIN-pc pid 3390: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpxbmcu0jk/work --queue /tmp/tmpxbmcu0jk/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpxbmcu0jk/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+ok waits while another program holds the GPU, starts when it is free
+2026-10-14 20:49:42 not armed (ARMED.txt missing): the loop leaves
+2026-10-14 20:49:42 ARMED: Ben 3:55 PM ET: go
+2026-10-14 20:49:42 STARTED runner MAIN-pc pid 3392: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2hcuruua/work --queue /tmp/tmp2hcuruua/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2hcuruua/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:49:42 HALT: /tmp/tmp2hcuruua/state/ARMED.txt.aside-20261014-204942
+2026-10-14 20:49:45 KILLED MAIN-pc: halt (Ben's word)
+2026-10-14 20:49:45 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:49:46 not armed (ARMED.txt missing): the loop leaves
+ok not armed = nothing starts; arm starts; halt stops the runners and disarms (events kept)
+2026-10-14 20:49:46 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:49:46 stale pool lock moved aside: /tmp/tmp2ulbdsoa/work/g8a/pools/p10-rung30-s400-a64-L.lock.aside-20261014-204946
+2026-10-14 20:49:46 STARTED runner MAIN-pc pid 3394: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2ulbdsoa/work --queue /tmp/tmp2ulbdsoa/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2ulbdsoa/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+ok a stale lock is moved aside and only the job's own GPU-BUSY line is removed
+2026-10-14 20:49:47 STARTED runner MAIN-pc pid 3396: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpi176dnrd/work --queue /tmp/tmpi176dnrd/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpi176dnrd/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --device cpu
+2026-10-14 20:49:51 KILLED MAIN-pc: train.py started on "cpu", not cuda
+2026-10-14 20:49:51 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:49:51 STOPPED job g2fa4: train.py started on the device "cpu" instead of cuda (driver / torch CUDA problem after an update?); it was stopped, nothing restarts until this is fixed
+ok a run that started on the CPU is stopped: train.py started on the device "cpu" instead of cuda (driver / torch CUDA problem after an
+2026-10-14 20:49:51 STARTED runner MAIN-pc pid 3412: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpz4ymclp3/work --queue /tmp/tmpz4ymclp3/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpz4ymclp3/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --hang-at 400
+2026-10-14 20:49:57 KILLED MAIN-pc: planned kill-and-resume test at update 153 (Ben's go line; big-run R4)
+2026-10-14 20:49:57 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:49:57 STARTED runner MAIN-pc pid 3429: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpz4ymclp3/work --queue /tmp/tmpz4ymclp3/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpz4ymclp3/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --hang-at 400
+2026-10-14 20:50:01 TRACE A: PASS []
+2026-10-14 20:50:01 STARTED runner BASE-pc pid 3431: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpz4ymclp3/work --queue /tmp/tmpz4ymclp3/src/custom_io/queue_local/BASE-pc.txt --busy /tmp/tmpz4ymclp3/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job BASE-3M
+2026-10-14 20:50:05 STALL: no new update for 0 min at update 399
+2026-10-14 20:50:11 KILLED MAIN-pc: no new update for 0 min: restart from the newest checkpoint
+2026-10-14 20:50:11 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:50:14 KILLED BASE-pc: baseline reached update 439
+2026-10-14 20:50:14 GPU-BUSY: removed 1 line(s) of BASE-pc
+2026-10-14 20:50:14 COMPARE accum 4 vs 32: PASS (GO) diff of means 0.0 last-n 0.0
+2026-10-14 20:50:14 STARTED runner MAIN-pc pid 3433: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpz4ymclp3/work --queue /tmp/tmpz4ymclp3/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpz4ymclp3/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --hang-at 400
+2026-10-14 20:50:26 DONE g2fa4: {'steps': 900, 'steps_per_s': 50.0, 'train_s': 11.999999999999833, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
+2026-10-14 20:50:26 ALL DONE
+ok a hung run: warned after 1.5 s, killed after 4 s, resumed from the checkpoint, finished
+2026-10-14 20:50:26 STARTED runner MAIN-pc pid 3461: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpyx1dco3u/work --queue /tmp/tmpyx1dco3u/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpyx1dco3u/GPU-BUSY.txt --steps 1200 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 500
+2026-10-14 20:50:32 KILLED MAIN-pc: planned kill-and-resume test at update 150 (Ben's go line; big-run R4)
+2026-10-14 20:50:32 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:50:33 STARTED runner MAIN-pc pid 3464: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpyx1dco3u/work --queue /tmp/tmpyx1dco3u/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpyx1dco3u/GPU-BUSY.txt --steps 1200 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 500
+2026-10-14 20:50:37 TRACE A: PASS []
+2026-10-14 20:50:37 STARTED runner BASE-pc pid 3466: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpyx1dco3u/work --queue /tmp/tmpyx1dco3u/src/custom_io/queue_local/BASE-pc.txt --busy /tmp/tmpyx1dco3u/GPU-BUSY.txt --steps 1200 --step-s 0.02 --ckpt-every 100 --job BASE-3M --step-s 0.08
+2026-10-14 20:50:41 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-14 20:50:44 KILLED BASE-pc: the main run died while the baseline shared the card
+2026-10-14 20:50:44 GPU-BUSY: removed 1 line(s) of BASE-pc
+2026-10-14 20:50:44 job-level RESULT.json (arm_failed) moved aside: /tmp/tmpyx1dco3u/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205044
+2026-10-14 20:50:44 STARTED runner MAIN-pc pid 3469: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpyx1dco3u/work --queue /tmp/tmpyx1dco3u/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpyx1dco3u/GPU-BUSY.txt --steps 1200 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 500
+2026-10-14 20:51:01 DONE g2fa4: {'steps': 1200, 'steps_per_s': 50.0, 'train_s': 15.999999999999748, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
+2026-10-14 20:51:01 ALL DONE
+ok the main run died while the baseline shared the card: baseline stopped first, main resumed and finished (baseline abandoned, flagged)
+2026-10-14 20:51:01 STARTED runner MAIN-pc pid 3478: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpf0v84nh9/work --queue /tmp/tmpf0v84nh9/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpf0v84nh9/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --ckpt-every 100000
+2026-10-14 20:51:07 KILLED MAIN-pc: no checkpoint file at update 150
+2026-10-14 20:51:07 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:51:07 STOPPED job g2fa4: no checkpoint was written by update 150 (--ckpt-every 100): the checkpoint path does not work on this card; stopped rather than run 15 h unprotected
+ok no checkpoint by update 150 stops the run instead of leaving it unprotected
+2026-10-14 20:51:07 STARTED runner MAIN-pc pid 3480: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmppauf3325/work --queue /tmp/tmppauf3325/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmppauf3325/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --die-after-resume-once
+2026-10-14 20:51:13 KILLED MAIN-pc: planned kill-and-resume test at update 150 (Ben's go line; big-run R4)
+2026-10-14 20:51:13 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:51:13 STARTED runner MAIN-pc pid 3484: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmppauf3325/work --queue /tmp/tmppauf3325/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmppauf3325/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --die-after-resume-once
+2026-10-14 20:51:14 job-level RESULT.json (arm_failed) moved aside: /tmp/tmppauf3325/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205114
+2026-10-14 20:51:14 STARTED runner MAIN-pc pid 3486: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmppauf3325/work --queue /tmp/tmppauf3325/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmppauf3325/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --die-after-resume-once
+2026-10-14 20:51:18 TRACE A: PASS []
+2026-10-14 20:51:18 STARTED runner BASE-pc pid 3488: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmppauf3325/work --queue /tmp/tmppauf3325/src/custom_io/queue_local/BASE-pc.txt --busy /tmp/tmppauf3325/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job BASE-3M
+2026-10-14 20:51:28 KILLED BASE-pc: baseline reached update 303
+2026-10-14 20:51:28 GPU-BUSY: removed 1 line(s) of BASE-pc
+2026-10-14 20:51:28 COMPARE accum 4 vs 32: PASS (GO) diff of means 0.0 last-n 0.0
+2026-10-14 20:51:31 DONE g2fa4: {'steps': 900, 'steps_per_s': 50.0, 'train_s': 15.999999999999748, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
+2026-10-14 20:51:31 ALL DONE
+ok a resumed segment that died before its first update does not break trace A
+ok the OS-level lock admits one holder at a time
+2026-10-14 20:51:31 STARTED runner MAIN-pc pid 3501: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpz3gmzohg/work --queue /tmp/tmpz3gmzohg/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpz3gmzohg/GPU-BUSY.txt --steps 1500 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:51:43 KILL FAILED (processes still alive: [3501, 3502, 3501, 3502]) MAIN-pc: planned kill-and-resume test at update 153 (Ben's go line; big-run R4)
+2026-10-14 20:51:44 GPU-BUSY: removed 1 line(s) of MAIN-pc
+2026-10-14 20:51:44 STARTED runner MAIN-pc pid 3508: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpz3gmzohg/work --queue /tmp/tmpz3gmzohg/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmpz3gmzohg/GPU-BUSY.txt --steps 1500 --step-s 0.02 --ckpt-every 100 --job MAIN-3M
+2026-10-14 20:51:45 TRACE A: PASS []
+2026-10-14 20:51:45 STARTED runner BASE-pc pid 3510: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmpz3gmzohg/work --queue /tmp/tmpz3gmzohg/src/custom_io/queue_local/BASE-pc.txt --busy /tmp/tmpz3gmzohg/GPU-BUSY.txt --steps 1500 --step-s 0.02 --ckpt-every 100 --job BASE-3M
+2026-10-14 20:51:54 KILLED BASE-pc: baseline reached update 301
+2026-10-14 20:51:54 GPU-BUSY: removed 1 line(s) of BASE-pc
+2026-10-14 20:51:54 COMPARE accum 4 vs 32: PASS (GO) diff of means 0.0 last-n 0.0
+2026-10-14 20:52:05 DONE g2fa4: {'steps': 1500, 'steps_per_s': 50.0, 'train_s': 19.999999999999662, 'peak_mem_mib': 8800.0, 'peak_reserved_mib': None, 'n_params': 4023302, 'resumed_from': None}
+2026-10-14 20:52:05 ALL DONE
+ok a failed kill is not counted as done; it is retried
+2026-10-14 20:52:05 STARTED runner MAIN-pc pid 3520: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:06 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-14 20:52:06 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205206
+2026-10-14 20:52:06 STARTED runner MAIN-pc pid 3522: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:07 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-14 20:52:07 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205207
+2026-10-14 20:52:07 STARTED runner MAIN-pc pid 3524: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:08 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205208
+2026-10-14 20:52:08 STARTED runner MAIN-pc pid 3526: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:08 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-14 20:52:08 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205208
+2026-10-14 20:52:08 STARTED runner MAIN-pc pid 3528: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:09 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205209
+2026-10-14 20:52:09 STARTED runner MAIN-pc pid 3530: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:10 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-14 20:52:10 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205210
+2026-10-14 20:52:10 STARTED runner MAIN-pc pid 3532: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:11 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-14 20:52:11 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205211
+2026-10-14 20:52:11 STARTED runner MAIN-pc pid 3534: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:12 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205212
+2026-10-14 20:52:12 STARTED runner MAIN-pc pid 3536: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:12 events.jsonl was written 0 s ago by a runner that is not listed: waiting until it is quiet for 0.3 s
+2026-10-14 20:52:12 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205212
+2026-10-14 20:52:12 STARTED runner MAIN-pc pid 3538: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:13 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205213
+2026-10-14 20:52:13 STARTED runner MAIN-pc pid 3540: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:14 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205214
+2026-10-14 20:52:14 STARTED runner MAIN-pc pid 3542: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:14 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205214
+2026-10-14 20:52:14 STARTED runner MAIN-pc pid 3544: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:15 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205215
+2026-10-14 20:52:15 STARTED runner MAIN-pc pid 3546: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:16 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205216
+2026-10-14 20:52:16 STARTED runner MAIN-pc pid 3548: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+2026-10-14 20:52:17 job-level RESULT.json (arm_failed) moved aside: /tmp/tmp2twosf1k/work/results/MAIN-pc/MAIN-3M/RESULT.json.aside-20261014-205217
+2026-10-14 20:52:17 STARTED runner MAIN-pc pid 3550: /usr/bin/python3 /home/user/learner/results/8a-g/pc-job-cards/g2fa4/tests/fake_runner.py --work /tmp/tmp2twosf1k/work --queue /tmp/tmp2twosf1k/src/custom_io/queue_local/MAIN-pc.txt --busy /tmp/tmp2twosf1k/GPU-BUSY.txt --steps 900 --step-s 0.02 --ckpt-every 100 --job MAIN-3M --crash-at 10 --crash-always
+ok deaths across a reboot are not counted as crashes (16 launches, still not stopped)
+ALL OK

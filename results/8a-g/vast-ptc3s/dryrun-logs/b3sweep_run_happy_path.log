@@ -1,0 +1,211 @@
+=== CIO START 2026-10-14T08:30:45Z
+=== STAGE setup 2026-10-14T08:30:45Z
+=== PTC3S START job=8aPTC3S-3M-s400 maxh=3 dph=0.4 guard=OFF-profile-mode cap_usd=4.0 tf=5.19.0 eg=1 dry=1 base=74d6e92c75f3a0ed6b3f1e49e13fefc5ed5d29d6 overlay=c2bf1a71c7386396a087e5993a3de4ce8873925d 2026-10-14T08:30:45Z
+=== PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=150 PROF_JOB_STEPS=2 PROF_COMPILE=0 end_sleep=20 PROF_PLAN=b3sweep) 2026-10-14T08:30:45Z
+               total        used        free      shared  buff/cache   available
+Mem:              15           6           7           5           7           9
+4
+tmpfs            16G  5.4G   11G  34% /dev/shm
+TICK at=2026-10-14T08:30:45Z stage=setup up_min=0 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10624 ram_avail=9831 | gpu 
+versions {'transformers': '5.19.0', 'safetensors': '0.8.0', 'tokenizers': '0.23.2', 'huggingface_hub': '1.33.0', 'numpy': '2.4.6', 'pyarrow': '26.0.0', 'accelerate': '1.15.0', 'torch': '2.14.1+cpu cuda None'}
+# date 2026-10-14T08:30:49Z
+# uname
+Linux vm 6.18.44-fc-v114 #1 SMP PREEMPT_DYNAMIC @0 x86_64 x86_64 x86_64 GNU/Linux
+# python
+Python 3.11.15
+# nvidia-smi
+cio: line 680: nvidia-smi: command not found
+# nvidia-smi gpu csv
+cio: line 681: nvidia-smi: command not found
+# pip list | grep -i -E "torch|transformers|numpy" (and the other pinned packages)
+accelerate                1.15.0
+huggingface_hub           1.33.0
+numpy                     2.4.6
+pyarrow                   26.0.0
+safetensors               0.8.0
+tokenizers                0.23.2
+torch                     2.14.1+cpu
+transformers              5.19.0
+# torch
+torch 2.14.1+cpu cuda None cudnn None cuda_available False
+tf32 matmul False tf32 cudnn True float32_matmul_precision highest
+# cpu
+CPU(s):                                  4
+Model name:                              Intel(R) Xeon(R) Processor @ 2.10GHz
+Thread(s) per core:                      1
+Core(s) per socket:                      4
+Socket(s):                               1
+               total        used        free      shared  buff/cache   available
+Mem:           16093        6277        8079        5483        7549        9816
+tmpfs            16G  5.4G   11G  34% /dev/shm
+=== STAGE code 2026-10-14T08:30:51Z
+=== src-ptc: base files and caps.py are 74d6e92c75's, the 6 PTC files and 2 queue files are in, all sha256 ok 2026-10-14T08:30:57Z
+=== ptccheck on the CPU (about 2 minutes) 2026-10-14T08:30:57Z
+    ok calc_train off = base 74d6e92c75: every weight at the seed, loss before and after 40 updates, target ids, intact / calc / loops:0 decodes (PT, PT_g, PTS), LESIONS ['calc'], cap counters, old arms' sizes and train_args are equal
+    all test_ptc checks passed
+(ii) test_ptc: all checks passed
+(iii) 8aPTC3S-pc.txt: 2 entries, 8aPTC3S-3M-s400 --arms PTC --accum PTC=16, job.py parses it, cfg = PTS cfg + calc_train; equal to 8aG2C3S's lines except arm and names
+(iii) 8aPTC10S-pc.txt: 2 entries, 8aPTC10S-10M-s400 --arms PTC --accum PTC=32, job.py parses it, cfg = PTS cfg + calc_train; 8aG2C10S-pc.txt not in src-b3g2 (not compared)
+PTC CPU CHECK OK
+=== CODE-ID 8aPTC3S-pc-047f8ed212 (PC: WORK\code\8aPTC3S-pc-<same 10 hex>); code_identity.py (CRLF as LF): CODE-HASH-LF 47d676dde1 FILES-LIST-SHA256 62179e62bb2ef62c53774259841b0e188412076e4cf40ac05b8a7a60017862a2 (118 files) ; raw-bytes file list sha256 62179e62bb2ef62c53774259841b0e188412076e4cf40ac05b8a7a60017862a2; caps.py 32862ae2d4e6e401fcad5bb6c5e54b0b8845019202dea73e2cb4c7efe5eea03e 2026-10-14T08:31:28Z
+CMD 8a-data mem 3000 MiB: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.get_data --work /dev/shm/ptcdry/J/work --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/8a-data --data-pool /dev/shm/ptcdry/J/work/8a-inputs/data-pool --own-xz /dev/shm/ptcdry/J/work/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+CMD 8aPTC3S-3M-s400 mem 9000 MiB: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.job --work /dev/shm/ptcdry/J/work/g8a --local --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/8aPTC3S-3M-s400 --skills /dev/shm/ptcdry/J/work/data --big-data /dev/shm/ptcdry/J/work/data_big --data8a /dev/shm/ptcdry/J/work/data8a --rung 3M --seed 400 --arms PTC --b2-extra '{"eg_embed": true}' --cloze-long /dev/shm/ptcdry/J/work/b3-inputs/cloze_long.py --caps-file /dev/shm/ptcdry/J/work/b3-inputs/caps_b3s.json --accum PTC=16 --device cpu -
+CHILD-ENV (added to the environment): {'PYTORCH_CUDA_ALLOC_CONF': 'expandable_segments:True'}
+QUEUE-ENV (the PC's # ENV lines, Windows paths, not used here): {"PYTHONPATH": "C:\\Users\\benja\\eg_site;C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages", "CUSTOM_IO_EG2": "C:\\Users\\benja\\eg2"}
+=== STAGE gemma 2026-10-14T08:31:28Z
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+{"device": "cpu", "transformers": "5.19.0", "path": "/dev/shm/ptcdry/J/eg2", "n_text": 271002624, "probe_cos_vs_build_box": [1.0, 1.0, 1.0], "pre_width": null, "pre_projection_max_abs_diff_fp32": null, "pre_projection_max_abs_diff_device": null, "pre_ok": null, "ok": true}
+=== STAGE data 2026-10-14T08:31:42Z
+=== data branches fetched at 3d0afbeadd5f1775c7c92195348bab6f66da767d and 8d012f1f97bd8203b15e88e369dc856721e13e6a; building the 8a data (FineWeb-Edu shard 0 is 2.15 GB; the slices must hash to the manifest) 2026-10-14T08:31:49Z
+[get_data 08:31:50] teach.jsonl ok (already there)
+[get_data 08:31:51] web slices ok (already there) ['slice_rung10.jsonl', 'slice_rung3.jsonl', 'slice_rung30.jsonl']
+[get_data 08:31:51] READY /dev/shm/ptcdry/J/work/data8a
+=== STAGE skills 2026-10-14T08:31:51Z
+TICK at=2026-10-14T08:32:45Z stage=skills up_min=2 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10625 ram_avail=9117 | gpu 
+curriculum hashes match
+TICK at=2026-10-14T08:34:45Z stage=skills up_min=4 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10675 ram_avail=9114 | gpu 
+big build train.jsonl hash matches
+=== STAGE prof 2026-10-14T08:34:54Z
+=== PROF START job smoke of 2 updates, then the harness (commit 1d728b99ef7180c567b285b07ede9aac7a46427a); budget 150 min, maxh 3 h, speed guard OFF, up 4 min so far 2026-10-14T08:34:54Z
+=== PROF PLAN b3sweep (PROF_PLAN): pool-building smoke of 2 updates, then ONLY the B3G2 accum sweep, the K-pinned comparison and two AT-1 speed runs; maxh 3 h, budget 150 min 2026-10-14T08:34:54Z
+[git shim] 1d728b99ef7180c567b285b07ede9aac7a46427a fetched from the local repository
+=== PROF-HARNESS commit 1d728b99ef7180c567b285b07ede9aac7a46427a; prof_train.py sha256 e2b5cbcd60d30e61885977f27beab52b2a5f23f43de29d9a7748498036203829 = the pinned value; test_prof.py f160c8064f43627749436b59cc61c2f162bfb6f8b9786e368230b44a218876ba; README.md 4e0fe73a695cc16fe5dabd8bebbe1aea443976fcddf8f543bda68b3fb5af1f99; PREREG-eg-once.md 261ef009c6c8434f70adffc6da073f4f7d3a5da16c26c696f6a845558fc18b67 2026-10-14T08:35:19Z
+PROF-JOB cmd: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.job --work /dev/shm/ptcdry/J/work/g8a --local --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/profjob --skills /dev/shm/ptcdry/J/work/data --big-data /dev/shm/ptcdry/J/work/data_big --data8a /dev/shm/ptcdry/J/work/data8a --rung 3M --seed 400 --arms PTC --b2-extra '{"eg_embed": true}' --cloze-long /dev/shm/ptcdry/J/work/b3-inputs/cloze_long.py --caps-file /dev/shm/ptcdry/J/work/b3-inputs/caps_b3s.json --accum PTC=16 --device cpu --steps 2 --big-data '' --tra
+=== STAGE prof-job 2026-10-14T08:35:19Z
+=== PROF-JOB START: the queue-built job command, --steps 2, --train-extra '--log-every 1 --batch 16 --eval-max 16', out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/profjob; timeout 1200 s (budget left 8975 s) 2026-10-14T08:35:19Z
+TICK at=2026-10-14T08:36:45Z stage=prof-job up_min=6 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10609 ram_avail=6180 | gpu 
+TICK at=2026-10-14T08:38:45Z stage=prof-job up_min=8 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10609 ram_avail=6145 | gpu 
+TICK at=2026-10-14T08:40:46Z stage=prof-job up_min=10 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10609 ram_avail=6089 | gpu 
+=== PROF-JOB END rc=0 secs=414 maxh_hit=no 2026-10-14T08:42:13Z
+pool reused p10-rung30-s400-a64-L
+{"rung": "3M", "seed": 400, "steps": 2, "wall_s": 412.8, "cost_usd": 0.0}
+RESULT-SUMMARY {"job_status": "ok", "arm_status": "ok", "steps": 2, "n_params": 4023976, "steps_per_s": 0.098, "train_s": 20, "wall_s": 409, "peak_mem_mib": null, "cap_total": 0, "calc_mismatch": 0, "calc_rows": 32, "calc_forced": 16, "final_eval": true, "chain5": false, "lesions": ["nocalc"]}
+PROF-JOB train step=1 loss=4.71416 lr=3.3e-06 elapsed_s=16.0 cap_hits=0
+PROF-JOB train step=2 loss=4.7024 lr=6.7e-06 elapsed_s=20.4 cap_hits=0
+PROF-JOB timing {"steps": 2, "train_s": 20.4, "steps_per_s_result": 0.09826264255879773, "sec_per_update_overall": 10.1768, "sec_per_update_first_to_last_log": 4.4, "first_log_step": 1, "last_log_step": 2, "job_wall_s": 414.0, "pool_build_s": 1.0, "arm_wall_s": 411.8, "final_eval_phase_s": 374.4, "startup_before_train_s": 15.3, "peak_mem_mib": null, "peak_reserved_mib": null}
+PROF-JOB projection for the 24,000-update job (this speed, suggested): train_h=29.33 final_eval_h=0.104 (the guard's EXTRA_H default is 0.5)
+PROF-JOB pool {"train_sha256": "27234f3e9861ce5f8c6db18371f27c5f52826712398b90a4e946e952ff8791fe", "train_bytes": 485544869, "rows": 1343273, "pieces": 60008258, "schedule_steps": 24000, "passes": 4.574}
+=== PROF harness pool /dev/shm/ptcdry/J/work/g8a/pools/p10-rung30-s400-a64-L (485544869 bytes), --pkg-root /dev/shm/ptcdry/J/src-ptc, CUSTOM_IO_EG2=/dev/shm/ptcdry/J/eg2 2026-10-14T08:42:13Z
+=== PROF PLAN b3sweep: B3G2 accum sweep 32,16,8,4 (PREREG-b3g2-accum.md), K-pinned comparison, AT-1 speed at accum 32 and at the fastest swept accum under 10 GB; no PTC stages, no E4, no a_profile; budget 150 min from the start of stage prof 2026-10-14T08:42:13Z
+=== STAGE prof-h1_b3g2_accumsweep 2026-10-14T08:42:13Z
+=== PROF STEP h1_b3g2_accumsweep start: timeout 2700 s, budget left 8561 s 2026-10-14T08:42:13Z
+TICK at=2026-10-14T08:42:46Z stage=prof-h1_b3g2_accumsweep up_min=12 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10608 ram_avail=9138 | gpu 
+=== PROF STEP h1_b3g2_accumsweep end rc=0 secs=37 2026-10-14T08:42:50Z
+[    1.1s] === section accumsweep
+[    1.1s] accumsweep round 1/1: accum 32 (1 rows per micro-batch)
+[   17.7s]   accum 32 round 1: 4.8031 s/update, peak alloc None GB, rounds per micro-batch 14.69
+[   17.7s] accumsweep round 1/1: accum 16 (2 rows per micro-batch)
+[   26.9s]   accum 16 round 1: 3.2026 s/update, peak alloc None GB, rounds per micro-batch 17.19
+[   26.9s] accumsweep round 1/1: accum 8 (4 rows per micro-batch)
+[   32.1s]   accum 8 round 1: 2.0442 s/update, peak alloc None GB, rounds per micro-batch 17.81
+[   32.1s] accumsweep round 1/1: accum 4 (8 rows per micro-batch)
+[   34.8s]   accum 4 round 1: 0.9815 s/update, peak alloc None GB, rounds per micro-batch 12.62
+--- b3g2_accumsweep.md
+# Profile: B3G2 3M accum 32 batch 32 on x86_64 (cpu), torch 2.14.1+cpu
+
+model b3g2, 205,014 trained params, data /dev/shm/ptcdry/J/work/g8a/pools/p10-rung30-s400-a64-L (400 rows), EG front stub, bf16 autocast False, seed 400, caps caps_b3g2.json
+
+## accumsweep
+
+arm B3G2 | rung 3M | accum 32 | batch 32 | device cpu | torch 2.14.1+cpu
+
+reference accum 32; 1 rounds x 2 timed updates after 1 warm-up (chunks of 2); marks (PREREG-b3g2-accum.md, fixed before any number): speed counts at >= 1.3x, memory fits at <= 10.0 GB peak allocated, a rise of rounds per micro-batch above +25 % is reported with the speed
+
+| accum | rows/micro-batch | median s/update | median of chunks | speed vs ref | speed mark | peak alloc GB | memory mark | rounds/micro-batch | sem | rounds vs ref | rise > 25 % | s/update per round |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 32 | 1 | 4.8031 | 4.8031 | 1.000 | no | - | - | 14.69 | 1.29 | 1.000 | no | 4.8031 |
+| 16 | 2 | 3.2026 | 3.2026 | 1.500 | yes | - | - | 17.19 | 1.91 | 1.170 | no | 3.2026 |
+| 8 | 4 | 2.0442 | 2.0442 | 2.350 | yes | - | - | 17.81 | 2.99 | 1.213 | no | 2.0442 |
+| 4 | 8 | 0.9815 | 0.9815 | 4.894 | yes | - | - | 12.62 | 3.38 | 0.860 | no | 0.9815 |
+
+prediction (accum 8 gives 2x to 3x) proved wrong (both accum 16 and accum 8 under 1.3x): no
+
+s_per_update_median = median over the rounds of each round's mean s/update (the bench convention); median_of_chunks = median over every timed chunk of every round. peak_alloc_gb is torch max_memory_allocated in GiB, reset before each timed run. rounds_per_micro_batch = mean of aux["rounds"] (n = max
+
+=== STAGE prof-h2_b3g2_accumcmp 2026-10-14T08:42:51Z
+=== PROF STEP h2_b3g2_accumcmp start: timeout 900 s, budget left 8523 s 2026-10-14T08:42:51Z
+=== PROF STEP h2_b3g2_accumcmp end rc=0 secs=11 2026-10-14T08:43:02Z
+[    0.9s] === section accumcmp
+[    0.9s] === section accumcmp
+[    0.9s] accumcmp: stochastic parts pinned (gap_p 0, ans_drill 0, rounds K0=9 where the model has them); reference accum 32, candidates [16, 8, 4]
+[    8.0s] accumcmp fp32: accum 32 vs 16: |dloss| 0.000e+00 (rel 0.000e+00), grad cos 1.00000000, rel L2 1.327e-07; rerun floor: cos 1.00000000
+[    9.0s] accumcmp fp32: accum 32 vs 8: |dloss| 0.000e+00 (rel 0.000e+00), grad cos 1.00000000, rel L2 1.260e-07; rerun floor: cos 1.00000000
+[    9.7s] accumcmp fp32: accum 32 vs 4: |dloss| 0.000e+00 (rel 0.000e+00), grad cos 1.00000000, rel L2 1.179e-07; rerun floor: cos 1.00000000
+[    9.7s] done /dev/shm/ptcdry/J/profraw/b3g2_accumcmp.json /dev/shm/ptcdry/J/profraw/b3g2_accumcmp.md
+--- b3g2_accumcmp.md
+# Profile: B3G2 3M accum 32 batch 32 on x86_64 (cpu), torch 2.14.1+cpu
+
+model b3g2, 205,014 trained params, data /dev/shm/ptcdry/J/work/g8a/pools/p10-rung30-s400-a64-L (400 rows), EG front stub, bf16 autocast False, seed 400, caps caps_b3g2.json
+
+## accumcmp
+
+arm B3G2 | rung 3M | accum 32 | batch 32 | device cpu | torch 2.14.1+cpu
+
+one update, 32 rows, stochastic parts pinned: True (K0 9); on CPU: True; reference accum 32
+
+| accum vs 32 | |d loss| | rel d loss | grad cosine | grad rel L2 | note |
+|---|---|---|---|---|---|
+| 32 again (fp32) | 0.00e+00 | - | 1.00000000 | 0.00e+00 | noise floor |
+| 16 (fp32) | 0.00e+00 | 0.00e+00 | 1.00000000 | 1.33e-07 |  |
+| 8 (fp32) | 0.00e+00 | 0.00e+00 | 1.00000000 | 1.26e-07 |  |
+| 4 (fp32) | 0.00e+00 | 0.00e+00 | 1.00000000 | 1.18e-07 |  |
+
+descriptive only: no pass bar. K pinned means every accum runs the same number of thinker rounds, so this isolates the partition (how rows share a micro-batch and its loss average).
+
+=== PROF-AT code: custom_io at 6e72a5fae514a343c217c4d95cde37bc3b587c8e (branch claude/project-thread-emwjvn, the PC's src-at); pins as in the AT10M kit 2026-10-14T08:43:02Z
+CMD 8aAT-3M-s400 mem 9000 MiB: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.job --work /dev/shm/ptcdry/J/work/g8a --local --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/8aAT-3M-s400 --skills /dev/shm/ptcdry/J/work/data --big-data /dev/shm/ptcdry/J/work/data_big --data8a /dev/shm/ptcdry/J/work/data8a --rung 3M --seed 400 --arms AT --b2-extra '{"eg_embed": true}' --cloze-long /dev/shm/ptcdry/J/work/b3-inputs/cloze_long.py --caps-file /dev/shm/ptcdry/J/work/b3-inputs/caps_b3g2.json --accum AT=32 --device cpu --steps 
+=== PROF-AT code ok: 11 pinned files match, caps_b3g2.json copied to /dev/shm/ptcdry/J/work/b3-inputs, the AT command is built (queue file 8aAT-3M-s400-pc.txt, local_runner's own parse_queue and command) 2026-10-14T08:43:06Z
+PROF-AT cmd: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.job --work /dev/shm/ptcdry/J/work/g8a --local --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/at/at_g1 --skills /dev/shm/ptcdry/J/work/data --big-data /dev/shm/ptcdry/J/work/data_big --data8a /dev/shm/ptcdry/J/work/data8a --rung 3M --seed 400 --arms AT --b2-extra '{"eg_embed": true}' --cloze-long /dev/shm/ptcdry/J/work/b3-inputs/cloze_long.py --caps-file /dev/shm/ptcdry/J/work/b3-inputs/caps_b3g2.json --accum AT=32 --device cpu --steps 2 --big-data '' --trai
+=== STAGE prof-at_g1 2026-10-14T08:43:06Z
+=== PROF-AT at_g1 START: arm AT (B3AT) 3M, accum AT=32, --steps 6, --train-extra '--log-every 1 --batch 32 --eval-max 16', out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/at/at_g1; timeout 1200 s (budget left 8508 s); the box stops the job when AT/RESULT.json appears (training is over, the final evaluation is not wanted) 2026-10-14T08:43:06Z
+TICK at=2026-10-14T08:44:46Z stage=prof-at_g1 up_min=14 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10608 ram_avail=5433 | gpu 
+PROF-AT at_g1 progress: step=2 loss=5.82382 elapsed_s=77.9 gpu_used_mib=none
+TICK at=2026-10-14T08:46:46Z stage=prof-at_g1 up_min=16 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10608 ram_avail=5425 | gpu 
+=== PROF-AT at_g1 END rc=143 secs=237 (training finished, job stopped by the box before its final evaluation) 2026-10-14T08:47:03Z
+PROF-AT at_g1 train step=1 loss=5.91774 lr=3.3e-06 elapsed_s=44.5
+PROF-AT at_g1 train step=2 loss=5.82382 lr=6.7e-06 elapsed_s=77.9
+PROF-AT at_g1 train step=3 loss=5.61371 lr=1e-05 elapsed_s=105.3
+PROF-AT at_g1 train step=4 loss=5.67872 lr=1.33e-05 elapsed_s=136.8
+PROF-AT at_g1 train step=5 loss=5.54892 lr=1.67e-05 elapsed_s=176.3
+PROF-AT at_g1 train step=6 loss=5.42663 lr=2e-05 elapsed_s=204.0
+PROF-AT at_g1 accum AT=32: ended=training finished, job stopped by the box before its final evaluation (rc 143); last step reached 6 of 6
+PROF-AT at_g1 SPEED: 29.6 s/update = median of 4 consecutive differences of the log lines from step 2 on (122 updates/hour)
+PROF-AT at_g1 PEAK: RESULT.json has no peak_mem_mib (train.py records it on CUDA only); nvidia-smi highest used memory None MiB (includes cached memory: an upper bound, not the allocated peak)
+PROF-AT at_g1 RATIO to B3G2 on this box at the same accum 32: 6.16x (B3G2 4.803 s/update from the harness sweep, a free-running mean over its timed updates; AT from train.py log lines; different timers, suggested comparison)
+PROF-AT pick: accum 32: 4.803097981000974 s/update, peak None GB, oom False (not eligible); accum 16: 3.2025717310007167 s/update, peak None GB, oom False (not eligible); accum 8: 2.044179730999531 s/update, peak None GB, oom False (not eligible); accum 4: 0.9815202570007386 s/update, peak None GB, oom False (not eligible)
+PROF-AT pick: no swept accum other than 32 qualifies (fits in 10 GB with a speed): accum 8 (the default)
+PROF-AT cmd: /tmp/claude-0/-home-user-learner/3367cbbf-5394-5200-b7a8-86f8e7226d4b/scratchpad/ptcbox/dry/venv/bin/python -m custom_io.g8a.job --work /dev/shm/ptcdry/J/work/g8a --local --out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/at/at_g2 --skills /dev/shm/ptcdry/J/work/data --big-data /dev/shm/ptcdry/J/work/data_big --data8a /dev/shm/ptcdry/J/work/data8a --rung 3M --seed 400 --arms AT --b2-extra '{"eg_embed": true}' --cloze-long /dev/shm/ptcdry/J/work/b3-inputs/cloze_long.py --caps-file /dev/shm/ptcdry/J/work/b3-inputs/caps_b3g2.json --accum AT=8 --device cpu --steps 2 --big-data '' --train
+=== STAGE prof-at_g2 2026-10-14T08:47:04Z
+=== PROF-AT at_g2 START: arm AT (B3AT) 3M, accum AT=8, --steps 6, --train-extra '--log-every 1 --batch 32 --eval-max 16', out /dev/shm/ptcdry/J/work/results/8aPTC3S-pc/at/at_g2; timeout 1200 s (budget left 8271 s); the box stops the job when AT/RESULT.json appears (training is over, the final evaluation is not wanted) 2026-10-14T08:47:04Z
+TICK at=2026-10-14T08:48:46Z stage=prof-at_g2 up_min=18 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10593 ram_avail=4302 | gpu 
+PROF-AT at_g2 progress: step=2 loss=5.94925 elapsed_s=79.6 gpu_used_mib=none
+TICK at=2026-10-14T08:50:46Z stage=prof-at_g2 up_min=20 step=2 loss=4.70828 train_elapsed_s=18.8 | mb data8a=1627 skills=111 pools=467 free=10593 ram_avail=4909 | gpu 
+=== PROF-AT at_g2 END rc=143 secs=237 (training finished, job stopped by the box before its final evaluation) 2026-10-14T08:51:01Z
+PROF-AT at_g2 train step=1 loss=5.90469 lr=3.3e-06 elapsed_s=42.1
+PROF-AT at_g2 train step=2 loss=5.94925 lr=6.7e-06 elapsed_s=79.6
+PROF-AT at_g2 train step=3 loss=5.91673 lr=1e-05 elapsed_s=120.9
+PROF-AT at_g2 train step=4 loss=5.50553 lr=1.33e-05 elapsed_s=144.9
+PROF-AT at_g2 train step=5 loss=5.55162 lr=1.67e-05 elapsed_s=175.6
+PROF-AT at_g2 train step=6 loss=5.69008 lr=2e-05 elapsed_s=204.3
+PROF-AT at_g2 accum AT=8: ended=training finished, job stopped by the box before its final evaluation (rc 143); last step reached 6 of 6
+PROF-AT at_g2 SPEED: 29.7 s/update = median of 4 consecutive differences of the log lines from step 2 on (121 updates/hour)
+PROF-AT at_g2 PEAK: RESULT.json has no peak_mem_mib (train.py records it on CUDA only); nvidia-smi highest used memory None MiB (includes cached memory: an upper bound, not the allocated peak)
+PROF-AT at_g2 RATIO to B3G2 on this box at the same accum 8: 14.53x (B3G2 2.044 s/update from the harness sweep, a free-running mean over its timed updates; AT from train.py log lines; different timers, suggested comparison)
+=== STAGE result 2026-10-14T08:51:01Z
+=== PROF printing: block profjob (job smoke folder), block profrun (17 files, archive 8285 bytes) 2026-10-14T08:51:01Z
+RBEGIN|profjob|876614b07d18534ac100750f29f396cf97ff4304918942144a5f230ac337236b|18239
+REND|profjob
+RBEGIN|profrun|5830182ad8e4f9481614a5778690e2cd6b32c1945929b09a4719749be523e930|8285
+REND|profrun
+=== PROF RESULT PRINTED blocks=profjob,profrun r_lines=119 (the Vast log read window is 20000 lines) failed=[] skipped=[] 2026-10-14T08:51:01Z
+=== PROF-STEPS (name rc seconds timeout_s): 2026-10-14T08:51:01Z
+job 0 414 1200
+h1_b3g2_accumsweep 0 37 2700
+h2_b3g2_accumcmp 0 11 900
+at_g1 143 237 1200
+at_g2 143 237 1200
+=== PROF DONE failed=none skipped=[] up_min=20 2026-10-14T08:51:01Z
+=== CIO DONE 2026-10-14T08:51:01Z
+run_dry exit 0

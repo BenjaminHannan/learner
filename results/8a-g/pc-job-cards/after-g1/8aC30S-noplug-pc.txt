@@ -1,0 +1,7 @@
+# BensPC RTX 5070 Ti: c30s = the plain 30M control with worked steps on every row (arm PTS, pinned caps_b3s.json: plain_target 115), the partner of B3 30M, seed 400 only. It replaces c30 (big-run PLAN.md addendum 10-10, 9:00 PM ET). Builds the 30M pool p30-rung30-s400-a64-L first. NO PLUG (Ben, 4:12 PM ET 11 Oct; job.py --noplug, the architecture thread's no-plug front): width 512, 8 heads, Gemma's own 512 numbers through a zero-start LayerNorm(512); size check on CPU at 74d6e92c75 under caps_b3s.json: 30M B2 30,000,092, PTS 9 layers, hidden 2099, 30,003,659 trained (within the plain band); lr 0.0005 (1e-3 x 256 / 512, every arm at this rung). Code src-b3g2 = the group 2 reader-rule commit installed by install_rr.ps1. Accum PTS=64, as c30's PT=64. The job stops at start if a row is over 115 (report only, never edit caps).
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aC30S-30M-s400 --rung 30M --seed 400 --arms PTS --b2-extra '{"eg_embed": true}' --cloze-long {WORK}/b3-inputs/cloze_long.py --caps-file {WORK}/b3-inputs/caps_b3s.json --accum PTS=64 --noplug

@@ -1,0 +1,29 @@
+--- PROF_PLAN=bogus is refused
+    === CIO-FAIL PROF_PLAN must be default or b3sweep (got 'bogus') 2026-10-14T08:40:23Z
+    RBEGIN|profjob|00db5cc4fe11c64c89bdb7419b5e3cc9343e52f54596e144ca118dc8a78b7f10|266
+    RBEGIN|profrun|52f9dd1e571d4ee0e5ab9fc913247ab1076fe595bf3f6d16c81409aa2665f2a3|262
+    => as expected (found: PROF_PLAN must be default or b3sweep)
+--- PROF_PLAN=b3sweep without PROFILE=1 is refused
+    === CIO-FAIL PROF_PLAN=b3sweep needs PROFILE=1 2026-10-14T08:42:23Z
+    => as expected (found: PROF_PLAN=b3sweep needs PROFILE=1)
+--- PROF_PLAN=b3sweep with PROFILE=0 is refused
+    === CIO-FAIL PROF_PLAN=b3sweep needs PROFILE=1 2026-10-14T08:44:23Z
+    => as expected (found: PROF_PLAN=b3sweep needs PROFILE=1)
+--- PROFILE=1 PROF_PLAN=b3sweep: the PROF MODE line names the plan (then stops at the PROF_DRY_ARGS-without-PTC_DRY refusal)
+    === PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=150 PROF_JOB_STEPS=50 PROF_COMPILE=0 end_sleep=1 PROF_PLAN=b3sweep) 2026-10-14T08:46:23Z
+    === CIO-FAIL PROF_DRY_* are CPU dry-run hooks and need PTC_DRY=1; never set them on Vast 2026-10-14T08:46:23Z
+    RBEGIN|profjob|4cac79441f223f9cfdc6a1711103632669d988439be1573eef47548db1069d5a|267
+    RBEGIN|profrun|f5b574cf5dbd31a957eb1a62243570bfa03d9b69d63bcc6a1084158a62d9490f|317
+    => as expected (found: PROF_PLAN=b3sweep)
+--- PROFILE=1 PROF_PLAN=default: the PROF MODE line is the old one (no plan text)
+    === PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=75 PROF_JOB_STEPS=300 PROF_COMPILE=0 end_sleep=1) 2026-10-14T08:46:24Z
+    === CIO-FAIL PROF_DRY_* are CPU dry-run hooks and need PTC_DRY=1; never set them on Vast 2026-10-14T08:46:24Z
+    RBEGIN|profjob|ecb102f610ef2302b8599c71f09edd1ac952548cb64f565a4e6bd2695d2f933e|266
+    RBEGIN|profrun|1341923aa2b21a5743166277fa08585e31663310ca4e6de96f26a2f5fc522878|262
+    => as expected (found: PROF_COMPILE=0 end_sleep=1))
+--- PROFILE=1 with PROF_PLAN unset: the PROF MODE line is the old one (no plan text)
+    === PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=75 PROF_JOB_STEPS=300 PROF_COMPILE=0 end_sleep=1) 2026-10-14T08:46:26Z
+    === CIO-FAIL PROF_DRY_* are CPU dry-run hooks and need PTC_DRY=1; never set them on Vast 2026-10-14T08:46:26Z
+    RBEGIN|profjob|2289aca04d85b0a057e52f17a8324e5e3f62a0329d1bb31916e23cbbb81d2f41|266
+    RBEGIN|profrun|685ddf2580ef437afb7740285b09ea39159fb1c91c5f862cb9633114b678a649|262
+    => as expected (found: PROF_COMPILE=0 end_sleep=1))

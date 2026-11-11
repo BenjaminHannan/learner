@@ -1,0 +1,40 @@
+tree: /dev/shm/ptcdry/J/work/code/8aPTC3S-pc-047f8ed212
+--- python -I imports (isolated: no cwd, no PYTHONPATH, no user site; the tree is added by sys.path.insert in the -c string)
+import ok custom_io.local_runner
+import ok custom_io.g8a.job
+import ok custom_io.g8a.get_data
+import ok custom_io.g8a.configs
+import ok custom_io.g8a.caps
+import ok custom_io.g8a.pool
+import ok custom_io.capcount
+import ok custom_io.models.plain_tf_steps
+import ok custom_io.models.plain_lm
+import ok custom_io.models.eg
+import ok custom_io.train
+PTC_ARM in ALL_ARMS: True | MODEL_OF PTC: plain_tf_steps_g
+ptc_cfg calc_train: True
+rc=0
+--- python -m custom_io.g8a.job --help (cwd = the frozen tree, as the runner does)
+usage: job.py [-h] --rung {3M,10M,30M,100M} --seed SEED --work WORK [--local]
+              [--out OUT] --skills SKILLS [--data8a DATA8A] [--own72 OWN72]
+              [--own-extra [OWN_EXTRA ...]] [--caps-file CAPS_FILE]
+              [--recompute-caps] [--cloze-long CLOZE_LONG] [--web30 WEB30]
+              [--web WEB] [--big-data BIG_DATA]
+              [--arms {B2,PT,LLM,B3,B3G2,PTS,PTC} [{B2,PT,LLM,B3,B3G2,PTS,PTC} ...]]
+              [--max-ans MAX_ANS] [--noplug] [--b2-extra B2_EXTRA]
+              [--lr-scale LR_SCALE] [--public {none,pythia31m}] [--maxh MAXH]
+              [--minutes [MINUTES ...]] [--dph DPH] [--accum ACCUM]
+              [--speed-json SPEED_JSON] [--device DEVICE] [--scale SCALE]
+              [--train-extra TRAIN_EXTRA] [--steps STEPS]
+              [--overlap-index OVERLAP_INDEX] [--data-pool DATA_POOL]
+rc=0
+--- python -m custom_io.g8a.get_data --help
+usage: get_data.py [-h] --work WORK --data-pool DATA_POOL [--own-xz OWN_XZ]
+                   [--expect-manifest-sha EXPECT_MANIFEST_SHA] [--out OUT]
+                   [--rungs RUNGS [RUNGS ...]]
+
+options:
+  -h, --help            show this help message and exit
+  --work WORK
+  --data-pool DATA_POOL
+rc=0

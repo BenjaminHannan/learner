@@ -1,0 +1,375 @@
+{
+ "meta": {
+  "arm": "B3G2",
+  "rung": "3M",
+  "accum": 32,
+  "batch": 256,
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 4090",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "python": "3.12.3",
+  "variant": "",
+  "bf16_autocast": true,
+  "model": "b3g2",
+  "cfg": {
+   "d": 256,
+   "n_heads": 4,
+   "reader_layers": 2,
+   "n_loops": 12,
+   "mlp": 4.8,
+   "label": "settled",
+   "span_copy": true,
+   "span_idx": true,
+   "span_end": true,
+   "ans_drill": 0.25,
+   "eg_embed": true,
+   "any_round": true,
+   "gap_p": 0.25,
+   "no_slots": true,
+   "no_place": true,
+   "bytes": true,
+   "as_written": true,
+   "blocks": 2,
+   "writer_mlp": 1.75
+  },
+  "n_params": 4023302,
+  "caps_file": "/job/src-ptc/custom_io/g8a/caps_b3g2.json",
+  "caps": {
+   "max_prompt": 2000,
+   "max_ans": 35,
+   "n_num": 240,
+   "w_max": 727,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 109,
+   "le": 95
+  },
+  "data": "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+  "rows_loaded": 200000,
+  "eg": "real",
+  "tiny": false,
+  "seed": 400,
+  "pkg_root": "/job/src-ptc",
+  "lr": 0.001,
+  "argv": [
+   "--arm",
+   "B3G2",
+   "--rung",
+   "3M",
+   "--accum",
+   "32",
+   "--data",
+   "/job/work/g8a/pools/p10-rung30-s400-a64-L",
+   "--pkg-root",
+   "/job/src-ptc",
+   "--caps",
+   "/job/src-ptc/custom_io/g8a/caps_b3g2.json",
+   "--sections",
+   "accumsweep",
+   "--accum-list",
+   "32,16,8,4",
+   "--accum-updates",
+   "40",
+   "--accum-warmup",
+   "10",
+   "--accum-rounds",
+   "2",
+   "--out",
+   "/job/profraw/b3g2_accumsweep.json"
+  ],
+  "started": "2026-10-14T10:43:33",
+  "finished": "2026-10-14T11:21:50"
+ },
+ "sections": {
+  "accumsweep": {
+   "tag": {
+    "arm": "B3G2",
+    "rung": "3M",
+    "accum": 32,
+    "batch": 256,
+    "device": "cuda",
+    "torch": "2.11.0+cu128",
+    "variant": ""
+   },
+   "reference_accum": 32,
+   "accums": [
+    32,
+    16,
+    8,
+    4
+   ],
+   "rounds": 2,
+   "timed_updates_per_run": 40,
+   "warmup": 10,
+   "chunk": 5,
+   "points": {
+    "32": {
+     "accum": 32,
+     "micro_batch_rows": 8,
+     "runs": [
+      {
+       "round": 1,
+       "s_per_update": 11.579684963074396,
+       "median_chunk": 11.407618472201284,
+       "chunk_values": [
+        11.513868486392312,
+        12.6974449547939,
+        10.929196032788605,
+        11.165569919999689,
+        11.997797487792559,
+        11.174505742220209,
+        11.301368458010256,
+        11.857728622597643
+       ],
+       "peak_mem": {
+        "allocated_gb": 1.636115550994873,
+        "reserved_gb": 1.798828125
+       },
+       "oom": false
+      },
+      {
+       "round": 2,
+       "s_per_update": 11.556360085346387,
+       "median_chunk": 11.254604358796495,
+       "chunk_values": [
+        11.190201291604899,
+        12.764946678793057,
+        11.015671457583085,
+        11.122414845204911,
+        11.871611126419158,
+        11.066857366799377,
+        11.319007425988094,
+        12.100170490378513
+       ],
+       "peak_mem": {
+        "allocated_gb": 1.636115550994873,
+        "reserved_gb": 2.033203125
+       },
+       "oom": false
+      }
+     ],
+     "oom": false,
+     "s_per_update_median": 11.568022524210392,
+     "median_of_chunks": 11.310187941999175,
+     "timed_updates": 80,
+     "peak_alloc_gb": 1.636115550994873,
+     "rounds_per_micro_batch": {
+      "micro_batches": 2560,
+      "mean_per_micro_batch": 15.9171875,
+      "sem_per_micro_batch": 0.21262855991134894,
+      "mean_per_row": 15.9171875,
+      "min": 4.0,
+      "max": 32.0
+     },
+     "speed_vs_ref": 1.0,
+     "meets_speed_mark": false,
+     "fits_memory_mark": true,
+     "rounds_vs_ref": 1.0,
+     "rounds_rise_over_25pct": false
+    },
+    "16": {
+     "accum": 16,
+     "micro_batch_rows": 16,
+     "runs": [
+      {
+       "round": 1,
+       "s_per_update": 5.958676247307449,
+       "median_chunk": 5.931429844209925,
+       "chunk_values": [
+        5.346078684390522,
+        5.921174177201465,
+        5.7182543984148655,
+        5.941685511218384,
+        6.311791001213715,
+        6.888047668803483,
+        6.128389906603843,
+        5.4139886306133125
+       ],
+       "peak_mem": {
+        "allocated_gb": 2.661961078643799,
+        "reserved_gb": 2.73046875
+       },
+       "oom": false
+      },
+      {
+       "round": 2,
+       "s_per_update": 5.945033702926594,
+       "median_chunk": 5.871263649407775,
+       "chunk_values": [
+        5.408787196385674,
+        5.877029594220221,
+        5.854150007199496,
+        5.865497704595327,
+        6.301435822201893,
+        6.821850201208145,
+        6.026384642999619,
+        5.405134454602376
+       ],
+       "peak_mem": {
+        "allocated_gb": 2.661961078643799,
+        "reserved_gb": 2.73046875
+       },
+       "oom": false
+      }
+     ],
+     "oom": false,
+     "s_per_update_median": 5.951854975117021,
+     "median_of_chunks": 5.899101885710843,
+     "timed_updates": 80,
+     "peak_alloc_gb": 2.661961078643799,
+     "rounds_per_micro_batch": {
+      "micro_batches": 1280,
+      "mean_per_micro_batch": 15.9921875,
+      "sem_per_micro_batch": 0.29079523015926617,
+      "mean_per_row": 15.9921875,
+      "min": 4.0,
+      "max": 32.0
+     },
+     "speed_vs_ref": 1.9435995286466048,
+     "meets_speed_mark": true,
+     "fits_memory_mark": true,
+     "rounds_vs_ref": 1.0047118877000099,
+     "rounds_rise_over_25pct": false
+    },
+    "8": {
+     "accum": 8,
+     "micro_batch_rows": 32,
+     "runs": [
+      {
+       "round": 1,
+       "s_per_update": 3.1823547080508434,
+       "median_chunk": 3.1762050807941704,
+       "chunk_values": [
+        3.60981005821377,
+        3.204414415010251,
+        3.122721304395236,
+        2.627535410807468,
+        3.1514631344005464,
+        3.4248809559969233,
+        3.2009470271877944,
+        3.1170653583947567
+       ],
+       "peak_mem": {
+        "allocated_gb": 4.681410312652588,
+        "reserved_gb": 4.88671875
+       },
+       "oom": false
+      },
+      {
+       "round": 2,
+       "s_per_update": 3.173254164130776,
+       "median_chunk": 3.1651028224034237,
+       "chunk_values": [
+        3.578486447408795,
+        3.220565543998964,
+        3.05882339279633,
+        2.679235035413876,
+        3.131393805006519,
+        3.430709402007051,
+        3.198811839800328,
+        3.088007846614346
+       ],
+       "peak_mem": {
+        "allocated_gb": 4.681410312652588,
+        "reserved_gb": 4.8671875
+       },
+       "oom": false
+      }
+     ],
+     "oom": false,
+     "s_per_update_median": 3.1778044360908098,
+     "median_of_chunks": 3.175137487100437,
+     "timed_updates": 80,
+     "peak_alloc_gb": 4.681410312652588,
+     "rounds_per_micro_batch": {
+      "micro_batches": 640,
+      "mean_per_micro_batch": 15.75625,
+      "sem_per_micro_batch": 0.39925465757124456,
+      "mean_per_row": 15.75625,
+      "min": 4.0,
+      "max": 32.0
+     },
+     "speed_vs_ref": 3.6402562702822725,
+     "meets_speed_mark": true,
+     "fits_memory_mark": true,
+     "rounds_vs_ref": 0.9898890743103955,
+     "rounds_rise_over_25pct": false
+    },
+    "4": {
+     "accum": 4,
+     "micro_batch_rows": 64,
+     "runs": [
+      {
+       "round": 1,
+       "s_per_update": 2.1258301282970935,
+       "median_chunk": 2.1375266810064204,
+       "chunk_values": [
+        1.8894181818002835,
+        2.516640588780865,
+        2.1644213252002373,
+        2.1106320368126035,
+        2.3947577103972435,
+        1.962729092198424,
+        2.1889376614009963,
+        1.7791044297860936
+       ],
+       "peak_mem": {
+        "allocated_gb": 8.76835298538208,
+        "reserved_gb": 8.90625
+       },
+       "oom": false
+      },
+      {
+       "round": 2,
+       "s_per_update": 2.1087018401711246,
+       "median_chunk": 2.1201945291948503,
+       "chunk_values": [
+        1.8791661307914183,
+        2.4905204453971237,
+        2.1530860943952574,
+        2.0873029639944436,
+        2.3849469654029236,
+        1.922764163184911,
+        2.1794780767988415,
+        1.7723498814040795
+       ],
+       "peak_mem": {
+        "allocated_gb": 8.76835298538208,
+        "reserved_gb": 8.90625
+       },
+       "oom": false
+      }
+     ],
+     "oom": false,
+     "s_per_update_median": 2.117265984234109,
+     "median_of_chunks": 2.1318590656039307,
+     "timed_updates": 80,
+     "peak_alloc_gb": 8.76835298538208,
+     "rounds_per_micro_batch": {
+      "micro_batches": 320,
+      "mean_per_micro_batch": 17.09375,
+      "sem_per_micro_batch": 0.5596403932080236,
+      "mean_per_row": 17.09375,
+      "min": 5.0,
+      "max": 32.0
+     },
+     "speed_vs_ref": 5.4636604991294755,
+     "meets_speed_mark": true,
+     "fits_memory_mark": true,
+     "rounds_vs_ref": 1.073917738293904,
+     "rounds_rise_over_25pct": false
+    }
+   },
+   "mark3_prediction_proved_wrong": false,
+   "marks": {
+    "speed_counts_at_x": 1.3,
+    "memory_fits_at_gb": 10.0,
+    "rounds_rise_reported_above": 1.25,
+    "source": "PREREG-b3g2-accum.md, fixed before any number"
+   },
+   "note": "s_per_update_median = median over the rounds of each round's mean s/update (the bench convention); median_of_chunks = median over every timed chunk of every round. peak_alloc_gb is torch max_memory_allocated in GiB, reset before each timed run. rounds_per_micro_batch = mean of aux[\"rounds\"] (n = max(K, longest call chain + 2), K drawn per micro-batch) over the timed updates. A different accum is a new recipe (b3g2 draws one K per micro-batch), never the registered G2f.",
+   "wall_s": 2296.9
+  }
+ }
+}

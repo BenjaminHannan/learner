@@ -1,0 +1,93 @@
+{
+ "status": "ok",
+ "job": {
+  "rung": "3M",
+  "seed": 400,
+  "steps": 24000,
+  "cfgs": {
+   "B2": {
+    "d": 256,
+    "n_heads": 4,
+    "reader_layers": 2,
+    "blocks": 2,
+    "n_loops": 12,
+    "mlp": 4.8,
+    "copy": true,
+    "eg_embed": true
+   },
+   "PT": {
+    "d_model": 256,
+    "n_heads": 4,
+    "eg_embed": true,
+    "n_layers": 4,
+    "hidden": 1066
+   },
+   "PTS": {
+    "d_model": 256,
+    "n_heads": 4,
+    "eg_embed": true,
+    "n_layers": 4,
+    "hidden": 1066,
+    "all_steps": true
+   }
+  },
+  "trained_params": {
+   "B2": 4023377,
+   "PT": 4023976,
+   "PTS": 4023976
+  },
+  "lr": 0.001,
+  "lr_scale": 1.0,
+  "caps": {
+   "max_prompt": 2000,
+   "max_ans": 35,
+   "n_num": 240,
+   "w_max": 727,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 115,
+   "rows": 4156181,
+   "own_rows": 2561232,
+   "source": "largest pool: own72 (rung <= 30) + rung30 web slice (long-chunk cloze rows, data_pool/cloze_long.py, seed 400) + dev; computed 10-09 on cloud CPU (own72 manifest e8f32daf, Oct-7 rung30 slice); matches the data thread's cap check (2000 / 240 / 727); PTS (all-steps plain target) re-measured 10-09 on own72 only (2,561,232 rows, Mac): plain_target 115 vs 109 for the group-1 target on the same rows; web cloze rows carry no steps (unchanged); dev rows not re-measured here, so the job caps report must refuse any row over 115"
+  },
+  "maxh": 0,
+  "dph": 0,
+  "accum": {
+   "PTS": 16
+  },
+  "arms": {
+   "PTS": {
+    "rc": 0,
+    "status": "ok",
+    "wall_s": 25848.5,
+    "steps": 24000,
+    "steps_per_s": 0.9307386078113574,
+    "n_params": 4023976,
+    "cmd": "C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe -m custom_io.train --model plain_tf_steps_g --cfg {\"all_steps\": true, \"d_model\": 256, \"eg_embed\": true, \"hidden\": 1066, \"n_heads\": 4, \"n_layers\": 4} --data C:\\Users\\benja\\custom-io\\work\\g8a\\pools\\p10-rung30-s400-a64-L --steps 24000 --batch 256 --lr 0.001 --seed 400 --log-every 500 --final-eval --max-ans 8 --caps C:\\Users\\benja\\custom-io\\work\\g8a\\pools\\p10-rung30-s400-a64-L.caps-PTS\\caps.json --bf16 --big-data C:\\Users\\benja\\custom-io\\work\\data_big --out C:\\Users\\benja\\custom-io\\work\\results\\8aG2C3S-pc\\8aG2C3S-3M-s400\\PTS --accum 16",
+    "accum": 16,
+    "peak_mem_mib": 2852.6
+   }
+  },
+  "started_unix": 1791922411.4996934,
+  "pool_build_s": 43.5,
+  "pool_train_sha256": "a5df2f4ab542db0a8bbd8b1d1f92a063bef383b92bb80367cbcdd4ff1c55aa8c",
+  "pool_schedule": {
+   "seen_pieces_target": 66000000.0,
+   "steps_by_seen": 5772,
+   "update_floor": 24000,
+   "steps": 24000,
+   "floor_rules": true,
+   "row_draws": 6144000,
+   "passes": 4.574,
+   "max_row_draws": 5,
+   "ok_reuse": true,
+   "seen_pieces_actual": 274471932
+  },
+  "b2_extra": {
+   "eg_embed": true,
+   "n_loops": 12
+  },
+  "wall_s": 25892.0,
+  "cost_usd": 0.0
+ }
+}

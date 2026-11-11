@@ -1,0 +1,259 @@
+{
+ "meta": {
+  "arm": "PTS",
+  "rung": "3M",
+  "accum": 16,
+  "batch": 256,
+  "device": "cpu",
+  "device_name": "arm",
+  "torch": "2.14.1",
+  "cuda": null,
+  "python": "3.12.14",
+  "variant": "",
+  "bf16_autocast": false,
+  "model": "plain_tf_steps_g",
+  "cfg": {
+   "d_model": 256,
+   "n_heads": 4,
+   "eg_embed": true,
+   "n_layers": 4,
+   "hidden": 1066,
+   "all_steps": true
+  },
+  "n_params": 4023976,
+  "caps_file": "/Users/ben-hannan/speedup/pkg/custom_io/g8a/caps_b3s.json",
+  "caps": {
+   "max_prompt": 2000,
+   "max_ans": 35,
+   "n_num": 240,
+   "w_max": 727,
+   "n_res": 11,
+   "n_reg": 36,
+   "plain_target": 115,
+   "le": 68
+  },
+  "data": "/Users/ben-hannan/speedup/pool-sample",
+  "rows_loaded": 20049,
+  "eg": "real",
+  "tiny": false,
+  "seed": 402,
+  "pkg_root": "/Users/ben-hannan/speedup/pkg",
+  "lr": 0.001,
+  "argv": [
+   "--arm",
+   "PTS",
+   "--rung",
+   "3M",
+   "--accum",
+   "16",
+   "--data",
+   "/Users/ben-hannan/speedup/pool-sample",
+   "--pkg-root",
+   "/Users/ben-hannan/speedup/pkg",
+   "--device",
+   "cpu",
+   "--eg",
+   "real",
+   "--sections",
+   "equiv",
+   "--equiv-check",
+   "--curve-updates",
+   "0",
+   "--equiv-list",
+   "eg_once",
+   "--seed",
+   "402",
+   "--out",
+   "/Users/ben-hannan/speedup/out/equiv_cpu_s402.json"
+  ],
+  "started": "2026-10-13T23:42:57",
+  "finished": "2026-10-13T23:44:49"
+ },
+ "sections": {
+  "equiv": {
+   "tag": {
+    "arm": "PTS",
+    "rung": "3M",
+    "accum": 16,
+    "batch": 256,
+    "device": "cpu",
+    "torch": "2.14.1"
+   },
+   "pinned": true,
+   "K0": 8,
+   "on_cpu": true,
+   "rows": 256,
+   "specs": {
+    "eg_once": {
+     "spec": "eg_once",
+     "fp32": {
+      "loss_base": 4.739525318145752,
+      "loss_var": 4.739525318145752,
+      "abs_loss_diff": 0.0,
+      "rel_loss_diff": 0.0,
+      "grad_cos": 0.9999999999999558,
+      "grad_rel_l2": 5.98964964911078e-08,
+      "grad_max_abs": 2.384185791015625e-07,
+      "grad_norm_base": 40.11857043309235,
+      "grad_norm_var": 40.11857044208648,
+      "E3_loss_ok": true,
+      "E3_grad_cos_ok": true
+     },
+     "weighting": {
+      "token_mean_per_micro_batch": true,
+      "weighting_changes": false,
+      "micro_batches_old": 16,
+      "micro_batches_variant": 16,
+      "tokens_per_micro_batch_old": [
+       223,
+       182,
+       230,
+       213,
+       181,
+       145,
+       174,
+       167,
+       236,
+       194,
+       179,
+       178,
+       182,
+       348,
+       176,
+       166
+      ],
+      "tokens_per_micro_batch_variant": [
+       223,
+       182,
+       230,
+       213,
+       181,
+       145,
+       174,
+       167,
+       236,
+       194,
+       179,
+       178,
+       182,
+       348,
+       176,
+       166
+      ],
+      "weight_ratio_min": 1.0,
+      "weight_ratio_max": 1.0,
+      "verdict": "weights unchanged"
+     },
+     "E3_verdict": "PASS"
+    }
+   },
+   "prereg": "PREREG-eg-once.md: E1 vectors (bf16 GPU), E2 vectors (fp32 CPU, 64 rows), E3 loss + gradient (fp32 CPU), E4 loss trace (bf16 GPU, 300 updates)",
+   "limits": {
+    "E1_position_cos": 0.998,
+    "E1_row_mean_cos": 0.9995,
+    "E1_x_old_spread": 1.5,
+    "E2_max_abs": 0.0001,
+    "E3_loss_rel": 1e-05,
+    "E3_grad_cos": 0.99999,
+    "E4_mean_abs": 0.02,
+    "E4_diff_of_means": 0.01,
+    "E4_window": [
+     101,
+     300
+    ]
+   },
+   "E3_setting": "fp32 on cpu (registered: cpu)",
+   "E3_registered_setting": true,
+   "E1": {
+    "once_vs_old": {
+     "n_positions": 46702,
+     "min_pos_cos": 0.999999992248745,
+     "mean_pos_cos": 0.9999999999992798,
+     "positions_below_limit": 0,
+     "min_row_mean_cos": 0.9999999999881192,
+     "rows_below_limit": 0,
+     "max_row_gap": 1.1880829653421188e-11,
+     "mean_row_gap": 2.037953139577553e-13
+    },
+    "old_vs_old_half_accum": {
+     "n_positions": 46702,
+     "min_pos_cos": 0.999999999764305,
+     "mean_pos_cos": 0.9999999999998587,
+     "positions_below_limit": 0,
+     "min_row_mean_cos": 0.9999999999961794,
+     "rows_below_limit": 0,
+     "max_row_gap": 3.820610494642551e-12,
+     "mean_row_gap": 9.317459997992827e-14
+    },
+    "rule1_every_position_cos_ge_0_998": true,
+    "rule2_every_row_mean_cos_ge_0_9995": true,
+    "rule3_gap_le_1_5x_old_spread": true,
+    "gap_over_spread": 3.1096678580768895,
+    "passed": true,
+    "rows": 256,
+    "accum_old": 16,
+    "accum_half": 8,
+    "state_dtype": "torch.float32",
+    "device": "cpu",
+    "eg": "real",
+    "eg_once_stats": {
+     "hits": 16,
+     "misses": 0,
+     "gemma_chunks": 2,
+     "prompts": 256
+    },
+    "registered_setting": false,
+    "note": "registered: bf16 on the GPU with the real Gemma; anything else is a plumbing check"
+   },
+   "E2": {
+    "max_abs_diff": 0.0021543502807617188,
+    "limit": 0.0001,
+    "passed": false,
+    "n_values": 9570816,
+    "limit_relative": 1e-05,
+    "passed_relative": true,
+    "max_abs_value": 564.156494140625,
+    "mean_abs_value": 33.64583761860765,
+    "p999_abs_value": 273.18487548828125,
+    "max_abs_diff_over_max_abs_value": 3.818710416590033e-06,
+    "value_at_max_diff": -9.638873100280762,
+    "rel_diff_at_max_diff": 0.0002235064471072834,
+    "position_of_max_diff_flat": 4341174,
+    "rows_prompts_sha256": "f0fd2653c1b2ab7286aef41ed5629bfa7937219875b7d48f4bd0147a05ec4655",
+    "seed": 402,
+    "rows": 64,
+    "micro_batch_rows": 16,
+    "dtype": "torch.float32",
+    "setting": "real Gemma, fp32, cpu",
+    "eg_once_stats": {
+     "hits": 4,
+     "misses": 0,
+     "gemma_chunks": 2,
+     "prompts": 64
+    },
+    "registered_setting": true
+   },
+   "precisions": [
+    "fp32"
+   ],
+   "reference": {
+    "fp32": {
+     "baseline_loss": 4.739525318145752,
+     "baseline_rerun": {
+      "abs_loss": 0.0,
+      "grad_cos": 0.9999999999999752,
+      "grad_rel_l2": 0.0,
+      "grad_max_abs": 0.0,
+      "grad_norm_base": 40.11857043309235,
+      "grad_norm_var": 40.11857043309235
+     },
+     "baseline_accum1_fullbatch": {
+      "accum": 1,
+      "skipped": true
+     }
+    }
+   },
+   "wall_s": 111.7
+  }
+ }
+}

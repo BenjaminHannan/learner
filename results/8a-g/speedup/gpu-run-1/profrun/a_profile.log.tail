@@ -1,0 +1,35 @@
+[    2.8s] world: arm PTC model plain_tf_steps_g (4,023,976 trained params) rows 200000 data /job/work/g8a/pools/p10-rung30-s400-a64-L caps caps_b3s.json device cuda eg real
+[    2.8s] === section breakdown
+[    3.6s] breakdown: 5 warmup + 30 timed updates (variant baseline, accum 16, hooks top)
+[   13.3s]   breakdown update 1/30: wall 1253 ms  fetch 9 h2d 1 fwd 1125 bwd 111 opt 1
+[   19.6s]   breakdown update 6/30: wall 1276 ms  fetch 11 h2d 1 fwd 1138 bwd 118 opt 1
+[   26.2s]   breakdown update 12/30: wall 614 ms  fetch 5 h2d 0 fwd 503 bwd 102 opt 0
+[   30.1s]   breakdown update 18/30: wall 727 ms  fetch 5 h2d 0 fwd 606 bwd 111 opt 0
+[   33.8s]   breakdown update 24/30: wall 655 ms  fetch 5 h2d 0 fwd 536 bwd 110 opt 0
+[   38.2s]   breakdown update 30/30: wall 893 ms  fetch 7 h2d 0 fwd 770 bwd 110 opt 1
+[   38.6s] === section throughput
+[   64.0s] throughput: 0.7386 s/update (1.35 updates/s), accum 16, variant baseline
+[   64.4s] === section profiler
+[   67.9s] profiler: schedule wait 1 warmup 1 active 3
+/usr/local/lib/python3.12/dist-packages/torch/profiler/profiler.py:224: UserWarning: Warning: Profiler clears events at the end of each cycle.Only events from the current cycle will be reported.To keep events across cycles, set acc_events=True.
+  _warn_once(
+[  122.6s] profiler: 859,345 events collected, analysing ...
+[  126.7s] profiler: GPU-bound
+[  128.7s] === section padding
+[  130.2s] === section sweep
+[  130.2s] sweep: accum 1 ...
+[  138.5s]   -> {"accum": 1, "micro_batch_rows": 256, "s_per_update": null, "oom": true} peak_gb 22.769978523254395
+[  138.5s] sweep: accum 2 ...
+[  146.7s]   -> {"accum": 2, "micro_batch_rows": 128, "s_per_update": 0.9832, "oom": false} peak_gb 12.151415824890137
+[  146.7s] sweep: accum 4 ...
+[  152.5s]   -> {"accum": 4, "micro_batch_rows": 64, "s_per_update": 0.6689, "oom": false} peak_gb 6.426589488983154
+[  152.5s] sweep: accum 8 ...
+[  157.3s]   -> {"accum": 8, "micro_batch_rows": 32, "s_per_update": 0.5208, "oom": false} peak_gb 3.5560359954833984
+[  157.3s] sweep: accum 16 ...
+[  163.6s]   -> {"accum": 16, "micro_batch_rows": 16, "s_per_update": 0.7368, "oom": false} peak_gb 2.088855743408203
+[  163.6s] sweep: accum 32 ...
+[  174.9s]   -> {"accum": 32, "micro_batch_rows": 8, "s_per_update": 1.3559, "oom": false} peak_gb 1.3409438133239746
+[  174.9s] === section syncs
+/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:1270: UserWarning: Synchronization debug mode is a prototype feature and does not yet detect all synchronizing operations (Triggered internally at /pytorch/torch/csrc/cuda/Module.cpp:1003.)
+  torch._C._cuda_set_sync_debug_mode(debug_mode)
+[  180.5s] done /job/profraw/profile.json /job/profraw/profile.md

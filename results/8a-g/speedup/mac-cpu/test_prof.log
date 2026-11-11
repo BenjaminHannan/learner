@@ -1,0 +1,88 @@
+PASS test_aggregate_sync_warnings (0.0s)
+PASS test_analyze_events_fake_cuda (0.0s)
+PASS test_analyze_events_kernels_only_on_cpu_ops (0.0s)
+[    0.1s] world: arm B3G2 model b3g2 (121,158 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+PASS test_b3g2_padding_has_round_stats (0.2s)
+[    0.2s] world: arm PTS model plain_tf_steps_g (92,688 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+[    2.6s] bench round 1/1: baseline
+[    2.7s] throughput: 0.0258 s/update (38.71 updates/s), accum 4, variant baseline
+[    2.8s] bench round 1/1: compile
+PASS test_compile_skips_cleanly_on_cpu (2.6s)
+PASS test_count_pass_matches_real_forward_and_restores_model (0.0s)
+PASS test_e1_rules_as_registered (0.0s)
+PASS test_e2_e4_metrics (0.0s)
+PASS test_eg_once_same_loss_and_gradient_and_stats (0.1s)
+PASS test_eg_once_serves_exactly_the_old_tensors_and_falls_back (0.0s)
+PASS test_every_variant_runs_one_update_on_cpu (0.2s)
+PASS test_instrument_wrap_load_and_restore (0.0s)
+[    3.1s] world: arm PTS model plain_tf_steps_g (92,688 trained params) rows 600 data synthetic(max_letters=280) caps caps_g.json device cpu eg stub
+[    3.1s] === section breakdown
+[    3.1s] breakdown: 1 warmup + 3 timed updates (variant baseline, accum 4, hooks top)
+[    3.2s]   breakdown update 1/3: wall 24 ms  fetch 0 h2d 0 fwd 12 bwd 10 opt 1
+[    3.2s]   breakdown update 2/3: wall 24 ms  fetch 0 h2d 0 fwd 12 bwd 10 opt 1
+[    3.2s]   breakdown update 3/3: wall 26 ms  fetch 0 h2d 0 fwd 13 bwd 11 opt 1
+[    3.3s] === section throughput
+[    3.4s] throughput: 0.0224 s/update (44.56 updates/s), accum 4, variant baseline
+[    3.4s] === section profiler
+[    3.5s] profiler: schedule wait 1 warmup 1 active 3
+USDT:2026-10-13 23:09:09 93830:1445171 SyncActivityProfilerHandler.cpp:39] profiler_start
+USDT:2026-10-13 23:09:09 93830:1445171 SyncActivityProfilerHandler.cpp:46] profiler_stop
+[    3.9s] profiler: 12,375 events collected, analysing ...
+[    3.9s] profiler: CPU-only run (no CUDA kernels)
+[    4.0s] === section padding
+[    4.0s] === section syncs
+[    4.0s] section syncs skipped: sync audit needs CUDA (torch.cuda.set_sync_debug_mode)
+[    4.0s] === section equiv
+[    4.0s] equiv: stochastic parts pinned (gap_p 0, ans_drill 0, rounds K0=8 where the model has them)
+[    4.0s] E1 (torch.float32, cpu, eg stub): min position cos 1.000000, min row-mean cos 1.000000, max row gap once 0.000e+00 vs old spread 0.000e+00 -> PASS
+[    4.1s] E2 (stub front (plumbing only)): max abs diff 0.000e+00 (limit 0.0001) -> PASS
+[    4.4s] equiv fp32: baseline loss 4.660720; rerun cos 1.00000000; accum=1 cos 0.90621271
+[    4.9s] equiv bf16: baseline loss 4.660769; rerun cos 1.00000000; accum=1 cos 0.90633668
+[    5.0s] equiv sortpad fp32: |dloss| 7.381e-03 rel 1.584e-03 grad cos 0.95694519 relL2 2.960e-01
+[    5.1s] equiv sortpad bf16: |dloss| 7.372e-03 rel 1.582e-03 grad cos 0.95698734 relL2 2.957e-01
+[    5.1s] E3 sortpad: loss rel 1.58e-03 (limit 1e-05), grad cos 0.95694519 (limit 0.99999), weighting: NOT EXACT: the variant changes the per-token weights (token- -> NOT EXACT (token-mean weighting changes)
+[    5.4s] E4 sortpad: updates 2..4: mean |dloss| 0.0036 (limit 0.02), diff of means 0.0036 (limit 0.01) -> not the registered window
+[    5.5s] equiv sortpad_tokw fp32: |dloss| 5.001e-03 rel 1.073e-03 grad cos 0.90621270 relL2 4.653e-01
+[    5.6s] equiv sortpad_tokw bf16: |dloss| 4.989e-03 rel 1.070e-03 grad cos 0.90634643 relL2 4.650e-01
+[    5.7s] E3 sortpad_tokw: loss rel 1.07e-03 (limit 1e-05), grad cos 0.90621270 (limit 0.99999), weighting: NOT EXACT: the variant changes the per-token weights (token- -> NOT EXACT (token-mean weighting changes)
+[    5.8s] E4 sortpad_tokw: updates 2..4: mean |dloss| 0.0046 (limit 0.02), diff of means 0.0046 (limit 0.01) -> not the registered window
+[    5.9s] equiv eg_sorted fp32: |dloss| 0.000e+00 rel 0.000e+00 grad cos 1.00000000 relL2 0.000e+00
+[    6.1s] equiv eg_sorted bf16: |dloss| 0.000e+00 rel 0.000e+00 grad cos 1.00000000 relL2 0.000e+00
+[    6.1s] E3 eg_sorted: loss rel 0.00e+00 (limit 1e-05), grad cos 1.00000000 (limit 0.99999), weighting: weights unchanged -> PASS
+[    6.3s] E4 eg_sorted: updates 2..4: mean |dloss| 0.0000 (limit 0.02), diff of means 0.0000 (limit 0.01) -> not the registered window
+[    6.3s] equiv eg_once fp32: |dloss| 0.000e+00 rel 0.000e+00 grad cos 1.00000000 relL2 0.000e+00
+[    6.5s] equiv eg_once bf16: |dloss| 0.000e+00 rel 0.000e+00 grad cos 1.00000000 relL2 0.000e+00
+[    6.5s] E3 eg_once: loss rel 0.00e+00 (limit 1e-05), grad cos 1.00000000 (limit 0.99999), weighting: weights unchanged -> PASS
+[    6.7s] E4 eg_once: updates 2..4: mean |dloss| 0.0000 (limit 0.02), diff of means 0.0000 (limit 0.01) -> not the registered window
+[    6.8s] equiv sortpad,oldw fp32: |dloss| 4.768e-07 rel 1.023e-07 grad cos 1.00000000 relL2 3.356e-07
+[    6.9s] equiv sortpad,oldw bf16: |dloss| 0.000e+00 rel 0.000e+00 grad cos 0.99999815 relL2 1.925e-03
+[    6.9s] E3 sortpad,oldw: loss rel 1.02e-07 (limit 1e-05), grad cos 1.00000000 (limit 0.99999), weighting: per-token weights restored by oldw -> PASS
+[    7.0s] E4 sortpad,oldw: updates 2..4: mean |dloss| 0.0000 (limit 0.02), diff of means 0.0000 (limit 0.01) -> not the registered window
+[    7.0s] done /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/prof_out_hqb7gs4_/r.json /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/prof_out_hqb7gs4_/r.md
+PASS test_main_sections_and_equiv_end_to_end (4.0s)
+PASS test_oldw_restores_old_weights_and_sortpad_is_flagged (0.1s)
+PASS test_pad_counts_hand_example (0.0s)
+PASS test_parse_variants (0.0s)
+PASS test_prefetch_identical_and_same_losses (0.1s)
+PASS test_recorder_exclusive_inclusive (0.0s)
+[    7.3s] E1 (torch.float32, cpu, eg stub): min position cos 0.999999, min row-mean cos 0.999999, max row gap once 1.192e-06 vs old spread 6.750e-07 -> PASS
+[    7.3s] E2 (stub front (plumbing only)): max abs diff 0.000e+00 (limit 0.0001) -> PASS
+PASS test_run_e1_e2_with_a_batch_shape_dependent_gemma (0.1s)
+PASS test_sortpad_row_loss_sum_matches_b3g2_pinned (0.2s)
+PASS test_sortpad_same_rows_and_widths (0.0s)
+PASS test_sortpad_total_nll_matches_plain_arm (0.0s)
+[    7.6s] sweep: accum 1 ...
+[    7.7s]   -> {"accum": 1, "micro_batch_rows": 16, "s_per_update": 0.0166, "oom": false} peak_gb None
+[    7.7s] sweep: accum 2 ...
+[    7.8s]   -> {"accum": 2, "micro_batch_rows": 8, "s_per_update": 0.0216, "oom": false} peak_gb None
+[    7.8s] sweep: accum 4 ...
+[    7.9s]   -> {"accum": 4, "micro_batch_rows": 4, "s_per_update": 0.0303, "oom": false} peak_gb None
+[    7.9s] sweep: accum 8 ...
+[    7.9s]   -> {"accum": 8, "micro_batch_rows": 2, "s_per_update": null, "oom": true} peak_gb None
+[    7.9s] sweep: accum 16 ...
+[    8.1s]   -> {"accum": 16, "micro_batch_rows": 1, "s_per_update": 0.0419, "oom": false} peak_gb None
+[    8.1s] sweep: accum 32 ...
+[    8.2s]   -> {"accum": 32, "micro_batch_rows": 1, "s_per_update": 0.0417, "oom": false} peak_gb None
+PASS test_sweep_catches_oom (0.6s)
+PASS test_timers_nonnegative_and_sum_to_wall (0.1s)
+24 of 24 passed in 8.4s

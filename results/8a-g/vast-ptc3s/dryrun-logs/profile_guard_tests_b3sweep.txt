@@ -1,0 +1,32 @@
+--- PROFILE=yes is refused
+    === CIO-FAIL PROFILE must be 0 or 1 (got 'yes') 2026-10-14T08:43:44Z
+    => as expected (found: PROFILE must be 0 or 1)
+--- PROFILE=1 with PROF_DRY_ARGS but without PTC_DRY is refused
+    === PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=75 PROF_JOB_STEPS=300 PROF_COMPILE=0 end_sleep=1) 2026-10-14T08:45:44Z
+    === CIO-FAIL PROF_DRY_* are CPU dry-run hooks and need PTC_DRY=1; never set them on Vast 2026-10-14T08:45:44Z
+    RBEGIN|profjob|1c8858d0001fcb301af30c973da1ea688c5c14859465003f6fe9008e72d739b6|266
+    RBEGIN|profrun|cf405bb8709c5a997f624b81bbda2978e765b02522a9c08fc0ea4541542f2534|262
+    => as expected (found: need PTC_DRY=1)
+--- PROFILE=1 with PROF_DRY_FAIL but without PTC_DRY is refused
+    === PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=75 PROF_JOB_STEPS=300 PROF_COMPILE=0 end_sleep=1) 2026-10-14T08:45:45Z
+    === CIO-FAIL PROF_DRY_* are CPU dry-run hooks and need PTC_DRY=1; never set them on Vast 2026-10-14T08:45:45Z
+    RBEGIN|profjob|bce07b31ac25f311924e0df39f88b09d7af298600e9d6ad7143f06a98a595d0f|266
+    RBEGIN|profrun|289c675a5db92f7ec7fc8c71bde600b61dbf642cbeffaa079c89fdeb33ac261b|263
+    => as expected (found: need PTC_DRY=1)
+--- PROFILE=1 with PROF_DRY_HANG but without PTC_DRY is refused
+    === PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=75 PROF_JOB_STEPS=300 PROF_COMPILE=0 end_sleep=1) 2026-10-14T08:45:47Z
+    === CIO-FAIL PROF_DRY_* are CPU dry-run hooks and need PTC_DRY=1; never set them on Vast 2026-10-14T08:45:47Z
+    RBEGIN|profjob|fb9dde50de11f380f304e9a8092e717077e45c96bda8119249d16bf462210507|267
+    RBEGIN|profrun|aea4f06c66657507f5fe59e3d075fcb34084e2b5d83d80ce12f5d4b95734919d|262
+    => as expected (found: need PTC_DRY=1)
+--- PROFILE=1 with PTC_DRY=1 on a box where nvidia-smi -L lists a GPU is refused
+    === PROF MODE: the GPU shake-out and profiling rental, not the job: stage prof replaces stage train (PROF_MAXMIN=75 PROF_JOB_STEPS=300 PROF_COMPILE=0 end_sleep=1) 2026-10-14T08:45:48Z
+    === CIO-FAIL PROFILE=1 with PTC_DRY=1 on a box that has a GPU: PTC_DRY is for the CPU dry run only 2026-10-14T08:45:48Z
+    RBEGIN|profjob|36800ee85596016cd761378253f48dc3f2259b7ae8f7abb57bc93348338ca4b4|267
+    RBEGIN|profrun|7e5e7d679fa57f9e0a259ffe55b4f553f48252b70545587fb3637733fe64c923|263
+    => as expected (found: box that has a GPU)
+--- EG=0 is still refused
+    === CIO-FAIL EG=1 is required: the job has eg_embed 2026-10-14T08:45:49Z
+    RBEGIN|profjob|fdfd20ae8a5ca270e420e45cec1e454f09bf95564057bb160cf3571978591219|267
+    RBEGIN|profrun|50b01f50a038c39a9ef7ed1f66d20225e19fe7ae39eb04698d50bbf5cc58c943|263
+    => as expected (found: EG=1 is required)

@@ -1,0 +1,7 @@
+# BensPC RTX 5070 Ti: G1f = 10M s400 of gate G1. q8aG1f_wait.ps1 starts it when the 8aG1e runner exits (8aG1e-3M-s401 runs to its end at accum 4, like s400). 10M accum B2=16,PT=8 after the 3M-s401 spill; MEM 9000 for the smaller micro-batches (spec addendum H). 10M s401 is queue 8aG1s401, started by q8aG1s401_wait.ps1 after the futility check (spec addendum I).
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
+# MEM 9000
+g8a: 8aG1f-10M-s400 --rung 10M --seed 400 --arms B2 PT --b2-extra '{"eg_embed": true}' --accum B2=16,PT=8
