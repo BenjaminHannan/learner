@@ -1,0 +1,2223 @@
+{
+ "n_rows": 400,
+ "device": "cpu fp32",
+ "results": {
+  "T1SDR_s200": {
+   "checkpoint": "/mnt/project-files/checkpoints/cio-1007/70-t1sdr-s200/T1SDR_s200/checkpoint.pt",
+   "summary": {
+    "teacher_forced": {
+     "n_calls": 806,
+     "wrong": 14,
+     "call_acc": 98.26,
+     "kinds": {
+      "operand a+b / gold from prompt,prompt": 9,
+      "operand b / gold from prompt": 2,
+      "operand a / gold from prompt": 2,
+      "op / gold from result,prompt": 1
+     },
+     "families": {
+      "table_calc": 12,
+      "list_stats": 1,
+      "state_update": 1
+     }
+    },
+    "free_run": {
+     "n_calls": 806,
+     "wrong": 17,
+     "call_acc": 97.89,
+     "kinds": {
+      "operand a+b / gold from prompt,prompt": 10,
+      "operand b / gold from prompt": 2,
+      "operand a / gold from prompt": 2,
+      "op / gold from result,prompt": 1,
+      "operand a / gold from const": 1,
+      "operand a / gold from result": 1
+     },
+     "families": {
+      "table_calc": 12,
+      "state_update": 3,
+      "list_stats": 2
+     }
+    }
+   },
+   "misses": {
+    "teacher_forced": [
+     {
+      "id": "list_stats-DI1-202",
+      "family": "list_stats",
+      "step": 1,
+      "n_steps": 7,
+      "op_ok": true,
+      "gold": [
+       "56",
+       "44"
+      ],
+      "got": [
+       "56",
+       "56"
+      ],
+      "sides_wrong": [
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 2,
+      "n_steps": 5,
+      "op_ok": false,
+      "gold": [
+       "15",
+       "5"
+      ],
+      "got": [
+       "15",
+       "5"
+      ],
+      "sides_wrong": [],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-116",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "4"
+      ],
+      "got": [
+       "2",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-138",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "2"
+      ],
+      "got": [
+       "10",
+       "5"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-176",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "12"
+      ],
+      "got": [
+       "12",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-252",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "10"
+      ],
+      "got": [
+       "2",
+       "9"
+      ],
+      "sides_wrong": [
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-297",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "7",
+       "9"
+      ],
+      "got": [
+       "9",
+       "9"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-395",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "8"
+      ],
+      "got": [
+       "4",
+       "9"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-436",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "4",
+       "11"
+      ],
+      "got": [
+       "8",
+       "4"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-488",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "4"
+      ],
+      "got": [
+       "4",
+       "6"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-609",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "5",
+       "2"
+      ],
+      "got": [
+       "2",
+       "7"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-647",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "8",
+       "11"
+      ],
+      "got": [
+       "9",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-705",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "3"
+      ],
+      "got": [
+       "5",
+       "9"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-864",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "2"
+      ],
+      "got": [
+       "12",
+       "2"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     }
+    ],
+    "free_run": [
+     {
+      "id": "list_stats-DI1-202",
+      "family": "list_stats",
+      "step": 1,
+      "n_steps": 7,
+      "op_ok": true,
+      "gold": [
+       "56",
+       "44"
+      ],
+      "got": [
+       "56",
+       "56"
+      ],
+      "sides_wrong": [
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 2,
+      "n_steps": 5,
+      "op_ok": false,
+      "gold": [
+       "15",
+       "5"
+      ],
+      "got": [
+       "15",
+       "5"
+      ],
+      "sides_wrong": [],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 3,
+      "n_steps": 5,
+      "op_ok": true,
+      "gold": [
+       "10",
+       "7"
+      ],
+      "got": [
+       "20",
+       "7"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "const",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "list_stats-DI1-202",
+      "family": "list_stats",
+      "step": 4,
+      "n_steps": 7,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "44"
+      ],
+      "got": [
+       "56",
+       "9"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 4,
+      "n_steps": 5,
+      "op_ok": true,
+      "gold": [
+       "17",
+       "21"
+      ],
+      "got": [
+       "27",
+       "21"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-116",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "4"
+      ],
+      "got": [
+       "2",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-138",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "2"
+      ],
+      "got": [
+       "10",
+       "5"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-176",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "12"
+      ],
+      "got": [
+       "12",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-252",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "10"
+      ],
+      "got": [
+       "2",
+       "9"
+      ],
+      "sides_wrong": [
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-297",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "7",
+       "9"
+      ],
+      "got": [
+       "9",
+       "9"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-395",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "8"
+      ],
+      "got": [
+       "4",
+       "9"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-436",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "4",
+       "11"
+      ],
+      "got": [
+       "8",
+       "4"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-488",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "4"
+      ],
+      "got": [
+       "4",
+       "6"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-609",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "5",
+       "2"
+      ],
+      "got": [
+       "2",
+       "7"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-647",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "8",
+       "11"
+      ],
+      "got": [
+       "9",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-705",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "3"
+      ],
+      "got": [
+       "5",
+       "9"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-864",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "2"
+      ],
+      "got": [
+       "12",
+       "2"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     }
+    ]
+   }
+  },
+  "T1SD_s200": {
+   "checkpoint": "/mnt/project-files/checkpoints/cio-1007/60-t1sd-s200/T1SD_s200/checkpoint.pt",
+   "summary": {
+    "teacher_forced": {
+     "n_calls": 806,
+     "wrong": 12,
+     "call_acc": 98.51,
+     "kinds": {
+      "operand a+b / gold from prompt,prompt": 6,
+      "operand b / gold from prompt": 2,
+      "operand a / gold from prompt": 2,
+      "op / gold from result,prompt": 1,
+      "op / gold from const,prompt": 1
+     },
+     "families": {
+      "table_calc": 9,
+      "state_update": 3
+     }
+    },
+    "free_run": {
+     "n_calls": 806,
+     "wrong": 14,
+     "call_acc": 98.26,
+     "kinds": {
+      "operand a+b / gold from prompt,prompt": 6,
+      "operand a / gold from prompt": 2,
+      "operand b / gold from const": 1,
+      "op / gold from result,prompt": 1,
+      "operand a+b / gold from result,prompt": 1,
+      "op / gold from const": 1,
+      "operand a / gold from result": 1,
+      "operand b / gold from prompt": 1
+     },
+     "families": {
+      "table_calc": 9,
+      "state_update": 4,
+      "percent_rate": 1
+     }
+    }
+   },
+   "misses": {
+    "teacher_forced": [
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 1,
+      "n_steps": 5,
+      "op_ok": false,
+      "gold": [
+       "17",
+       "2"
+      ],
+      "got": [
+       "17",
+       "2"
+      ],
+      "sides_wrong": [],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 2,
+      "n_steps": 5,
+      "op_ok": true,
+      "gold": [
+       "15",
+       "5"
+      ],
+      "got": [
+       "15",
+       "7"
+      ],
+      "sides_wrong": [
+       1
+      ],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 3,
+      "n_steps": 5,
+      "op_ok": false,
+      "gold": [
+       "10",
+       "7"
+      ],
+      "got": [
+       "10",
+       "7"
+      ],
+      "sides_wrong": [],
+      "gold_src": [
+       "const",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-116",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "4"
+      ],
+      "got": [
+       "4",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-138",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "2"
+      ],
+      "got": [
+       "10",
+       "5"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-176",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "12"
+      ],
+      "got": [
+       "12",
+       "7"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-252",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "10"
+      ],
+      "got": [
+       "2",
+       "2"
+      ],
+      "sides_wrong": [
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-297",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "7",
+       "9"
+      ],
+      "got": [
+       "9",
+       "9"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-395",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "8"
+      ],
+      "got": [
+       "8",
+       "8"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-436",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "4",
+       "11"
+      ],
+      "got": [
+       "8",
+       "4"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-609",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "5",
+       "2"
+      ],
+      "got": [
+       "2",
+       "7"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-647",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "8",
+       "11"
+      ],
+      "got": [
+       "9",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     }
+    ],
+    "free_run": [
+     {
+      "id": "percent_rate-DI1-39",
+      "family": "percent_rate",
+      "step": 1,
+      "n_steps": 2,
+      "op_ok": true,
+      "gold": [
+       "12000",
+       "100"
+      ],
+      "got": [
+       "12000",
+       "105"
+      ],
+      "sides_wrong": [
+       1
+      ],
+      "gold_src": [
+       "result",
+       "const"
+      ],
+      "span": [
+       true,
+       false
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 1,
+      "n_steps": 5,
+      "op_ok": false,
+      "gold": [
+       "17",
+       "2"
+      ],
+      "got": [
+       "17",
+       "2"
+      ],
+      "sides_wrong": [],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 2,
+      "n_steps": 5,
+      "op_ok": true,
+      "gold": [
+       "15",
+       "5"
+      ],
+      "got": [
+       "19",
+       "7"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 3,
+      "n_steps": 5,
+      "op_ok": false,
+      "gold": [
+       "10",
+       "7"
+      ],
+      "got": [
+       "12",
+       "7"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "const",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 4,
+      "n_steps": 5,
+      "op_ok": true,
+      "gold": [
+       "17",
+       "21"
+      ],
+      "got": [
+       "5",
+       "21"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-116",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "4"
+      ],
+      "got": [
+       "4",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-138",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "2"
+      ],
+      "got": [
+       "10",
+       "5"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-176",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "12"
+      ],
+      "got": [
+       "12",
+       "7"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-252",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "10"
+      ],
+      "got": [
+       "2",
+       "2"
+      ],
+      "sides_wrong": [
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-297",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "7",
+       "9"
+      ],
+      "got": [
+       "9",
+       "9"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-395",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "8"
+      ],
+      "got": [
+       "8",
+       "8"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-436",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "4",
+       "11"
+      ],
+      "got": [
+       "8",
+       "4"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-609",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "5",
+       "2"
+      ],
+      "got": [
+       "2",
+       "7"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-647",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "8",
+       "11"
+      ],
+      "got": [
+       "9",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     }
+    ]
+   }
+  },
+  "T1SDR_s201": {
+   "checkpoint": "/mnt/project-files/checkpoints/cio-1007/70-t1sdr-s201/T1SDR_s201/checkpoint.pt",
+   "summary": {
+    "teacher_forced": {
+     "n_calls": 806,
+     "wrong": 10,
+     "call_acc": 98.76,
+     "kinds": {
+      "operand a+b / gold from prompt,prompt": 5,
+      "operand a / gold from prompt": 3,
+      "op / gold from result,prompt": 1,
+      "operand b / gold from prompt": 1
+     },
+     "families": {
+      "table_calc": 9,
+      "state_update": 1
+     }
+    },
+    "free_run": {
+     "n_calls": 806,
+     "wrong": 12,
+     "call_acc": 98.51,
+     "kinds": {
+      "operand a+b / gold from prompt,prompt": 5,
+      "operand a / gold from prompt": 3,
+      "op / gold from result,prompt": 1,
+      "operand a / gold from const": 1,
+      "operand a / gold from result": 1,
+      "operand b / gold from prompt": 1
+     },
+     "families": {
+      "table_calc": 9,
+      "state_update": 3
+     }
+    }
+   },
+   "misses": {
+    "teacher_forced": [
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 2,
+      "n_steps": 5,
+      "op_ok": false,
+      "gold": [
+       "15",
+       "5"
+      ],
+      "got": [
+       "15",
+       "5"
+      ],
+      "sides_wrong": [],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-116",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "4"
+      ],
+      "got": [
+       "2",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-138",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "2"
+      ],
+      "got": [
+       "10",
+       "5"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-176",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "12"
+      ],
+      "got": [
+       "6",
+       "2"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-252",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "10"
+      ],
+      "got": [
+       "2",
+       "2"
+      ],
+      "sides_wrong": [
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-297",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "7",
+       "9"
+      ],
+      "got": [
+       "9",
+       "9"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-395",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "8"
+      ],
+      "got": [
+       "8",
+       "8"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-436",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "4",
+       "11"
+      ],
+      "got": [
+       "8",
+       "4"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-609",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "5",
+       "2"
+      ],
+      "got": [
+       "8",
+       "7"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-864",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "2"
+      ],
+      "got": [
+       "12",
+       "2"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     }
+    ],
+    "free_run": [
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 2,
+      "n_steps": 5,
+      "op_ok": false,
+      "gold": [
+       "15",
+       "5"
+      ],
+      "got": [
+       "15",
+       "5"
+      ],
+      "sides_wrong": [],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 3,
+      "n_steps": 5,
+      "op_ok": true,
+      "gold": [
+       "10",
+       "7"
+      ],
+      "got": [
+       "20",
+       "7"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "const",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "state_update-DI1-99",
+      "family": "state_update",
+      "step": 4,
+      "n_steps": 5,
+      "op_ok": true,
+      "gold": [
+       "17",
+       "21"
+      ],
+      "got": [
+       "27",
+       "21"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "result",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-116",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "4"
+      ],
+      "got": [
+       "2",
+       "3"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-138",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "2"
+      ],
+      "got": [
+       "10",
+       "5"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-176",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "12"
+      ],
+      "got": [
+       "6",
+       "2"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-252",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "10"
+      ],
+      "got": [
+       "2",
+       "2"
+      ],
+      "sides_wrong": [
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-297",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "7",
+       "9"
+      ],
+      "got": [
+       "9",
+       "9"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-395",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "9",
+       "8"
+      ],
+      "got": [
+       "8",
+       "8"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-436",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "4",
+       "11"
+      ],
+      "got": [
+       "8",
+       "4"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-609",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "5",
+       "2"
+      ],
+      "got": [
+       "8",
+       "7"
+      ],
+      "sides_wrong": [
+       0,
+       1
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     },
+     {
+      "id": "table_calc-DI1-864",
+      "family": "table_calc",
+      "step": 0,
+      "n_steps": 1,
+      "op_ok": true,
+      "gold": [
+       "2",
+       "2"
+      ],
+      "got": [
+       "12",
+       "2"
+      ],
+      "sides_wrong": [
+       0
+      ],
+      "gold_src": [
+       "prompt",
+       "prompt"
+      ],
+      "span": [
+       true,
+       true
+      ]
+     }
+    ]
+   }
+  }
+ }
+}

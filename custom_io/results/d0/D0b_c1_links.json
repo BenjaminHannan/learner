@@ -1,0 +1,1442 @@
+{
+ "what": "D0b: first wrong link of every chain-5 row the text baseline gets wrong with its calculator on (C1')",
+ "labels": {
+  "a": "operand digits copied wrong",
+  "b": "wrong number chosen",
+  "c": "wrong operation",
+  "d": "tool result copied wrong into a later step",
+  "e": "final answer copied wrong",
+  "f": "step format the calculator did not fire on",
+  "g": "stopped early or ran too long",
+  "h": "trained answer-only (steps + answer over 64 chars)",
+  "i": "own arithmetic wrong on an arrow step (calculator never fires)",
+  "j": "wrong name",
+  "x": "none of these"
+ },
+ "seeds": [
+  {
+   "ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "exact": 96.3,
+   "n": 1000,
+   "wrong_by_family": {
+    "chain_ops": 1,
+    "story_chain3": 3,
+    "var_chain": 33
+   },
+   "labels": {
+    "b": 1,
+    "j": 2,
+    "f": 3,
+    "h": 30,
+    "c": 1
+   }
+  },
+  {
+   "ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "exact": 96.5,
+   "n": 1000,
+   "wrong_by_family": {
+    "chain_ops": 1,
+    "state_update": 1,
+    "story_chain3": 3,
+    "var_chain": 30
+   },
+   "labels": {
+    "c": 1,
+    "i": 1,
+    "j": 3,
+    "h": 28,
+    "f": 2
+   }
+  }
+ ],
+ "pooled": {
+  "b": 1,
+  "j": 5,
+  "f": 5,
+  "h": 58,
+  "c": 2,
+  "i": 1
+ },
+ "call": {
+  "rows_in_call": 8,
+  "copying_ade": 0,
+  "choosing_bc": 3,
+  "apart_hij": {
+   "h": 58,
+   "i": 1,
+   "j": 5
+  },
+  "verdict": "mixed"
+ },
+ "rows": [
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "chain_ops-DI1-852",
+   "family": "chain_ops",
+   "label": "b",
+   "detail": "step 2: wrote '17 - 1 = 16' for '17 - 11 = 6' (1 is a prompt number)",
+   "prompt": "Here is a puzzle. Ivo has 18 plums. Then Ivo loses 1. Then Ivo uses up 11. Then Ivo splits them into 3 equal groups and keeps one. How many plums does Ivo have at the end?",
+   "gold": "18 - 1 = 17; 17 - 11 = 6; 6 / 3 = 2 # 2",
+   "gold_steps": [
+    "18 - 1 = 17",
+    "17 - 11 = 6",
+    "6 / 3 = 2"
+   ],
+   "written": "18 - 1 = 17; 17 - 1 = 16; 16 / 3 = 5 # 5",
+   "fills": [
+    [
+     8,
+     " 17"
+    ],
+    [
+     21,
+     " 16"
+    ]
+   ],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "story_chain3-DI1-36",
+   "family": "story_chain3",
+   "label": "j",
+   "detail": "answer 'Wren' for 'same'",
+   "prompt": "Facts: Wren had 90 plums, got 3 more, then lost 3. A friend has 90. Question: Who has more now, Wren or the friend?",
+   "gold": "90+3-3=90; compare 90 90 # same",
+   "gold_steps": [
+    "90+3-3=90",
+    "compare 90 90"
+   ],
+   "written": "90+3-3=90; compare 90 90 # Wren",
+   "fills": [
+    [
+     7,
+     "90"
+    ]
+   ],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "story_chain3-DI1-87",
+   "family": "story_chain3",
+   "label": "j",
+   "detail": "answer 'Lou' for 'friend'",
+   "prompt": "Facts: Lou had 22 scarves, got 13 more, then lost 2. A friend has 38. Question: Who has more now, Lou or the friend?",
+   "gold": "22+13-2=33; compare 33 38 # friend",
+   "gold_steps": [
+    "22+13-2=33",
+    "compare 33 38"
+   ],
+   "written": "22+13-2=33; compare 33 38 # Lou",
+   "fills": [
+    [
+     8,
+     "33"
+    ]
+   ],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "story_chain3-DI1-533",
+   "family": "story_chain3",
+   "label": "f",
+   "detail": "step 1: wrote '50' for '50+8-10=48' (the answer alone: no steps, so the calculator never fired)",
+   "prompt": "Think it through. Who has more now, Nia or the friend? Nia had 50 shells, got 8 more, then lost 10. A friend has 87.",
+   "gold": "50+8-10=48; compare 48 87 # friend",
+   "gold_steps": [
+    "50+8-10=48",
+    "compare 48 87"
+   ],
+   "written": "50",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-4",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Solve this. Facts: r = 21. s = r - 4. k = s - 7. x = k * 3. c = x - 2. Question: What is c?",
+   "gold": "28",
+   "gold_steps": [
+    "s = 21 - 4 = 17",
+    "k = 17 - 7 = 10",
+    "x = 10 * 3 = 30",
+    "c = 30 - 2 = 28"
+   ],
+   "written": "77",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-11",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Let's see. m = 21. a = m + 2. k = a + 9. u = k - 2. q = u - 8. What is q?",
+   "gold": "22",
+   "gold_steps": [
+    "a = 21 + 2 = 23",
+    "k = 23 + 9 = 32",
+    "u = 32 - 2 = 30",
+    "q = 30 - 8 = 22"
+   ],
+   "written": "26",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-28",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Next problem: Facts: x = 25. u = x - 8. e = u + 2. r = e + 5. f = r - 8. p = 28. Question: What is f + p?",
+   "gold": "44",
+   "gold_steps": [
+    "u = 25 - 8 = 17",
+    "e = 17 + 2 = 19",
+    "r = 19 + 5 = 24",
+    "f = 24 - 8 = 16",
+    "16 + 28 = 44"
+   ],
+   "written": "2r = 25 - 8 = 17; e = 17 + 2 = 19; r = 19 - 5 = 14 # 14",
+   "fills": [
+    [
+     13,
+     " 17"
+    ],
+    [
+     30,
+     " 19"
+    ],
+    [
+     47,
+     " 14"
+    ]
+   ],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-29",
+   "family": "var_chain",
+   "label": "f",
+   "detail": "step 1: wrote 'b = 7 * 4' for 'b = 7 * 4 = 28'",
+   "prompt": "A small challenge: What is b? b = 7. b = b * 4. b = b - 5.",
+   "gold": "b = 7 * 4 = 28; b = 28 - 5 = 23 # 23",
+   "gold_steps": [
+    "b = 7 * 4 = 28",
+    "b = 28 - 5 = 23"
+   ],
+   "written": "b = 7 * 4 # 28",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-32",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "q = 7. k = q + 9. c = k - 5. e = c + 3. x = 14. What is e + x?",
+   "gold": "28",
+   "gold_steps": [
+    "k = 7 + 9 = 16",
+    "c = 16 - 5 = 11",
+    "e = 11 + 3 = 14",
+    "14 + 14 = 28"
+   ],
+   "written": "46",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-40",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "What is y? r = 21. c = r + 2. s = c - 4. u = s + 4. y = u * 6.",
+   "gold": "138",
+   "gold_steps": [
+    "c = 21 + 2 = 23",
+    "s = 23 - 4 = 19",
+    "u = 19 + 4 = 23",
+    "y = 23 * 6 = 138"
+   ],
+   "written": "106",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-43",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Read carefully. e = 17. q = e * 4. p = q + 7. f = p - 7. h = 4. What is f + h? Be brief.",
+   "gold": "72",
+   "gold_steps": [
+    "q = 17 * 4 = 68",
+    "p = 68 + 7 = 75",
+    "f = 75 - 7 = 68",
+    "68 + 4 = 72"
+   ],
+   "written": "49",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-62",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "What is p? g = 8. e = g - 3. m = e - 7. w = m + 8. p = w + 8. Give only the answer.",
+   "gold": "14",
+   "gold_steps": [
+    "e = 8 - 3 = 5",
+    "m = 5 - 7 = -2",
+    "w = -2 + 8 = 6",
+    "p = 6 + 8 = 14"
+   ],
+   "written": "-4",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-70",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Try this problem. What is b + u? p = 28. f = p * 4. z = f * 7. b = z * 4. u = 3.",
+   "gold": "3139",
+   "gold_steps": [
+    "f = 28 * 4 = 112",
+    "z = 112 * 7 = 784",
+    "b = 784 * 4 = 3136",
+    "3136 + 3 = 3139"
+   ],
+   "written": "999",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-109",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Solve this. g = 21. m = g - 6. t = m * 9. c = t - 8. f = c + 3. u = 5. What is f + u?",
+   "gold": "135",
+   "gold_steps": [
+    "m = 21 - 6 = 15",
+    "t = 15 * 9 = 135",
+    "c = 135 - 8 = 127",
+    "f = 127 + 3 = 130",
+    "130 + 5 = 135"
+   ],
+   "written": "m = 21 - 6 = 15; t = 15 * 9 = 135; c = 135 - 3 = 132 # 132",
+   "fills": [
+    [
+     12,
+     " 15"
+    ],
+    [
+     29,
+     " 135"
+    ],
+    [
+     48,
+     " 132"
+    ]
+   ],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-123",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Facts: k = 6. a = k + 8. x = a * 4. c = x * 4. s = 27. Question: What is c + s? No explanation needed.",
+   "gold": "251",
+   "gold_steps": [
+    "a = 6 + 8 = 14",
+    "x = 14 * 4 = 56",
+    "c = 56 * 4 = 224",
+    "224 + 27 = 251"
+   ],
+   "written": "68",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-125",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Facts: b = 15. g = b * 5. c = g + 4. y = c - 9. d = 15. Question: What is y + d?",
+   "gold": "85",
+   "gold_steps": [
+    "g = 15 * 5 = 75",
+    "c = 75 + 4 = 79",
+    "y = 79 - 9 = 70",
+    "70 + 15 = 85"
+   ],
+   "written": "23",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-156",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Facts: a = 9. k = a - 3. s = k * 9. p = s - 4. w = p * 5. Question: What is w?",
+   "gold": "250",
+   "gold_steps": [
+    "k = 9 - 3 = 6",
+    "s = 6 * 9 = 54",
+    "p = 54 - 4 = 50",
+    "w = 50 * 5 = 250"
+   ],
+   "written": "126",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-161",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Think it through. Facts: d = 28. c = d + 5. s = c + 8. f = s * 6. p = f - 8. r = 14. Question: What is p + r?",
+   "gold": "252",
+   "gold_steps": [
+    "c = 28 + 5 = 33",
+    "s = 33 + 8 = 41",
+    "f = 41 * 6 = 246",
+    "p = 246 - 8 = 238",
+    "238 + 14 = 252"
+   ],
+   "written": "119",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-165",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Try this problem. What is f? b = 13. u = b + 4. y = u - 7. h = y - 7. f = h - 3.",
+   "gold": "0",
+   "gold_steps": [
+    "u = 13 + 4 = 17",
+    "y = 17 - 7 = 10",
+    "h = 10 - 7 = 3",
+    "f = 3 - 3 = 0"
+   ],
+   "written": "8",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-166",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Solve this. w = 10. p = w + 8. h = p + 6. u = h * 4. t = 12. What is u + t? Just the answer, please.",
+   "gold": "108",
+   "gold_steps": [
+    "p = 10 + 8 = 18",
+    "h = 18 + 6 = 24",
+    "u = 24 * 4 = 96",
+    "96 + 12 = 108"
+   ],
+   "written": "228",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-188",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Facts: c = 13. c = c * 2. c = c - 9. c = c + 8. c = c - 7. Question: What is c?",
+   "gold": "18",
+   "gold_steps": [
+    "c = 13 * 2 = 26",
+    "c = 26 - 9 = 17",
+    "c = 17 + 8 = 25",
+    "c = 25 - 7 = 18"
+   ],
+   "written": "48",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-191",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Solve this. What is d? d = 7. d = d + 3. d = d - 5. d = d * 6. d = d + 9.",
+   "gold": "39",
+   "gold_steps": [
+    "d = 7 + 3 = 10",
+    "d = 10 - 5 = 5",
+    "d = 5 * 6 = 30",
+    "d = 30 + 9 = 39"
+   ],
+   "written": "180",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-194",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Let's see. Facts: d = 29. c = d + 9. m = c + 2. e = m + 3. h = e + 7. Question: What is h?",
+   "gold": "50",
+   "gold_steps": [
+    "c = 29 + 9 = 38",
+    "m = 38 + 2 = 40",
+    "e = 40 + 3 = 43",
+    "h = 43 + 7 = 50"
+   ],
+   "written": "49",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-210",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "c = 19. n = c - 8. u = n * 9. s = u * 3. e = 20. What is s + e?",
+   "gold": "317",
+   "gold_steps": [
+    "n = 19 - 8 = 11",
+    "u = 11 * 9 = 99",
+    "s = 99 * 3 = 297",
+    "297 + 20 = 317"
+   ],
+   "written": "340",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-221",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Read carefully. What is r + t? s = 18. h = s * 7. y = h + 5. r = y + 2. t = 25.",
+   "gold": "158",
+   "gold_steps": [
+    "h = 18 * 7 = 126",
+    "y = 126 + 5 = 131",
+    "r = 131 + 2 = 133",
+    "133 + 25 = 158"
+   ],
+   "written": "50",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-237",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Think it through. Facts: f = 26. p = f * 9. m = p * 4. d = m - 4. a = d * 3. Question: What is a?",
+   "gold": "2796",
+   "gold_steps": [
+    "p = 26 * 9 = 234",
+    "m = 234 * 4 = 936",
+    "d = 936 - 4 = 932",
+    "a = 932 * 3 = 2796"
+   ],
+   "written": "2180",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-253",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Read carefully. k = 22. c = k - 3. n = c - 5. q = n - 8. t = q - 4. What is t?",
+   "gold": "2",
+   "gold_steps": [
+    "c = 22 - 3 = 19",
+    "n = 19 - 5 = 14",
+    "q = 14 - 8 = 6",
+    "t = 6 - 4 = 2"
+   ],
+   "written": "12",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-270",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Let's see. Facts: q = 13. x = q + 4. p = x + 2. t = p * 2. e = 10. Question: What is t + e?",
+   "gold": "48",
+   "gold_steps": [
+    "x = 13 + 4 = 17",
+    "p = 17 + 2 = 19",
+    "t = 19 * 2 = 38",
+    "38 + 10 = 48"
+   ],
+   "written": "140",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-287",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "y = 10. y = y + 8. y = y + 5. y = y + 5. y = y - 8. What is y? Give only the answer.",
+   "gold": "20",
+   "gold_steps": [
+    "y = 10 + 8 = 18",
+    "y = 18 + 5 = 23",
+    "y = 23 + 5 = 28",
+    "y = 28 - 8 = 20"
+   ],
+   "written": "27",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-293",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Solve this. Facts: s = 19. d = s - 7. c = d + 4. b = c * 2. f = 14. Question: What is b + f?",
+   "gold": "46",
+   "gold_steps": [
+    "d = 19 - 7 = 12",
+    "c = 12 + 4 = 16",
+    "b = 16 * 2 = 32",
+    "32 + 14 = 46"
+   ],
+   "written": "71",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-325",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Facts: c = 22. c = c * 6. c = c * 4. c = c - 7. c = c * 8. Question: What is c?",
+   "gold": "4168",
+   "gold_steps": [
+    "c = 22 * 6 = 132",
+    "c = 132 * 4 = 528",
+    "c = 528 - 7 = 521",
+    "c = 521 * 8 = 4168"
+   ],
+   "written": "1150",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-327",
+   "family": "var_chain",
+   "label": "f",
+   "detail": "step 1: wrote '36' for 't = 13 - 8 = 5' (the answer alone: no steps, so the calculator never fired)",
+   "prompt": "Facts: c = 13. t = c - 8. h = t - 3. z = h * 7. w = 4. Question: What is z + w? No explanation needed.",
+   "gold": "t = 13 - 8 = 5; h = 5 - 3 = 2; z = 2 * 7 = 14; 14 + 4 = 18 # 18",
+   "gold_steps": [
+    "t = 13 - 8 = 5",
+    "h = 5 - 3 = 2",
+    "z = 2 * 7 = 14",
+    "14 + 4 = 18"
+   ],
+   "written": "36",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-334",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "x = 16. b = x + 7. p = b - 7. z = p * 4. c = 6. What is z + c?",
+   "gold": "70",
+   "gold_steps": [
+    "b = 16 + 7 = 23",
+    "p = 23 - 7 = 16",
+    "z = 16 * 4 = 64",
+    "64 + 6 = 70"
+   ],
+   "written": "416",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-391",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Question time. Facts: e = 23. e = e - 6. e = e - 9. e = e * 7. e = e + 9. Question: What is e?",
+   "gold": "65",
+   "gold_steps": [
+    "e = 23 - 6 = 17",
+    "e = 17 - 9 = 8",
+    "e = 8 * 7 = 56",
+    "e = 56 + 9 = 65"
+   ],
+   "written": "28",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-411",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "g = 12. g = g * 7. g = g * 9. g = g * 7. g = g + 9. What is g?",
+   "gold": "5301",
+   "gold_steps": [
+    "g = 12 * 7 = 84",
+    "g = 84 * 9 = 756",
+    "g = 756 * 7 = 5292",
+    "g = 5292 + 9 = 5301"
+   ],
+   "written": "2524",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-464",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Facts: u = 5. s = u + 9. b = s * 6. q = b + 4. k = 3. Question: What is q + k?",
+   "gold": "91",
+   "gold_steps": [
+    "s = 5 + 9 = 14",
+    "b = 14 * 6 = 84",
+    "q = 84 + 4 = 88",
+    "88 + 3 = 91"
+   ],
+   "written": "77",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/20-screen-s100-w1/tfsteps_s100/checkpoint.pt",
+   "id": "var_chain-DI1-481",
+   "family": "var_chain",
+   "label": "c",
+   "detail": "step 3: wrote 'p = 7 + 7 = 14' for 'p = 7 * 7 = 49'",
+   "prompt": "Next problem: c = 7. s = c - 7. a = s + 7. p = a * 7. What is p?",
+   "gold": "s = 7 - 7 = 0; a = 0 + 7 = 7; p = 7 * 7 = 49 # 49",
+   "gold_steps": [
+    "s = 7 - 7 = 0",
+    "a = 0 + 7 = 7",
+    "p = 7 * 7 = 49"
+   ],
+   "written": "s = 7 - 7 = 0; a = 0 + 7 = 7; p = 7 + 7 = 14 # 14",
+   "fills": [
+    [
+     11,
+     " 0"
+    ],
+    [
+     26,
+     " 7"
+    ],
+    [
+     41,
+     " 14"
+    ]
+   ],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "chain_ops-DI1-312",
+   "family": "chain_ops",
+   "label": "c",
+   "detail": "step 2: wrote '129 + 32 = 161' for '129 - 9 = 120'",
+   "prompt": "Next problem: How many tickets does Ned have at the end? Ned has 150 tickets. Then Ned uses up 21. Then Ned uses up 9. Then Ned gets 32 more.",
+   "gold": "150 - 21 = 129; 129 - 9 = 120; 120 + 32 = 152 # 152",
+   "gold_steps": [
+    "150 - 21 = 129",
+    "129 - 9 = 120",
+    "120 + 32 = 152"
+   ],
+   "written": "150 - 21 = 129; 129 + 32 = 161 # 161",
+   "fills": [
+    [
+     10,
+     " 129"
+    ],
+    [
+     26,
+     " 161"
+    ]
+   ],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "state_update-DI1-12",
+   "family": "state_update",
+   "label": "i",
+   "detail": "last step '2 + 13' has no \"=\", so the calculator never fires; answer '35' for '15'",
+   "prompt": "Think it through. How many are in both jars together now? Jar A holds 13 keys. Jar B holds 13. For jar A: 9 are removed. 6 are added. 2 are removed. 6 are removed.",
+   "gold": "-9 -> 4; +6 -> 10; -2 -> 8; -6 -> 2; 2 + 13 # 15",
+   "gold_steps": [
+    "-9 -> 4",
+    "+6 -> 10",
+    "-2 -> 8",
+    "-6 -> 2",
+    "2 + 13"
+   ],
+   "written": "-9 -> 4; +6 -> 10; -2 -> 8; -6 -> 2; 2 + 13 # 35",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "story_chain3-DI1-36",
+   "family": "story_chain3",
+   "label": "j",
+   "detail": "answer 'friend' for 'same'",
+   "prompt": "Facts: Wren had 90 plums, got 3 more, then lost 3. A friend has 90. Question: Who has more now, Wren or the friend?",
+   "gold": "90+3-3=90; compare 90 90 # same",
+   "gold_steps": [
+    "90+3-3=90",
+    "compare 90 90"
+   ],
+   "written": "90+3-3=90; compare 90 90 # friend",
+   "fills": [
+    [
+     7,
+     "90"
+    ]
+   ],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "story_chain3-DI1-248",
+   "family": "story_chain3",
+   "label": "j",
+   "detail": "answer 'Sue' for 'friend'",
+   "prompt": "Solve this. Facts: Sue had 49 pears, got 14 more, then lost 8. A friend has 57. Question: Who has more now, Sue or the friend?",
+   "gold": "49+14-8=55; compare 55 57 # friend",
+   "gold_steps": [
+    "49+14-8=55",
+    "compare 55 57"
+   ],
+   "written": "49+14-8=55; compare 55 57 # Sue",
+   "fills": [
+    [
+     8,
+     "55"
+    ]
+   ],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "story_chain3-DI1-393",
+   "family": "story_chain3",
+   "label": "j",
+   "detail": "answer 'Lou' for 'friend'",
+   "prompt": "Who has more now, Lou or the friend? Lou had 20 plums, got 6 more, then lost 7. A friend has 27.",
+   "gold": "20+6-7=19; compare 19 27 # friend",
+   "gold_steps": [
+    "20+6-7=19",
+    "compare 19 27"
+   ],
+   "written": "20+6-7=19; compare 19 27 # Lou",
+   "fills": [
+    [
+     7,
+     "19"
+    ]
+   ],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-4",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Solve this. Facts: r = 21. s = r - 4. k = s - 7. x = k * 3. c = x - 2. Question: What is c?",
+   "gold": "28",
+   "gold_steps": [
+    "s = 21 - 4 = 17",
+    "k = 17 - 7 = 10",
+    "x = 10 * 3 = 30",
+    "c = 30 - 2 = 28"
+   ],
+   "written": "40",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-11",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Let's see. m = 21. a = m + 2. k = a + 9. u = k - 2. q = u - 8. What is q?",
+   "gold": "22",
+   "gold_steps": [
+    "a = 21 + 2 = 23",
+    "k = 23 + 9 = 32",
+    "u = 32 - 2 = 30",
+    "q = 30 - 8 = 22"
+   ],
+   "written": "10",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-28",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Next problem: Facts: x = 25. u = x - 8. e = u + 2. r = e + 5. f = r - 8. p = 28. Question: What is f + p?",
+   "gold": "44",
+   "gold_steps": [
+    "u = 25 - 8 = 17",
+    "e = 17 + 2 = 19",
+    "r = 19 + 5 = 24",
+    "f = 24 - 8 = 16",
+    "16 + 28 = 44"
+   ],
+   "written": "7",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-32",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "q = 7. k = q + 9. c = k - 5. e = c + 3. x = 14. What is e + x?",
+   "gold": "28",
+   "gold_steps": [
+    "k = 7 + 9 = 16",
+    "c = 16 - 5 = 11",
+    "e = 11 + 3 = 14",
+    "14 + 14 = 28"
+   ],
+   "written": "14",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-40",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "What is y? r = 21. c = r + 2. s = c - 4. u = s + 4. y = u * 6.",
+   "gold": "138",
+   "gold_steps": [
+    "c = 21 + 2 = 23",
+    "s = 23 - 4 = 19",
+    "u = 19 + 4 = 23",
+    "y = 23 * 6 = 138"
+   ],
+   "written": "162",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-43",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Read carefully. e = 17. q = e * 4. p = q + 7. f = p - 7. h = 4. What is f + h? Be brief.",
+   "gold": "72",
+   "gold_steps": [
+    "q = 17 * 4 = 68",
+    "p = 68 + 7 = 75",
+    "f = 75 - 7 = 68",
+    "68 + 4 = 72"
+   ],
+   "written": "174",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-70",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Try this problem. What is b + u? p = 28. f = p * 4. z = f * 7. b = z * 4. u = 3.",
+   "gold": "3139",
+   "gold_steps": [
+    "f = 28 * 4 = 112",
+    "z = 112 * 7 = 784",
+    "b = 784 * 4 = 3136",
+    "3136 + 3 = 3139"
+   ],
+   "written": "343",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-103",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "What is k + r? x = 4. f = x + 4. m = f * 2. k = m + 4. r = 27.",
+   "gold": "47",
+   "gold_steps": [
+    "f = 4 + 4 = 8",
+    "m = 8 * 2 = 16",
+    "k = 16 + 4 = 20",
+    "20 + 27 = 47"
+   ],
+   "written": "95",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-109",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Solve this. g = 21. m = g - 6. t = m * 9. c = t - 8. f = c + 3. u = 5. What is f + u?",
+   "gold": "135",
+   "gold_steps": [
+    "m = 21 - 6 = 15",
+    "t = 15 * 9 = 135",
+    "c = 135 - 8 = 127",
+    "f = 127 + 3 = 130",
+    "130 + 5 = 135"
+   ],
+   "written": "333",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-125",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Facts: b = 15. g = b * 5. c = g + 4. y = c - 9. d = 15. Question: What is y + d?",
+   "gold": "85",
+   "gold_steps": [
+    "g = 15 * 5 = 75",
+    "c = 75 + 4 = 79",
+    "y = 79 - 9 = 70",
+    "70 + 15 = 85"
+   ],
+   "written": "127",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-161",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Think it through. Facts: d = 28. c = d + 5. s = c + 8. f = s * 6. p = f - 8. r = 14. Question: What is p + r?",
+   "gold": "252",
+   "gold_steps": [
+    "c = 28 + 5 = 33",
+    "s = 33 + 8 = 41",
+    "f = 41 * 6 = 246",
+    "p = 246 - 8 = 238",
+    "238 + 14 = 252"
+   ],
+   "written": "82",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-165",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Try this problem. What is f? b = 13. u = b + 4. y = u - 7. h = y - 7. f = h - 3.",
+   "gold": "0",
+   "gold_steps": [
+    "u = 13 + 4 = 17",
+    "y = 17 - 7 = 10",
+    "h = 10 - 7 = 3",
+    "f = 3 - 3 = 0"
+   ],
+   "written": "14",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-166",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Solve this. w = 10. p = w + 8. h = p + 6. u = h * 4. t = 12. What is u + t? Just the answer, please.",
+   "gold": "108",
+   "gold_steps": [
+    "p = 10 + 8 = 18",
+    "h = 18 + 6 = 24",
+    "u = 24 * 4 = 96",
+    "96 + 12 = 108"
+   ],
+   "written": "91",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-188",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Facts: c = 13. c = c * 2. c = c - 9. c = c + 8. c = c - 7. Question: What is c?",
+   "gold": "18",
+   "gold_steps": [
+    "c = 13 * 2 = 26",
+    "c = 26 - 9 = 17",
+    "c = 17 + 8 = 25",
+    "c = 25 - 7 = 18"
+   ],
+   "written": "13",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-191",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Solve this. What is d? d = 7. d = d + 3. d = d - 5. d = d * 6. d = d + 9.",
+   "gold": "39",
+   "gold_steps": [
+    "d = 7 + 3 = 10",
+    "d = 10 - 5 = 5",
+    "d = 5 * 6 = 30",
+    "d = 30 + 9 = 39"
+   ],
+   "written": "28",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-194",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Let's see. Facts: d = 29. c = d + 9. m = c + 2. e = m + 3. h = e + 7. Question: What is h?",
+   "gold": "50",
+   "gold_steps": [
+    "c = 29 + 9 = 38",
+    "m = 38 + 2 = 40",
+    "e = 40 + 3 = 43",
+    "h = 43 + 7 = 50"
+   ],
+   "written": "130",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-210",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "c = 19. n = c - 8. u = n * 9. s = u * 3. e = 20. What is s + e?",
+   "gold": "317",
+   "gold_steps": [
+    "n = 19 - 8 = 11",
+    "u = 11 * 9 = 99",
+    "s = 99 * 3 = 297",
+    "297 + 20 = 317"
+   ],
+   "written": "233",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-221",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Read carefully. What is r + t? s = 18. h = s * 7. y = h + 5. r = y + 2. t = 25.",
+   "gold": "158",
+   "gold_steps": [
+    "h = 18 * 7 = 126",
+    "y = 126 + 5 = 131",
+    "r = 131 + 2 = 133",
+    "133 + 25 = 158"
+   ],
+   "written": "194",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-237",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Think it through. Facts: f = 26. p = f * 9. m = p * 4. d = m - 4. a = d * 3. Question: What is a?",
+   "gold": "2796",
+   "gold_steps": [
+    "p = 26 * 9 = 234",
+    "m = 234 * 4 = 936",
+    "d = 936 - 4 = 932",
+    "a = 932 * 3 = 2796"
+   ],
+   "written": "840",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-241",
+   "family": "var_chain",
+   "label": "f",
+   "detail": "step 1: wrote '20' for 'x = 4 * 2 = 8' (the answer alone: no steps, so the calculator never fired)",
+   "prompt": "e = 4. x = e * 2. q = x - 4. b = q - 7. y = b + 3. What is y?",
+   "gold": "x = 4 * 2 = 8; q = 8 - 4 = 4; b = 4 - 7 = -3; y = -3 + 3 = 0 # 0",
+   "gold_steps": [
+    "x = 4 * 2 = 8",
+    "q = 8 - 4 = 4",
+    "b = 4 - 7 = -3",
+    "y = -3 + 3 = 0"
+   ],
+   "written": "20",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-253",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Read carefully. k = 22. c = k - 3. n = c - 5. q = n - 8. t = q - 4. What is t?",
+   "gold": "2",
+   "gold_steps": [
+    "c = 22 - 3 = 19",
+    "n = 19 - 5 = 14",
+    "q = 14 - 8 = 6",
+    "t = 6 - 4 = 2"
+   ],
+   "written": "10",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-270",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Let's see. Facts: q = 13. x = q + 4. p = x + 2. t = p * 2. e = 10. Question: What is t + e?",
+   "gold": "48",
+   "gold_steps": [
+    "x = 13 + 4 = 17",
+    "p = 17 + 2 = 19",
+    "t = 19 * 2 = 38",
+    "38 + 10 = 48"
+   ],
+   "written": "134",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-287",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "y = 10. y = y + 8. y = y + 5. y = y + 5. y = y - 8. What is y? Give only the answer.",
+   "gold": "20",
+   "gold_steps": [
+    "y = 10 + 8 = 18",
+    "y = 18 + 5 = 23",
+    "y = 23 + 5 = 28",
+    "y = 28 - 8 = 20"
+   ],
+   "written": "7",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-293",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Solve this. Facts: s = 19. d = s - 7. c = d + 4. b = c * 2. f = 14. Question: What is b + f?",
+   "gold": "46",
+   "gold_steps": [
+    "d = 19 - 7 = 12",
+    "c = 12 + 4 = 16",
+    "b = 16 * 2 = 32",
+    "32 + 14 = 46"
+   ],
+   "written": "17",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-325",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Facts: c = 22. c = c * 6. c = c * 4. c = c - 7. c = c * 8. Question: What is c?",
+   "gold": "4168",
+   "gold_steps": [
+    "c = 22 * 6 = 132",
+    "c = 132 * 4 = 528",
+    "c = 528 - 7 = 521",
+    "c = 521 * 8 = 4168"
+   ],
+   "written": "3138",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-327",
+   "family": "var_chain",
+   "label": "f",
+   "detail": "step 1: wrote '11' for 't = 13 - 8 = 5' (the answer alone: no steps, so the calculator never fired)",
+   "prompt": "Facts: c = 13. t = c - 8. h = t - 3. z = h * 7. w = 4. Question: What is z + w? No explanation needed.",
+   "gold": "t = 13 - 8 = 5; h = 5 - 3 = 2; z = 2 * 7 = 14; 14 + 4 = 18 # 18",
+   "gold_steps": [
+    "t = 13 - 8 = 5",
+    "h = 5 - 3 = 2",
+    "z = 2 * 7 = 14",
+    "14 + 4 = 18"
+   ],
+   "written": "11",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-334",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "x = 16. b = x + 7. p = b - 7. z = p * 4. c = 6. What is z + c?",
+   "gold": "70",
+   "gold_steps": [
+    "b = 16 + 7 = 23",
+    "p = 23 - 7 = 16",
+    "z = 16 * 4 = 64",
+    "64 + 6 = 70"
+   ],
+   "written": "10",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-391",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Question time. Facts: e = 23. e = e - 6. e = e - 9. e = e * 7. e = e + 9. Question: What is e?",
+   "gold": "65",
+   "gold_steps": [
+    "e = 23 - 6 = 17",
+    "e = 17 - 9 = 8",
+    "e = 8 * 7 = 56",
+    "e = 56 + 9 = 65"
+   ],
+   "written": "148",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-411",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "g = 12. g = g * 7. g = g * 9. g = g * 7. g = g + 9. What is g?",
+   "gold": "5301",
+   "gold_steps": [
+    "g = 12 * 7 = 84",
+    "g = 84 * 9 = 756",
+    "g = 756 * 7 = 5292",
+    "g = 5292 + 9 = 5301"
+   ],
+   "written": "1477",
+   "fills": [],
+   "ended": true
+  },
+  {
+   "seed_ckpt": "/mnt/project-files/custom-io/checkpoints/22-screen-s101-w1/tfsteps_s101/checkpoint.pt",
+   "id": "var_chain-DI1-464",
+   "family": "var_chain",
+   "label": "h",
+   "detail": "training target is the answer alone",
+   "prompt": "Facts: u = 5. s = u + 9. b = s * 6. q = b + 4. k = 3. Question: What is q + k?",
+   "gold": "91",
+   "gold_steps": [
+    "s = 5 + 9 = 14",
+    "b = 14 * 6 = 84",
+    "q = 84 + 4 = 88",
+    "88 + 3 = 91"
+   ],
+   "written": "51",
+   "fills": [],
+   "ended": true
+  }
+ ]
+}

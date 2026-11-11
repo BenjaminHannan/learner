@@ -1,0 +1,9 @@
+# BensPC RTX 5070 Ti (cuda): W1, global attention in the reader (PASS-MARKS.md addendum 19, written before any W1 run).
+# Family mark re-sealed before any run (architecture sec. 8a; PASS-MARKS addendum 19 amendment 1). Runs after queue 41 (U0).
+# W1 = B2 + one low-rank global attention block (one head, inner width 32) after the +-4 window: ledger cfg copy + gattn 32, 3,336,113 params.
+# Inside = queue 33's plain B2 (same PC, same flags), not retrained. Screen seeds 200 and 201; the 6-seed confirm waits on the screen.
+# Judge: python -m custom_io.analyze_gain --results custom_io/results/33-pc-confirm-b2 custom_io/results/42-pc-gain-w1
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\42-pc-gain-w1.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# MEM 6000
+W1_s200 --model ledger --cfg '{"copy":true,"gattn":32}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval --save-preds
+W1_s201 --model ledger --cfg '{"copy":true,"gattn":32}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval --save-preds
