@@ -1,0 +1,771 @@
+{
+  "kicker": "Part 3 of 8",
+  "title": "The thinker: rounds of looking and passing notes",
+  "blurb": "The thinker is the part that does the thinking. It works in rounds: it looks at the question, passes notes, and thinks again.",
+  "accent": "thinker",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 20,
+      "heading": "Where we are: the thinker",
+      "caption": [
+        {
+          "at": 0.03,
+          "text": "This is the thinker, the second part of the model. It does the thinking."
+        },
+        {
+          "at": 0.345,
+          "text": "It is ours. It starts from scratch and learns only from our practice."
+        },
+        {
+          "at": 0.6421,
+          "text": "The planned size is about 100 million numbers. That size has never been tested."
+        }
+      ],
+      "chip": "never tested at 100M",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 (about 100M planned) and sec. 2 (Thinker row: yes, from scratch; shape untested at 100M)"
+      ],
+      "labels": {
+        "talker": "stand-in today"
+      },
+      "atMap": [
+        [
+          0.025,
+          0.03
+        ],
+        [
+          0.3403,
+          0.345
+        ],
+        [
+          0.6556,
+          0.6421
+        ]
+      ]
+    },
+    {
+      "id": "s02",
+      "duration": 22.5,
+      "heading": "Picture only: a team of note-takers",
+      "caption": [
+        {
+          "at": 0.0267,
+          "text": "Picture only. Think of a small team of note-takers sitting around one question."
+        },
+        {
+          "at": 0.2908,
+          "text": "Each round, every note-taker looks at the whole question again."
+        },
+        {
+          "at": 0.5073,
+          "text": "Then they pass notes to each other and write down what they now believe."
+        },
+        {
+          "at": 0.7873,
+          "text": "The same team, with the same habits, every round."
+        }
+      ],
+      "tag": "picture only",
+      "labels": {
+        "q": "The question",
+        "n": "Note-taker"
+      },
+      "src": [
+        "kit/GLOSSARY.md (thinker row: the shared picture; no numbers)"
+      ],
+      "atMap": [
+        [
+          0.0222,
+          0.0267
+        ],
+        [
+          0.2602,
+          0.2908
+        ],
+        [
+          0.4981,
+          0.5073
+        ],
+        [
+          0.7361,
+          0.7873
+        ]
+      ]
+    },
+    {
+      "id": "s03",
+      "duration": 24.5,
+      "heading": "Vectors: 8 control, 36 memory",
+      "caption": [
+        {
+          "at": 0.0245,
+          "text": "A vector is a list of numbers, like a note card with a row of numbers."
+        },
+        {
+          "at": 0.3146,
+          "text": "The thinker keeps 8 control vectors. Two of them steer the work."
+        },
+        {
+          "at": 0.5426,
+          "text": "It also keeps 36 memory vectors, where its notes are kept."
+        },
+        {
+          "at": 0.756,
+          "text": "Older builds had 17 vectors: 8 control and 9 memory."
+        }
+      ],
+      "chip": "never tested at 100M",
+      "labels": {
+        "ctrl": "8 control vectors",
+        "mem": "36 memory vectors",
+        "old": "Older build: 8 + 9 = 17",
+        "steer": "These two steer the work"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Thinker row: 8 + 36 under the B3 caps; T1SDR and H1 had 8 + 9 = 17) and sec. 8 (44 vectors = 8 + 36)",
+        "custom_io/g8a/caps_b3.json (n_reg 36) on origin/claude/project-thread-qtxfp4",
+        "custom_io/models/ledger.py line 71 (N_CTRL 8), same branch",
+        "custom_io/g8a/caps.py line 24 (TODAY n_reg 9, the older 17)",
+        "architecture/model-deep-dive.html line 108 and no-hardcoding/INPUT-UNITS-2026-10-07.md line 37 (heads read only control 0 and control 1: two steer the work)"
+      ],
+      "tag": "shading is decoration",
+      "atMap": [
+        [
+          0.0176,
+          0.0245
+        ],
+        [
+          0.2581,
+          0.3146
+        ],
+        [
+          0.4985,
+          0.5426
+        ],
+        [
+          0.739,
+          0.756
+        ]
+      ]
+    },
+    {
+      "id": "s04",
+      "duration": 25,
+      "heading": "Control vector 0 drives the call writer",
+      "caption": [
+        {
+          "at": 0.024,
+          "text": "After each round from round 2 on, the call writer reads control vector 0."
+        },
+        {
+          "at": 0.3723,
+          "text": "It either writes a request for the calculator, like sub 12 5, or writes nothing."
+        },
+        {
+          "at": 0.7275,
+          "text": "The numbers in the request are usually copied from the question or an earlier reply."
+        }
+      ],
+      "chip": "tested in older design (3M, 6 copies)",
+      "labels": {
+        "c0": "Control vector 0",
+        "cw": "Call writer",
+        "slip": "sub 12 5",
+        "none": "or nothing"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1, and sec. 2 (Call writer row: shown in T1SDR; Calculator row: T1SDR at 3M, 6 seeds)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 item 2 (tool.py:329-374 copies the numbers; calls need t >= 1, so none after round 1) and sec. 4 (span copy used for 98% of written operands)"
+      ],
+      "chip2": "current design: never run as a whole",
+      "atMap": [
+        [
+          0.0187,
+          0.024
+        ],
+        [
+          0.3385,
+          0.3723
+        ],
+        [
+          0.6583,
+          0.7275
+        ]
+      ]
+    },
+    {
+      "id": "s05",
+      "duration": 34.5,
+      "heading": "Do controls 2 to 7 matter?",
+      "caption": [
+        {
+          "at": 0.0174,
+          "text": "Controls 2 to 7 feed no output. They only pass information along when the notes look at each other."
+        },
+        {
+          "at": 0.2518,
+          "text": "In an older build, switching them off at test time cost 1.6 points on the main test."
+        },
+        {
+          "at": 0.511,
+          "text": "On the multi-step test they cost 7.8 points: 99.4 fell to 91.6."
+        },
+        {
+          "at": 0.7368,
+          "text": "Those numbers are one copy (seed 200). All six copies of that older design lost points, very unevenly."
+        }
+      ],
+      "tag": "older design, 1 of 6 copies shown",
+      "labels": {
+        "on": "All controls on",
+        "off": "Controls 2 to 7 off",
+        "axis": "Multi-step test, points out of 100",
+        "main": "Main test, points lost"
+      },
+      "values": {
+        "on": 99.4,
+        "off": 91.6,
+        "mainLoss": 1.6
+      },
+      "src": [
+        "architecture/model-deep-dive.html line 108 (zeroing controls 2-7: 1.6 on pooled-5, 7.8 on chains, 99.4 to 91.6, seed s200; older 17-vector design)",
+        "no-hardcoding/D0-RESULT-2026-10-07.md table and line 20 (ctl27 on seeds 200-205: pooled-5 -1.62, -0.61, -0.78, -8.79, -0.81, -13.64; chain-5 -7.8, -0.6, -1.0, -30.8, -0.8, -36.9; every seed loses, very unevenly)",
+        "no-hardcoding/INPUT-UNITS-2026-10-07.md line 37 (heads read only controls 0 and 1; 2-7 are scratch through attention)"
+      ],
+      "notes": "Seed 200 numbers: pooled-5 change -1.62 (shown as 1.6), chain-5 change -7.8, 99.4 to 91.6 (99.4 - 7.8 = 91.6). Six copies (seeds 200 to 205) all lost points, range -0.61 to -13.64 on pooled-5 and -0.6 to -36.9 on chain-5 (D0-RESULT table). The bars show only seed 200. Older B2 design, calculator inside, 17 vectors.",
+      "atMap": [
+        [
+          0.0143,
+          0.0174
+        ],
+        [
+          0.2565,
+          0.2518
+        ],
+        [
+          0.4988,
+          0.511
+        ],
+        [
+          0.7411,
+          0.7368
+        ]
+      ]
+    },
+    {
+      "id": "s06",
+      "duration": 24,
+      "heading": "Round step 1: look at everything",
+      "caption": [
+        {
+          "at": 0.025,
+          "text": "Each letter of the question is one box. A borrowed reader, Gemma, has already given each letter its meaning."
+        },
+        {
+          "at": 0.3619,
+          "text": "Each note vector looks at every letter. In later rounds it also looks at every calculator reply."
+        },
+        {
+          "at": 0.669,
+          "text": "The shading inside each note is a picture only, not real numbers."
+        }
+      ],
+      "tag": "picture only",
+      "labels": {
+        "q": "Tom has 12 apples.",
+        "look": "Look"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Thinker row: every letter and every calculator reply) and sec. 3 item 1 (Gemma reads the question once)",
+        "custom_io/models/ledger.py, class CBlock (cross-attention to the letters and replies)"
+      ],
+      "atMap": [
+        [
+          0.0214,
+          0.025
+        ],
+        [
+          0.3393,
+          0.3619
+        ],
+        [
+          0.6571,
+          0.669
+        ]
+      ]
+    },
+    {
+      "id": "s07",
+      "duration": 36,
+      "heading": "Round steps 2 and 3: compare, then think",
+      "caption": [
+        {
+          "at": 0.0167,
+          "text": "Step 2: the note vectors look at each other. In code this is called self-attention."
+        },
+        {
+          "at": 0.2016,
+          "text": "Each note reads the other notes and keeps what matters from them."
+        },
+        {
+          "at": 0.3567,
+          "text": "The letters are not compared with each other inside the thinker."
+        },
+        {
+          "at": 0.502,
+          "text": "Step 3: each note goes through a small network."
+        },
+        {
+          "at": 0.6526,
+          "text": "At the 100M step it widens to 4.8 times as many numbers, then squeezes back."
+        },
+        {
+          "at": 0.8643,
+          "text": "Then the notes go on to the next round."
+        }
+      ],
+      "labels": {
+        "compare": "Compare notes",
+        "think": "Think: small network",
+        "widen": "Widen 4.8 times",
+        "q": "Tom has 12 apples.",
+        "letters": "Letters are not compared"
+      },
+      "src": [
+        "custom_io/models/ledger.py, class CBlock (self-attention; MLP with hidden = mlp x width)",
+        "custom_io/g8a/configs.py line 37 on origin/claude/project-thread-qtxfp4 (100M rung: width 512, 8 heads, mlp 4.8, 21 blocks; the 30M rung uses mlp 6.0 at line 36)",
+        "architecture/important-links-2026-10-09.md sec. 1, lines 12-14 (letters do not compare inside the thinker)",
+        "architecture/running-summary-2026-10-08.md line 22 (notes talk to each other, then pass through an MLP)"
+      ],
+      "tag": "shading is decoration",
+      "atMap": [
+        [
+          0.0143,
+          0.0167
+        ],
+        [
+          0.1758,
+          0.2016
+        ],
+        [
+          0.3373,
+          0.3567
+        ],
+        [
+          0.4988,
+          0.502
+        ],
+        [
+          0.6603,
+          0.6526
+        ],
+        [
+          0.8218,
+          0.8643
+        ]
+      ]
+    },
+    {
+      "id": "s08",
+      "duration": 22.5,
+      "heading": "Same blocks, every round",
+      "caption": [
+        {
+          "at": 0.0267,
+          "text": "One look, compare and think unit is a block. The same blocks run in every round."
+        },
+        {
+          "at": 0.3384,
+          "text": "The learned numbers are the same in every round. Same team, same habits."
+        },
+        {
+          "at": 0.6025,
+          "text": "A round stamp, a learned tag for the round number, is added to the notes each round."
+        }
+      ],
+      "chip": "older design ran this way",
+      "tag": "round stamp",
+      "src": [
+        "custom_io/models/ledger.py, forward loop (the same self.core blocks each round; step_emb[t] added each round)",
+        "custom_io/models/b3.py line 144 (B3 adds step_emb[ts] before each think)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Thinker row: same weights every round)"
+      ],
+      "labels": {
+        "block": "Block"
+      },
+      "sketch": "picture only: 3 blocks drawn, not the real count",
+      "atMap": [
+        [
+          0.0207,
+          0.0267
+        ],
+        [
+          0.3391,
+          0.3384
+        ],
+        [
+          0.6575,
+          0.6025
+        ]
+      ]
+    },
+    {
+      "id": "s09",
+      "duration": 36,
+      "heading": "Why some questions need several rounds",
+      "caption": [
+        {
+          "at": 0.0167,
+          "text": "Tom has 12 apples, gives away 5, then buys 3. After round 2, the call writer writes sub 12 5."
+        },
+        {
+          "at": 0.2817,
+          "text": "It copies 12 and 5 from the question. The calculator replies 7, which is added to the notes."
+        },
+        {
+          "at": 0.4963,
+          "text": "Round 3 sees that reply. After it, the call writer writes add 7 3, and the calculator replies 10."
+        },
+        {
+          "at": 0.721,
+          "text": "The talker, which writes the final answer, copies 10 from the last reply. A worked example, traced from the code."
+        }
+      ],
+      "chip": "traced from code, never run as a whole",
+      "labels": {
+        "r2": "After round 2: sub 12 5",
+        "r2r": "Reply: 7",
+        "r3": "After round 3: add 7 3",
+        "r3r": "Reply: 10",
+        "ans": "Answer: 10"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 items 2-6 (tool.py:329-374, tool.py:155-170, tool.py:368-374)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 header (B3 group 1 changes are built but have never run)"
+      ],
+      "atMap": [
+        [
+          0.0133,
+          0.0167
+        ],
+        [
+          0.2561,
+          0.2817
+        ],
+        [
+          0.4989,
+          0.4963
+        ],
+        [
+          0.7417,
+          0.721
+        ]
+      ]
+    },
+    {
+      "id": "s10",
+      "duration": 23.5,
+      "heading": "The bell: when to stop",
+      "caption": [
+        {
+          "at": 0.0255,
+          "text": "After each round, a tiny learned stop switch, the bell, asks: is this settled, or should it think more?"
+        },
+        {
+          "at": 0.387,
+          "text": "It must think at least 1 round. It can never go past 32 rounds."
+        },
+        {
+          "at": 0.6551,
+          "text": "It learns from a settled label: stop once no later round would have been right."
+        }
+      ],
+      "chip": "built, never run",
+      "labels": {
+        "min": "At least 1",
+        "max": "At most 32",
+        "bell": "The bell: learned stop switch"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Learned stop row) and sec. 3 item 5",
+        "custom_io/models/tool_h1.py line 20 (at least 1 round, hard cap 32) and line 42 (CAP = 32)"
+      ],
+      "tag": "shading is decoration",
+      "atMap": [
+        [
+          0.0194,
+          0.0255
+        ],
+        [
+          0.3387,
+          0.387
+        ],
+        [
+          0.6581,
+          0.6551
+        ]
+      ]
+    },
+    {
+      "id": "s11",
+      "duration": 29,
+      "heading": "One block: 4,624,281 numbers",
+      "caption": [
+        {
+          "at": 0.0207,
+          "text": "A block is one look, compare and think unit, built from attention and a small network."
+        },
+        {
+          "at": 0.2626,
+          "text": "Counting every learned number in one block, where each vector holds 512 numbers (its width), gives 4,624,281."
+        },
+        {
+          "at": 0.5871,
+          "text": "Our arithmetic: 21 blocks alone give 97.1 million. An older plan said 30 blocks, which would give about 139 million."
+        }
+      ],
+      "chip": "our arithmetic",
+      "labels": {
+        "b21": "21 blocks",
+        "b30": "30 blocks",
+        "b30old": "older plan"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 9 (their count; 100M = 21 blocks at width 512)",
+        "custom_io/models/ledger.py, class CBlock (layer sizes; we recounted by hand: 4,624,281 exactly at width 512, mlp 4.8)",
+        "custom_io/g8a/configs.py line 37 on origin/claude/project-thread-qtxfp4 (100M rung: width 512, 8 heads, mlp 4.8, 21 blocks)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 8 table (big-run PLAN sec. 2, 6 said 'about 30 blocks, width 512'; true: about 21 blocks)"
+      ],
+      "notes": "Computed by hand: 21 x 4,624,281 = 97,109,901; 30 x 4,624,281 = 138,728,430. Per block: LayerNorms 4,096 + q 262,656 + kv 525,312 + o 262,656 + qkv 787,968 + p 262,656 + fc 1,260,441 + out 1,258,496.",
+      "values": {
+        "block": 4624281,
+        "b21": 21,
+        "b30": 30
+      },
+      "atMap": [
+        [
+          0.02,
+          0.0207
+        ],
+        [
+          0.3389,
+          0.2626
+        ],
+        [
+          0.6578,
+          0.5871
+        ]
+      ]
+    },
+    {
+      "id": "s12",
+      "duration": 31.5,
+      "heading": "Four sizes, counted from the build",
+      "caption": [
+        {
+          "at": 0.019,
+          "text": "The learned part of the model comes in four sizes, named 3M, 10M, 30M and 100M for their rough size."
+        },
+        {
+          "at": 0.3192,
+          "text": "These are counts from the build. The finished design (B3) has not been run at any of these sizes yet."
+        },
+        {
+          "at": 0.6166,
+          "text": "As built so far, without the planned talker, the whole model at the 100 million step is 373.1 million numbers, borrowed reader included."
+        }
+      ],
+      "chip": "counted, never run",
+      "note": "Plus 271,002,624 borrowed reader numbers (frozen, never changed)",
+      "labels": {
+        "r3": "3M",
+        "r10": "10M",
+        "r30": "30M",
+        "r100": "100M"
+      },
+      "values": {
+        "r3": 4039957,
+        "r10": 9832977,
+        "r30": 29789693,
+        "r100": 102116618
+      },
+      "src": [
+        "animations/model-explainer-build/sources/pr-56-b3-group1-and-token-test.md line 15 (sizes at caps_b3, trained numbers) and line 17 ('Runs: none yet')",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 (373.1M whole at 100M; ladder 3M, 10M, 30M, 100M) and sec. 2 (271,002,624 frozen reader)"
+      ],
+      "notes": "Bars are trained numbers at caps_b3 (they include the Gemma adapter and the letter window, not only the thinker blocks). 102,116,618 + 271,002,624 = 373,119,242 = 373.1 million, which matches FINISHED sec. 1. The planned 25M talker is not built and is not in 373.1M.",
+      "atMap": [
+        [
+          0.0162,
+          0.019
+        ],
+        [
+          0.3378,
+          0.3192
+        ],
+        [
+          0.6595,
+          0.6166
+        ]
+      ]
+    },
+    {
+      "id": "s13",
+      "duration": 44,
+      "heading": "Long text: is the thinker cheap?",
+      "caption": [
+        {
+          "at": 0.0136,
+          "text": "An average question has 81 letters. Every letter against every letter: 81 times 81 is 6,561 checks."
+        },
+        {
+          "at": 0.2586,
+          "text": "Notes look at letters instead. A rough count: 44 notes, each looking at 81 letters and 27 number slots, gives 4,752 checks per round."
+        },
+        {
+          "at": 0.5433,
+          "text": "Over 8 rounds, the older count, that is 4,752 times 8 = 38,016. At 81 letters, no work is saved."
+        },
+        {
+          "at": 0.8018,
+          "text": "Its gain is structure, not speed. By this count, much longer text would favour the notes, but that is untested."
+        }
+      ],
+      "chip": "suggested, arithmetic",
+      "labels": {
+        "all": "All pairs, 81 letters",
+        "round": "Notes, one round",
+        "eight": "Notes, 8 rounds"
+      },
+      "values": {
+        "all": 6561,
+        "round": 4752,
+        "eight": 38016
+      },
+      "notes": "Computed by hand: 81 x 81 = 6,561; 44 x (81 + 27) = 4,752; 4,752 x 8 = 38,016 (the source says about 38,000). The 27 slots and the 8 rounds belong to the older build (calculator inside); the source calls the whole thing a rough count, nothing was run.",
+      "src": [
+        "architecture/important-links-2026-10-09.md sec. 2, lines 22-24 (6,561; 4,752; about 38,000; at this length the thinker does not save work)",
+        "architecture/important-links-2026-10-09.md sec. 1, lines 12-14 (letters do not compare inside the thinker)",
+        "architecture/running-summary-2026-10-08.md line 48 (questions average 81 letters)"
+      ],
+      "atMap": [
+        [
+          0.014,
+          0.0136
+        ],
+        [
+          0.2564,
+          0.2586
+        ],
+        [
+          0.4988,
+          0.5433
+        ],
+        [
+          0.7413,
+          0.8018
+        ]
+      ]
+    },
+    {
+      "id": "s14",
+      "duration": 28,
+      "heading": "First test: thinking on, then off",
+      "caption": [
+        {
+          "at": 0.0214,
+          "text": "In the first completed test (older design), one copy at the smallest size scored 73.01 points out of 100 on 6,040 kept-aside questions, thinking on."
+        },
+        {
+          "at": 0.5282,
+          "text": "With thinking switched off (zero rounds), the same copy scored 0.66 points."
+        },
+        {
+          "at": 0.7631,
+          "text": "That is one copy at one size. Part 8 explains the test and its checks."
+        }
+      ],
+      "chip": "older design, not B3 (3M, one copy)",
+      "labels": {
+        "on": "Thinking on",
+        "off": "Thinking off",
+        "axis": "Points out of 100"
+      },
+      "values": {
+        "on": 73.01,
+        "off": 0.66
+      },
+      "src": [
+        "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md addendum G, line 188 (3M seed 400: 4,410 of 6,040; thinker-off 0.66)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 2 and item 7 (that design had the calculator inside, 12 fixed rounds)",
+        "origin/claude/8a-g-pc-results results/8a-g/pc/8aG1d-pc/8aG1d-3M-s400/B2/RESULT.json (pooled over the 5 panels: 4,410 of 6,040 = 73.01; lesion loops:0: 40 of 6,040 = 0.66; n_loops 12, eg_embed true)"
+      ],
+      "notes": "G1 3M seed 400, B2 arm (calculator inside, 12 fixed rounds, Gemma reader), 3,544,913 trained numbers: pooled over the 5 panels 4,410 of 6,040 = 73.01; with zero rounds (loops:0) 40 of 6,040 = 0.66. A second finished copy (3M seed 401: 4,450 of 6,040 = 73.68; zero rounds 0 of 6,040) is in the results branch dated Oct 10 but FINISHED-MODEL does not cite it yet, so it is not shown.",
+      "atMap": [
+        [
+          0.0182,
+          0.0214
+        ],
+        [
+          0.3384,
+          0.5282
+        ],
+        [
+          0.6586,
+          0.7631
+        ]
+      ]
+    },
+    {
+      "id": "s15",
+      "duration": 37,
+      "heading": "Not known yet, and what to remember",
+      "caption": [
+        {
+          "at": 0.0162,
+          "text": "Not known: the thinker has never been tested at 100 million numbers."
+        },
+        {
+          "at": 0.2204,
+          "text": "Not known: whether many rounds hurt. One older probe, on one seed, found 16 rounds cost 1.2 to 1.9 points."
+        },
+        {
+          "at": 0.4736,
+          "text": "Experts (many small specialist networks, a few used at a time) are a separate idea, not yet tested and not covered here."
+        },
+        {
+          "at": 0.7211,
+          "text": "Remember: the thinker looks, passes notes and thinks, in rounds. The same blocks run every round. A learned bell is built to say when to stop."
+        }
+      ],
+      "chip": "bell: not tested yet",
+      "labels": {
+        "r": "Recap",
+        "talker": "stand-in today"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (shape untested at 100M), sec. 5 item 13 (depth cost, open risk; the learned stop is meant to avoid it), sec. 5 item 10 (experts join only if both GX stages pass; no expert test has run on this thinker, EXPERTS-TEST-2026-10-09.md sec. 1)",
+        "no-hardcoding/INPUT-UNITS-2026-10-07.md line 39 (16 rounds cost 1.2-1.9 points, 40-loops-probe, one seed; FINISHED cites line 31, which is the wrong line)"
+      ],
+      "atMap": [
+        [
+          0.0136,
+          0.0162
+        ],
+        [
+          0.2563,
+          0.2204
+        ],
+        [
+          0.4989,
+          0.4736
+        ],
+        [
+          0.7415,
+          0.7211
+        ]
+      ]
+    }
+  ]
+}

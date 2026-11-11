@@ -1,0 +1,613 @@
+{
+  "kicker": "Start here",
+  "title": "What you are about to see",
+  "blurb": "This project is building a language model that thinks in careful steps. This opening section covers what it is, the colours and tags, and the words you need. Parts 1 to 10 and a wrap-up follow.",
+  "accent": "thinker",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 22.5,
+      "heading": "A research project, not a product",
+      "caption": [
+        {
+          "at": 0.0267,
+          "text": "This is a research project. It is building a language model: a program that reads text and writes an answer."
+        },
+        {
+          "at": 0.4019,
+          "text": "Two of its goals: skills and careful thinking first, then learning from only a few examples."
+        },
+        {
+          "at": 0.7137,
+          "text": "It is not an app. GitHub lists 0 releases for it, and nothing here is finished."
+        }
+      ],
+      "labels": {
+        "stages": [
+          {
+            "name": "plan only",
+            "sub": "an idea on paper"
+          },
+          {
+            "name": "built, never tested",
+            "sub": "code, no real run"
+          },
+          {
+            "name": "tested",
+            "sub": "a result exists"
+          },
+          {
+            "name": "released",
+            "sub": "0 so far"
+          }
+        ],
+        "note": "The first three boxes are the status tags you will see all video. The last is the finish line: nothing is there yet."
+      },
+      "src": [
+        "creative-roadmap/gpt6pro-creative-roadmap-2026-10-06.md:30-31 (north star; other goals: skills and critical thinking first, learning from few examples)",
+        "big-run/PLAN.md:72 (scorecard row 1: think first, learn from a few examples) and :79 (row 8: the goal)",
+        "animations/storyboards-2026-10-09.md:20 (research model, not an app) and :26 (GitHub shows 0 releases and 0 tags)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:4 (the model we plan to ship; not finished)",
+        "kit/GLOSSARY.md (status chips: grey plan only/placeholder, amber built never tested, green tested)"
+      ],
+      "notes": "The four boxes are a picture of the status ladder (glossary). 0 releases: storyboards sec. 2 (Oct 9) and a live read of the GitHub REST API on Oct 10 (repos/BenjaminHannan/learner/releases: 0; tags: 0; local git also has 0 tags). Only two of the project's goals are named; the far goal (an agent that beats Minecraft like a person, roadmap line 30) and 'beat 1-2B models at the same total size' are in the roadmap but not in this cut.",
+      "atMap": [
+        [
+          0.014,
+          0.0267
+        ],
+        [
+          0.377,
+          0.4019
+        ],
+        [
+          0.6804,
+          0.7137
+        ]
+      ]
+    },
+    {
+      "id": "s02",
+      "duration": 28,
+      "heading": "Two goals it is trying to reach",
+      "caption": [
+        {
+          "at": 0.0214,
+          "text": "First goal: skills and careful thinking."
+        },
+        {
+          "at": 0.1656,
+          "text": "At the smallest size, 3 million learned numbers, an earlier design scored higher than an ordinary same-size model in all six separate training runs."
+        },
+        {
+          "at": 0.6602,
+          "text": "Second goal: learning from only a few examples. Only partly shown so far: brand-new kinds of rule are mostly missed."
+        }
+      ],
+      "labels": {
+        "steps": [
+          {
+            "t": "skills and careful thinking",
+            "cl": "skills shown at 3M, earlier design"
+          },
+          {
+            "t": "learning from few examples",
+            "cl": "partly shown"
+          }
+        ]
+      },
+      "src": [
+        "creative-roadmap/gpt6pro-creative-roadmap-2026-10-06.md:30-31 (other goals: skills and critical thinking first, learning from few examples)",
+        "big-run/PLAN.md:72 (scorecard row 1 (a): shown at 3M, B2 +20.3 over a plain transformer, 6 of 6 seeds; (b) partly: held-out families 0-4%, new kinds about 11%)",
+        "big-run/PLAN.md:131 (B2 at 3M, calculator inside, letter reader: 6 seeds, pooled-5 +20.3 over a same-size plain transformer, ahead on 6 of 6)",
+        "whole-model-roadmap/whole-model-roadmap-2026-10-06.md:367 (B2 confirm, 6 of 6 seeds, PASS-1, +20.3 vs plain_tf, CI 19.4 to 21.3)",
+        "creative-roadmap/gpt6pro-creative-roadmap-2026-10-06.md:66 (every model scores 0-4% on held-out task families)",
+        "kit/GLOSSARY.md:50 (3M = about three million learned numbers, the smallest size)"
+      ],
+      "notes": "Goal 1's evidence (6 of 6, +20.3 on pooled-5 skills questions) belongs to the older B2 design at 3M (no Gemma reader, calculator inside); the video says 'earlier design'. What is shown for goal 1 is the score ahead of a same-size plain model, so the chip says 'skills shown'. Goal 2: held-out families 0-4% and new kinds about 11% are older-model scores; sleep lifted the first try to 71.3% on 6 parents with the project's own scripts, never on the finished design, so 'partly shown'. The 'partly shown' chip is green with a 'partly' label (a result exists, but only for older models; it was amber in the checked version, which read as 'built, never tested'). Two of the project's goals only; the far goal (an agent that beats Minecraft like a person, roadmap line 30) and 'beat 1-2B models' are not in this cut.",
+      "atMap": [
+        [
+          0.0176,
+          0.0214
+        ],
+        [
+          0.1324,
+          0.1656
+        ],
+        [
+          0.62,
+          0.6602
+        ]
+      ]
+    },
+    {
+      "id": "s06",
+      "duration": 38.5,
+      "heading": "The whole machine in one picture",
+      "caption": [
+        {
+          "at": 0.0156,
+          "text": "The reader gives each letter a meaning from the whole question. Its main part is borrowed from others and frozen: our practice never changes it."
+        },
+        {
+          "at": 0.3371,
+          "text": "The thinker thinks in rounds, which are laps of looking and thinking. Our practice sets its settings from scratch."
+        },
+        {
+          "at": 0.5577,
+          "text": "The stop switch says done. It is built, but never run."
+        },
+        {
+          "at": 0.6935,
+          "text": "The talker writes one line a turn. Today it is a small stand-in."
+        },
+        {
+          "at": 0.8479,
+          "text": "Outside: a calculator. The talker's line calls it; the reader reads the reply."
+        }
+      ],
+      "labels": {
+        "jobs": [
+          "reads the question",
+          "thinks in rounds",
+          "says when done",
+          "writes the answer or a call",
+          "outside tool: does exact sums"
+        ],
+        "chip": "stand-in today",
+        "chipStop": "built, never tested"
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md:15-20 and table lines 31-38 (sec. 1-2)"
+      ],
+      "notes": "Part boxes come from S.modelMap (sub-labels fixed by the kit). Reader: the frozen Gemma part is borrowed (271,002,624 numbers); the small adapter and letter window on top are ours (table lines 32-33), hence 'main part'. 'Borrowed from others and frozen' is the glossary's definition (a part somebody else trained, not changed by our practice). Stop switch: built, never run (line 36). Talker: 'today a small stand-in; the English talker is unbuilt' (line 38). The amber chip under the stop switch was added in the checking pass. The chip reads 'built, never tested' (the legend wording); the source says never run (line 36), the same fact. Calculator is outside the model (Ben, Oct 2026): fifth caption and job text are for the outside tool; the model has four parts.",
+      "atMap": [
+        [
+          0.0133,
+          0.0156
+        ],
+        [
+          0.2422,
+          0.3371
+        ],
+        [
+          0.4222,
+          0.5577
+        ],
+        [
+          0.5778,
+          0.6935
+        ],
+        [
+          0.7089,
+          0.8479
+        ]
+      ]
+    },
+    {
+      "id": "s08",
+      "duration": 37,
+      "heading": "One picture for the whole video",
+      "caption": [
+        {
+          "at": 0.0162,
+          "text": "One picture runs through the whole video: a student doing a word problem."
+        },
+        {
+          "at": 0.1768,
+          "text": "A translator reads the question. A team of note-takers thinks it over, round after round."
+        },
+        {
+          "at": 0.362,
+          "text": "The one who writes the final answer may write a request slip. A pocket calculator, outside the team, hands back a slip, and the translator reads it."
+        },
+        {
+          "at": 0.6578,
+          "text": "A little bell rings when they are done. One person writes the final answer. Each colour always means the same part."
+        }
+      ],
+      "labels": {
+        "cards": [
+          {
+            "t": "Reader",
+            "p": "a borrowed translator"
+          },
+          {
+            "t": "Thinker",
+            "p": "note-takers passing notes"
+          },
+          {
+            "t": "Stop switch",
+            "p": "a little bell"
+          },
+          {
+            "t": "Talker",
+            "p": "writes the answer or the slip"
+          },
+          {
+            "t": "Calculator",
+            "p": "outside: a pocket calculator"
+          }
+        ]
+      },
+      "src": [
+        "kit/GLOSSARY.md (the one analogy table)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:31-38 (part names)"
+      ],
+      "notes": "The student analogy is the project's shared teaching picture (glossary), not a measurement.",
+      "illustration": "The cards are an analogy, not a diagram of the code.",
+      "atMap": [
+        [
+          0.0143,
+          0.0162
+        ],
+        [
+          0.2143,
+          0.1768
+        ],
+        [
+          0.4381,
+          0.362
+        ],
+        [
+          0.6857,
+          0.6578
+        ]
+      ]
+    },
+    {
+      "id": "s09",
+      "duration": 30.5,
+      "heading": "How sure are we? Three tags",
+      "caption": [
+        {
+          "at": 0.0197,
+          "text": "Green: tested. A result file exists. Example: with the calculator outside, scores matched the earlier design in six runs, at the smallest size."
+        },
+        {
+          "at": 0.4842,
+          "text": "Amber: built, but never tested. The code exists, but no real training run was ever done. Example: the stop switch."
+        },
+        {
+          "at": 0.761,
+          "text": "Grey: placeholder. It does not exist yet. Example: the English talker."
+        }
+      ],
+      "labels": {
+        "rows": [
+          {
+            "name": "the outside calculator",
+            "sub": "matched the earlier design, 6 runs"
+          },
+          {
+            "name": "the stop switch",
+            "sub": "code exists, no real run"
+          },
+          {
+            "name": "the English talker",
+            "sub": "about 25 million planned, not built"
+          }
+        ]
+      },
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md:106 (sec. 5 item 1: T1SDR matched B2 over 6 seeds, pooled-5 +0.62, CI -0.23 to +1.46; calculator off scores 0.0)",
+        "architecture/MARKS-D0-T1-2026-10-07.md:200 and :204 (Record 13: pooled-5 T1SDR minus B2 +0.62, 6 of 6 seeds within 1.0; 'at parity with B2 over six seeds')",
+        "architecture/FINISHED-MODEL-2026-10-09.md:36 (stop switch: built, never run)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:38 (English talker unbuilt) and :21 (talker about 25M planned)",
+        "kit/GLOSSARY.md:39-46 (status chips)"
+      ],
+      "notes": "Amber is the kit's 'untested' chip (built, never tested). The green example is the calculator moved outside the model (T1SDR) matching B2 (the earlier design, calculator inside) at the smallest size (3.24M, MARKS-D0-T1 line 76 context) over six copies; 'matched' is the source's word. Disclosed in the source and not on screen: Ben cleared the leak mark, and the swap mark is unscored on seed 205. Copies are named 'runs' here because the word 'copy' is defined in the Score and copy scene.",
+      "atMap": [
+        [
+          0.0162,
+          0.0197
+        ],
+        [
+          0.29,
+          0.4842
+        ],
+        [
+          0.55,
+          0.761
+        ]
+      ]
+    },
+    {
+      "id": "s11",
+      "duration": 21.5,
+      "heading": "Two words: vector and round",
+      "caption": [
+        {
+          "at": 0.0279,
+          "text": "A vector is a list of numbers, like a note card. The reader turns each letter into one. “Picture only” means a drawing, not a measurement."
+        },
+        {
+          "at": 0.5967,
+          "text": "A round is one lap of looking at the whole question, passing notes, and thinking. The thinker does several laps."
+        }
+      ],
+      "labels": {
+        "word": "cat",
+        "vecLabel": "one letter, one note card",
+        "steps": [
+          "look",
+          "pass notes",
+          "think"
+        ],
+        "lap": "round",
+        "pic": "picture only"
+      },
+      "src": [
+        "kit/GLOSSARY.md (vector, round)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:31 (each letter gets the 768-number state of the Gemma token it sits in)"
+      ],
+      "notes": "The shading of the strip is decoration. The lap counter 1 to 3 only illustrates; real runs use more rounds.",
+      "illustration": "The shaded strip and the 1-2-3 lap counter are illustrations.",
+      "atMap": [
+        [
+          0.0214,
+          0.0279
+        ],
+        [
+          0.45,
+          0.5967
+        ]
+      ]
+    },
+    {
+      "id": "s12",
+      "duration": 26.5,
+      "heading": "Two more words: call and reply",
+      "caption": [
+        {
+          "at": 0.0226,
+          "text": "A call is the talker's line: a text request to the outside calculator. Here, sub 12 5 means: take 5 away from 12."
+        },
+        {
+          "at": 0.3817,
+          "text": "The reply is the calculator's answer, also text: 7. The whole reader reads it. Together they read sub 12 5 = 7."
+        },
+        {
+          "at": 0.7272,
+          "text": "The talker writes calls on its own. A line that is not a call is the final answer."
+        }
+      ],
+      "labels": {
+        "callL": "call: talker's line",
+        "calcL": "outside calculator",
+        "replyL": "reply",
+        "call": "sub 12 5",
+        "reply": "7",
+        "line": "sub 12 5 = 7",
+        "ex": "made-up example"
+      },
+      "src": [
+        "kit/GLOSSARY.md:26 (call, reply)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:35 and 37 (tested version: a call writer picks 1 of 8 operations or no call; calculator replies as text. New design, not tested: the talker writes the call at the end of a turn)"
+      ],
+      "notes": "The numbers 12, 5 and 7 are the glossary's example, not a result.",
+      "atMap": [
+        [
+          0.0187,
+          0.0226
+        ],
+        [
+          0.43,
+          0.3817
+        ],
+        [
+          0.6883,
+          0.7272
+        ]
+      ]
+    },
+    {
+      "id": "s13",
+      "duration": 20,
+      "heading": "Two more words: practice and kept aside",
+      "caption": [
+        {
+          "at": 0.03,
+          "text": "Practice: the model tries a question, is told the right answer, and every setting is nudged a tiny bit. One nudge is one update."
+        },
+        {
+          "at": 0.5422,
+          "text": "Questions kept aside are never used in practice. They are saved for the exam, so the score is fair: the model has never seen them."
+        }
+      ],
+      "labels": {
+        "steps": [
+          "try",
+          "told the answer",
+          "nudge"
+        ],
+        "upd": "update",
+        "practice": "practice pile",
+        "aside": "kept-aside pile",
+        "pic": "picture only"
+      },
+      "src": [
+        "kit/GLOSSARY.md (practice / training, update, held-out / kept aside)"
+      ],
+      "notes": "Counts of cards and updates are illustrative only.",
+      "illustration": "The cards and the update counter are a picture, not real counts.",
+      "atMap": [
+        [
+          0.02,
+          0.03
+        ],
+        [
+          0.4667,
+          0.5422
+        ]
+      ]
+    },
+    {
+      "id": "s14",
+      "duration": 31,
+      "heading": "Score and copy",
+      "caption": [
+        {
+          "at": 0.0194,
+          "text": "A score is points out of 100: the share of questions answered right. Here, 73.01 points on 6,040 questions kept aside."
+        },
+        {
+          "at": 0.4186,
+          "text": "A copy is one separate run of the model from its own random start. Six copies are six chances to see the same result."
+        },
+        {
+          "at": 0.737,
+          "text": "Careful: 73.01 is one copy, at the smallest size, on an earlier design."
+        }
+      ],
+      "labels": {
+        "num": 73.01,
+        "outOf": "points out of 100",
+        "over": "6,040 questions kept aside",
+        "chip": "tested",
+        "copies": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "copyW": "copy",
+        "copyNote": "picture only",
+        "careful": "one copy, 3 million learned numbers, earlier design"
+      },
+      "src": [
+        "animations/source-g1-3m-s400.json (raw G1 result: G-B2 full.pooled5 73.01 = 4,410 of 6,040; G-PT full.pooled5 67.12 = 4,054 of 6,040; seed 400, 3M)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:109-110 (sec. 5 item 2: G1 first finished run, 3M, seed 400: 73.01 thinker on)",
+        "big-run/PLAN.md:99 and :134 (3M seed 400 done: G-B2 73.01, G-PT 67.12) and :225 (pooled-5 on the 6,040 dev rows; G1's 3M lead for G-B2 over G-PT was +5.9 on one seed)",
+        "kit/GLOSSARY.md:62 and :78 (pooled-5 = the 6,040 questions kept aside, five kinds pooled into one score out of 100); kit/GLOSSARY.md:30-32 (score, seed/copy)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:125-126 (item 7: G1 tests today's earlier design: calculator inside, 12 fixed rounds)"
+      ],
+      "notes": "73.01 is seed 400 at 3M (G1 first finished run; 4,410 of 6,040 = 73.01). Other chapters call it the older 12-round design; here 'earlier design'. A second 3M copy (seed 401, 73.7 vs 68.0, PLAN.md line 9, not recomputed by the project) finished after the chapter was written; the video shows seed 400 only and says one copy about that number, which stays true.",
+      "illustration": "The six copy boxes are a picture of the idea; they are not six real results.",
+      "atMap": [
+        [
+          0.0162,
+          0.0194
+        ],
+        [
+          0.2757,
+          0.4186
+        ],
+        [
+          0.565,
+          0.737
+        ]
+      ]
+    },
+    {
+      "id": "s15",
+      "duration": 34,
+      "heading": "The plain model: our yardstick",
+      "caption": [
+        {
+          "at": 0.0176,
+          "text": "A plain model is an ordinary model of the same size, trained on the same practice, with the same borrowed reader. It is our yardstick."
+        },
+        {
+          "at": 0.324,
+          "text": "On the same 6,040 questions kept aside, the plain model scored 67.12 points out of 100, and ours scored 73.01."
+        },
+        {
+          "at": 0.7024,
+          "text": "Careful: these two scores come from one copy, at the smallest size, on an earlier design. We do not claim it holds at bigger sizes."
+        }
+      ],
+      "labels": {
+        "rows": [
+          {
+            "label": "Ours",
+            "value": 73.01
+          },
+          {
+            "label": "Plain",
+            "value": 67.12
+          }
+        ],
+        "unit": "points out of 100",
+        "chip": "tested",
+        "care": "one copy, 3 million learned numbers, earlier design"
+      },
+      "src": [
+        "animations/source-g1-3m-s400.json (G-B2 73.01 and G-PT 67.12, both of 6,040; learned parameters 3,544,913 and 3,495,936)",
+        "whole-model-roadmap/8AG-GEMMA-GROWTH-SPEC-2026-10-08.md:33-35 (G-PT = the plain step model with the same Gemma front, sized within 2% of G-B2) and :92 (1.4% apart at 3M)",
+        "big-run/PLAN.md:53 (one clean 3M rung, 73.01 vs 67.12, a 10M answer still to come) and :72 (row 1: G-B2 73.01 vs G-PT 67.12 on one seed)",
+        "architecture/FINISHED-MODEL-2026-10-09.md:109-110",
+        "kit/GLOSSARY.md:32 (plain model), :62 and :78 (pooled-5 = the 6,040 questions kept aside)",
+        "big-run/PLAN.md:225 (pooled-5 on the 6,040 dev rows; G1's 3M lead for G-B2 over G-PT was +5.9 on one seed)"
+      ],
+      "notes": "No difference is computed in the video (73.01 - 67.12 = 5.89, which PLAN.md:225 rounds to +5.9). The 6,040 is the pooled-5 held-out set. Both arms use the same borrowed Gemma reader (spec lines 33-35), so the gap is not the reader. Seed 401 (73.7 vs 68.0, PLAN.md:9, not recomputed by the project) is not shown.",
+      "atMap": [
+        [
+          0.0154,
+          0.0176
+        ],
+        [
+          0.3333,
+          0.324
+        ],
+        [
+          0.6538,
+          0.7024
+        ]
+      ]
+    },
+    {
+      "id": "s19",
+      "duration": 29.5,
+      "heading": "Our promise to you",
+      "caption": [
+        {
+          "at": 0.0203,
+          "text": "Every real number in this video comes from a project file. Here is one example: the plain model's score, traced to its file."
+        },
+        {
+          "at": 0.3429,
+          "text": "Pictures that only illustrate carry a tag, like picture only or made-up example. They are never real measurements."
+        },
+        {
+          "at": 0.633,
+          "text": "What is not proven stays amber or grey. Nothing here is released, and no future date is promised to you."
+        }
+      ],
+      "labels": {
+        "num": 67.12,
+        "tag": "big-run/PLAN.md",
+        "chipA": "picture only",
+        "chipB": "made-up example",
+        "chipC": "built, never tested",
+        "chipD": "plan only",
+        "rel": "released: 0",
+        "numL": "the plain model's score, points out of 100",
+        "tagSub": "scorecard row 1, “Status today”",
+        "tagsLead": "Tags on pictures that only illustrate:"
+      },
+      "src": [
+        "big-run/PLAN.md:72 (scorecard row 1: G-PT 67.12, the plain model's score) and animations/source-g1-3m-s400.json (G-PT pooled5 67.12 of 6,040)",
+        "animations/storyboards-2026-10-09.md:26 (GitHub shows 0 releases)",
+        "brief ch00 point 7 (the honesty promise)"
+      ],
+      "notes": "The file tag shows how a number is traced to its source. The tag names the scorecard row and its 'Status today' column (the table in the SCORECARD section of PLAN.md, line 72 at the time of checking; that column holds the 67.12), not a line number, because PLAN.md is edited often. The tags are shown as dashed pills under a lead-in so they cannot be read as describing the real score above. The checking pass compared every number in this chapter with its source; the video does not put a file tag beside every number (the first draft promised that), so the caption now promises only that every real number comes from a project file and shows one traced example.",
+      "atMap": [
+        [
+          0.0146,
+          0.0203
+        ],
+        [
+          0.3415,
+          0.3429
+        ],
+        [
+          0.6537,
+          0.633
+        ]
+      ]
+    }
+  ]
+}

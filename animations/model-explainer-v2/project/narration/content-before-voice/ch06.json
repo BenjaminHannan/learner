@@ -1,0 +1,298 @@
+{
+  "kicker": "Part 5 of 10",
+  "title": "Deciding when it is done",
+  "blurb": "The model stops thinking on its own. A small learned switch looks after each round and decides whether the thinking is finished. This part is built, but it has never been run.",
+  "accent": "stop",
+  "scenes": [
+    {
+      "id": "s01",
+      "duration": 28,
+      "heading": "Where we are: the stop switch",
+      "caption": [
+        "The model thinks in rounds, one lap at a time.",
+        "The stop switch decides when thinking stops.",
+        "It is built, but it has never been run."
+      ],
+      "chip": "built, never tested",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 1 (one paragraph) and sec. 2 (Learned stop row, line 36: built, never run)"
+      ]
+    },
+    {
+      "id": "s02",
+      "duration": 30,
+      "heading": "The problem: a fixed dial is a guess",
+      "caption": [
+        "The older design had a dial: the same number of rounds for every question, set by hand (12 in the tested model, 8 in another).",
+        "Easy questions may need fewer rounds. Hard questions may need more."
+      ],
+      "dial": "12 rounds, set by hand",
+      "easy": "easy question",
+      "hard": "hard question",
+      "picture": "picture only: one fixed dial for every question",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (table row: fixed number of rounds, 8 in T1SDR, 12 in G1, line 94)",
+        "results/8a-g/pc/8aG1d-pc/8aG1d-3M-s400/B2/RESULT.json config.cfg.n_loops = 12 (branch origin/claude/8a-g-pc-results)"
+      ],
+      "notes": "Easy-needs-fewer and hard-needs-more is the reason for the learned stop (framing, suggested); the evidence for it is on the next two scenes. Dial = number of rounds allowed (GLOSSARY).",
+      "key": "1 square = 1 round"
+    },
+    {
+      "id": "s03",
+      "duration": 34,
+      "heading": "Evidence: fewer rounds scored lower",
+      "caption": [
+        "We turned the dial down on one trained copy, with no new practice.",
+        "Points out of 100, on 6,040 questions kept aside (called pooled-5).",
+        "Trained at 12 rounds it scored 73.01. With 2 rounds, 29.30. With 1 round, 20.00. With 0 rounds, 0.66."
+      ],
+      "bars": [
+        {
+          "label": "0 rounds",
+          "value": 0.66
+        },
+        {
+          "label": "1 round",
+          "value": 20.0
+        },
+        {
+          "label": "2 rounds",
+          "value": 29.3
+        },
+        {
+          "label": "12 rounds (trained)",
+          "value": 73.01
+        }
+      ],
+      "chip": "tested: older design, one copy, 3 million numbers",
+      "note": "G1 size test, older design: calculator inside, 12 fixed rounds",
+      "src": [
+        "animations/source-g1-3m-s400.json G-B2 (full pooled5 73.01, right 4410 of 6040; by_thinking_rounds loops:0 0.66, loops:1 20.0, loops:2 29.3; trained_rounds 12)",
+        "results/8a-g/pc/8aG1d-pc/8aG1d-3M-s400/B2/RESULT.json (branch origin/claude/8a-g-pc-results): final_eval + lesions loops:0/1/2 summed over the five splits, recomputed by the checker: 4410, 40, 1208, 1770 of 6040",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 2 (73.01 with thinker on, 0.66 with it off, 3M seed 400)"
+      ],
+      "notes": "Points are scores out of 100 (right / 6,040 x 100): 4410/6040 = 73.01, 1770/6040 = 29.30, 1208/6040 = 20.00, 40/6040 = 0.66. The 0 to 2 round rows are the same trained copy with its dial turned down (loops:K), no new practice. 3M = about 3 million learned numbers (3,544,913 in this run). Bars are all indigo (thinker rounds); purple would wrongly suggest a stop switch, and G1 has none."
+    },
+    {
+      "id": "s04",
+      "duration": 35,
+      "heading": "Multi-step questions needed more rounds",
+      "caption": [
+        "Chain-5 is a set of 1,000 multi-step questions, scored on the same trained copy.",
+        "On pooled-5, 1 round scored 20.00. On chain-5 it scored 0.0, and 1.1 at 2 rounds.",
+        "At the full 12 rounds chain-5 scored 99.9. So this copy needed more rounds on multi-step questions than on pooled-5."
+      ],
+      "bars": [
+        {
+          "label": "1 round",
+          "value": 0.0
+        },
+        {
+          "label": "2 rounds",
+          "value": 1.1
+        },
+        {
+          "label": "12 rounds (trained)",
+          "value": 99.9
+        }
+      ],
+      "chip": "tested: older design, one copy, 3 million numbers",
+      "note": "chain-5 score out of 100, same older design",
+      "src": [
+        "animations/source-g1-3m-s400.json G-B2 chain5 (loops:0 0.0, loops:1 0.0, loops:2 1.1, intact 99.9); by_thinking_rounds loops:1 20.0 (pooled-5)",
+        "results/8a-g/pc/8aG1d-pc/8aG1d-3M-s400/B2/RESULT.json chain5 (branch origin/claude/8a-g-pc-results): n = 1000 for every row; intact 99.9 (999 of 1000), loops:1 0.0, loops:2 1.1 (11 of 1000), loops:0 0.0"
+      ],
+      "notes": "The source file's key for the full setting is 'intact' (no lesion = the 12 trained rounds; loops:24 also gives 99.9). The raw RESULT.json shows chain-5 has 1,000 questions, so the count is stated. 'Needed more rounds' is read from one trained copy; the heading says needed, not need. Older B2 copies (q33) show the same shape: chain-5 2.2 to 3.0 at 1 round (fast-slow-2026-10-08.md line 18)."
+    },
+    {
+      "id": "s05",
+      "duration": 35,
+      "heading": "Too many rounds can cost points",
+      "caption": [
+        "Older models were trained for 8 rounds. In a round-count test on two copies, the score on practice-like questions stopped rising at 8 rounds.",
+        "On all 8 copies we checked (those two and six more), running 16 rounds scored 0.8 to 1.9 points lower than 8 rounds.",
+        "So too few rounds hurt, and too many may hurt too."
+      ],
+      "big": "0.8 to 1.9 points lower",
+      "eight": "8 rounds: score stops rising",
+      "sixteen": "16 rounds: lower",
+      "chip": "tested: older design, 8 copies",
+      "src": [
+        "custom_io/results/40-loops-probe/PROBE.json M1 (branch origin/claude/custom-reader-talker-4x309r): B2 seeds 100 and 101, in_dist at 8 / 16 rounds = 89.35 / 88.21 and 90.53 / 89.68; flat from 8 to 9 rounds",
+        "custom_io/results/33-pc-confirm-b2/B2_s200..s205/RESULT.json (same branch): in_dist at the trained 8 rounds vs lesions loops:16 = 90.51/88.60, 91.54/89.93, 89.78/88.38, 91.03/89.26, 89.63/88.82, 90.66/89.41; RESULTS-EG2.md line 29 gives -1.91 and -1.62 for seeds 200 and 201",
+        "no-hardcoding/INPUT-UNITS-2026-10-07.md line 39 and architecture/FINISHED-MODEL-2026-10-09.md sec. 5 item 13 (line 149): 'one probe, 1.2-1.9' (the raw files show 8 copies and 0.8 to 1.9; see notes)",
+        "architecture/fast-slow-2026-10-08.md line 21 (1.6 to 1.9 worse, q33 seeds)"
+      ],
+      "notes": "CHECKER CHANGE. FINISHED item 13 and INPUT-UNITS line 39 say 'one probe/one seed, 1.2-1.9'; fast-slow says '1.6 to 1.9'. The raw files give 16 rounds minus 8 rounds on in_dist of -1.15 and -0.85 (probe seeds 100, 101) and -1.91, -1.62, -1.40, -1.76, -0.81, -1.25 (q33 seeds 200 to 205): all 8 copies lower, range 0.81 to 1.91. So the screen says 0.8 to 1.9 and 'all 8 copies'. 'Stopped rising at 8' is from the two probe copies only. All are older B2 copies (trained at 8 rounds, calculator inside, about 3.3 million numbers); the finished model runs up to 32 rounds with a learned stop."
+    },
+    {
+      "id": "s06",
+      "duration": 38,
+      "heading": "After each round, a small head says stop or go",
+      "caption": [
+        "After every round, the stop switch, a small head, reads one of the thinker's note cards.",
+        "It gives a number from 0 to 1. At 0.5 or more, the thinking stops.",
+        "It always runs at least 1 round, and never more than 32.",
+        "The stop switch has 257 numbers when each card has 256, and 513 when each has 512."
+      ],
+      "thinker": "Thinker",
+      "head": "Stop switch",
+      "line": "0.5 = stop line",
+      "picture": "picture only: the meter is not a real run",
+      "chip": "built, never tested",
+      "src": [
+        "custom_io/models/tool_h1.py (branch origin/claude/project-thread-qtxfp4) line 10 (stop = Linear(d,1), 257 params, on ln_z(control 1)), lines 42-44 (CAP = 32, P_STOP = 0.5)",
+        "custom_io/models/tool_h1.py lines 19-21 (run rule: first round with sigmoid >= 0.5, at least 1 round, cap 32)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 2 (Learned stop row, line 36: width + 1, 257 at 256, 513 at 512, never run)"
+      ],
+      "notes": "The stop head reads control vector 1 only (one note card), not all the thinker's notes; the caption says one card. Width = numbers per note card; 256 at the 3M size, 512 at the 100M size (FINISHED sec. 2 thinker row)."
+    },
+    {
+      "id": "s07",
+      "duration": 32,
+      "heading": "One stop for the whole answer",
+      "caption": [
+        "Built version: one stop for the whole answer. New design: one stop per turn.",
+        "Built version, not tested: the thinker may call an outside calculator, from round 2 up to 32.",
+        "Built code: about a quarter of questions add 0 to 2 rounds before a call. New design: the talker writes calls."
+      ],
+      "round": "built version: rounds (10 of 32 shown)",
+      "call": "call",
+      "bell": "stop",
+      "picture": "made-up example: no real run",
+      "chip": "built, never tested",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 (lines 60-66: calls inside the thinking; one stop for the whole answer)",
+        "architecture/B3-GROUP1-BUILD-2026-10-09.md sec. 3 (lines 53-54: gap_p 0.25, gaps g in {0,1,2}; line 104: B3_G1 config gap_p 0.25)",
+        "custom_io/models/tool_h1.py lines 5-21 and custom_io/models/b3.py lines 6-12 (branch origin/claude/project-thread-qtxfp4): one stop per turn; any_round; gap_p"
+      ],
+      "notes": "'Round 2' follows FINISHED sec. 3 (code index t = round - 1, calls need t >= 1). b3.py and B3-GROUP1-BUILD write 'after any round t >= 1' with the 0-based t, so they agree. The 'gap_p = 0.25' default is 'suggested, fixed now, not tuned' (B3-GROUP1-BUILD line 53)."
+    },
+    {
+      "id": "s08",
+      "duration": 31,
+      "heading": "How it is taught: the settled label",
+      "caption": [
+        "Training gives every round a label: stop, or keep going.",
+        "The label says stop when the answer is right now, or when no later round is right.",
+        "So the stop switch is also taught to stop on questions it cannot solve."
+      ],
+      "rowA": "made-up question A: first right at round 4",
+      "rowB": "made-up question B: never right",
+      "go": "go",
+      "stop": "stop",
+      "picture": "made-up example: no real run",
+      "chip": "built, never tested",
+      "src": [
+        "custom_io/models/tool_h1.py lines 52-57 (def settled: label = right now, or no later round is right; branch origin/claude/project-thread-qtxfp4)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 item 5 (lines 54-56)"
+      ]
+    },
+    {
+      "id": "s09",
+      "duration": 39,
+      "heading": "The fix: count the label only in full batches",
+      "caption": [
+        "Practice uses batches of questions, and some batches run only 8 rounds. There, a question first right at round 10 looks never right.",
+        "So the label says stop at round 1, and the stop switch would learn to stop too early.",
+        "Fix: the stop switch learns only from batches that run all 32 rounds, about 1 in 4."
+      ],
+      "short": "8-round batch: not counted",
+      "full": "32-round batch (12 of 32 shown): counted",
+      "go": "go",
+      "stop": "stop",
+      "picture": "made-up example: no real run",
+      "chip": "built, never tested",
+      "src": [
+        "custom_io/models/tool_h1.py lines 13-16 and line 237 (w_stop = 1.0 if label == 'right' or n >= cap else 0.0; branch origin/claude/project-thread-qtxfp4, commit 8fce7247a8): a batch of n < 32 rounds cannot see later rounds; stop loss counted only when n >= 32, about 1 batch in 4, about half of all trained rounds",
+        "big-run/PLAN.md Amendment 1:25 PM ET (audit B13-2; allowed before any B3 run; line 238): 'a row that is right only after round n looked settled at every earlier round and taught the head to stop early'; no run has happened"
+      ],
+      "notes": "The made-up question (first right at round 10) is an illustration of the mechanism, not a stop round from any real question. The PLAN says no H1R or B3 run has happened, so the head never actually learned the early stop: the caption says 'would learn'. Batches draw K from {4, 8, 16, 32} (tool_h1.py lines 22-24), so 1 in 4 is the 32 draw."
+    },
+    {
+      "id": "s10",
+      "duration": 32,
+      "heading": "The risk: a stop that fires too early",
+      "caption": [
+        "The label only sees the rounds a question actually ran.",
+        "So a stop that fires early may never be shown a later right answer (suggested).",
+        "The first run is planned to report how often questions stop early, and their answers. This is reported only, not a pass mark."
+      ],
+      "chip": "first run planned",
+      "ran": "made-up example: rounds it ran",
+      "go": "go",
+      "stop": "stop",
+      "unseen": "later rounds: never seen",
+      "early": "early stop",
+      "src": [
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 3 (lines 66-69: risk, suggested; B3 3M readout reports it)",
+        "big-run/PLAN.md addendum 12:25 PM ET (line 232: early-stop share and the answers on those rows are reported, not gated); Amendment 1:25 PM ET (line 238: it stays reporting-only)"
+      ]
+    },
+    {
+      "id": "s11",
+      "duration": 45,
+      "heading": "How it will be judged: marks set in advance",
+      "caption": [
+        "Key pass marks (bars the test must reach) were written before any run. They are targets, not results.",
+        "On average, 1-step questions must use at most half the rounds of the longest ones (code: 11 steps; plan: 12).",
+        "Always-32 is the same model forced to think all 32 rounds. Practised questions: within 1 point. Longer chains: within 2.",
+        "It fails if it never stops early (rounds within 10% of 32), or if longer chains fall over 5 below always-32."
+      ],
+      "barA": "1-step questions: rounds (target)",
+      "barB": "longest questions: rounds (target)",
+      "ruleA": "at most half of the longest",
+      "target": "target, not a result",
+      "chip": "plan only",
+      "src": [
+        "big-run/PLAN.md sec. 5 row 5 (line 76: practised within 1, longer chains within 2 of always-32, rounds on 1-step <= half those on 12-step, fails if it never stops early)",
+        "big-run/PLAN.md B3-4 (line 228: average rounds on 1-step at most half those on 12-step; longer chains within 2 of the loops:32 lesion; proved wrong if average rounds are within 10% of the cap of 32 on every family, or longer chains are more than 5 below the lesion)",
+        "big-run/PLAN.md sec. 5 note (b) (line 236: n_res is 11 under caps_b3, so read '12-step' as 11-step)",
+        "whole-model-roadmap/whole-model-roadmap-2026-10-06.md line 508 (row 2d: practised skills within 1 point; held-out longer chains within 2 of always-32; 1-step average rounds at most half those on 12-step ones; never stops early = average rounds within 10% of the cap)"
+      ],
+      "notes": "The PLAN does not state the unit of 'within 1'; the roadmap row 2d says 'within 1 point'. The same model with the stop ignored is the loops:32 lesion (free, no extra training). 'Always-32' is PLAN row 5 and roadmap wording. 'Practised within 1 point' is in PLAN row 5 and roadmap 2d only; B3-4 restates the 1-step-half and longer-chains-within-2 marks and adds the more-than-5 fail line, so the caption says 'some of the pass marks'. Dashed bars are empty on purpose: no result exists."
+    },
+    {
+      "id": "s12",
+      "duration": 44,
+      "heading": "If it fails: no build switch removes the stop",
+      "caption": [
+        "No build switch removes the stop. The switches cover things like Gemma and calls, not the stop.",
+        "A trained copy can still be run with the stop ignored and a forced number of rounds, as a test.",
+        "The nearest model with no stop is the outside-calculator model (T1SDR), with a fixed 8 rounds.",
+        "The stop has never run. Its first run is planned after the separate G1 size test finishes (not covered here)."
+      ],
+      "chip": "built, never tested",
+      "sw1": "switch: borrowed reader (Gemma)",
+      "sw2": "switch: calls at any round",
+      "noSw": "stop: no switch",
+      "fallback": "no stop: T1SDR, fixed 8 rounds",
+      "src": [
+        "custom_io/models/b3.py docstring lines 1-17 (switches: eg_embed, any_round, no_slots, tok_think; the stop is part of H1R; branch origin/claude/project-thread-qtxfp4)",
+        "custom_io/models/tool_h1.py line 25 (loops:K = exactly K rounds with the stop head ignored) and big-run/PLAN.md line 228 (loops:32, a free lesion, no extra training)",
+        "architecture/FINISHED-MODEL-2026-10-09.md sec. 4 (line 94: fixed rounds, 8 in T1SDR, 12 in G1) and sec. 2 (line 36: first run after G1)"
+      ],
+      "notes": "The brief said the stop can only be removed by running T1SDR. The code shows no stop switch at build time; H1R is T1SDR plus the learned stop (b3.py docstring line 1). At test time a copy can be run with the stop ignored (loops:K). T1SDR is named here as the nearest model without a stop. No source found calls it the fallback, so the video does not say that. G1 is a separate size test (not covered in this video); the first B3 run is planned after it, a plan and not a date."
+    },
+    {
+      "id": "s13",
+      "duration": 36,
+      "heading": "Fast and slow: one thinker, not two",
+      "caption": [
+        "People talk about fast thinking and slow thinking. Few rounds is like the fast kind, many rounds like the slow kind.",
+        "We suggest one looped thinker gives both, so no separate fast and slow model is needed (suggested, not tested).",
+        "To remember: the stop switch decides, the limit is 32 rounds, and the stop is built but not yet run."
+      ],
+      "one": "one looped thinker",
+      "fast": "fast: few rounds",
+      "slow": "slow: many rounds",
+      "chip": "idea (suggested)",
+      "src": [
+        "architecture/fast-slow-2026-10-08.md sec. 1 (short answer, suggested) and sec. 5 (no new test proposed)",
+        "custom_io/models/tool_h1.py lines 42-44 (cap 32, stop line 0.5; branch origin/claude/project-thread-qtxfp4)"
+      ],
+      "recapA": "the stop switch decides",
+      "recapB": "limit: 32 rounds"
+    }
+  ]
+}
