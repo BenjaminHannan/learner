@@ -1,0 +1,89 @@
+#!/bin/bash
+# Read-only BensPC health check for the pc-operator agent.
+# Exit 0: PC answered. Exit 2: PC did not answer twice, 20 seconds apart.
+set -u
+HOST="${BENSPC_HOST:-benspc}"
+BIN="$(cd "$(dirname "$0")" && pwd)"
+
+echo "CHECK_TIME=$(TZ=America/New_York date '+%Y-%m-%d %H:%M %Z')"
+reach() {
+    ssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+        "$HOST" "exit 0" </dev/null >/dev/null 2>&1
+}
+if ! reach; then
+    sleep 20
+    if ! reach; then
+        echo "PC_REACHABLE=no"
+        exit 2
+    fi
+fi
+echo "PC_REACHABLE=yes"
+
+"$BIN/pc-ps" <<'PS'
+$ErrorActionPreference = 'Continue'
+$home_ = 'C:\Users\benja'
+$busy = Join-Path $home_ 'GPU-BUSY.txt'
+if (Test-Path -LiteralPath $busy) {
+    'GPU_BUSY_FILE=present'
+    '--- GPU-BUSY.txt ---'
+    Get-Content -LiteralPath $busy -TotalCount 20
+    '--- end ---'
+} else { 'GPU_BUSY_FILE=absent' }
+
+$smi = Get-Command nvidia-smi.exe -ErrorAction SilentlyContinue
+if ($smi) {
+    $q = & $smi.Source --query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw --format=csv,noheader,nounits
+    'GPU util%,used_mib,total_mib,temp_c,power_w=' + ($q | Select-Object -First 1)
+} else { 'GPU=nvidia-smi missing' }
+
+$drive = Get-PSDrive -Name C -ErrorAction SilentlyContinue
+if ($drive) { 'DISK_C_FREE_GB=' + [math]::Round($drive.Free / 1GB, 1) }
+
+# Per-process GPU memory from the Windows counters; "shared" is the spill into system RAM.
+$mem = @{}
+try {
+    $samples = (Get-Counter -Counter '\GPU Process Memory(*)\Shared Usage', '\GPU Process Memory(*)\Dedicated Usage' -ErrorAction Stop).CounterSamples
+    foreach ($s in $samples) {
+        if ($s.InstanceName -match '^pid_(\d+)_') {
+            $key = $Matches[1] + '|' + ($s.Path -like '*shared usage')
+            $mem[$key] = [double]$mem[$key] + $s.CookedValue
+        }
+    }
+} catch { 'GPU_PROCESS_COUNTERS=unavailable' }
+
+$procs = @(Get-CimInstance Win32_Process -Filter "Name LIKE 'python%'")
+'PYTHON_PROCS=' + $procs.Count
+foreach ($p in $procs) {
+    $shared = [math]::Round([double]$mem["$($p.ProcessId)|True"] / 1MB)
+    $dedicated = [math]::Round([double]$mem["$($p.ProcessId)|False"] / 1MB)
+    $cmd = [string]$p.CommandLine
+    if ($cmd.Length -gt 300) { $cmd = $cmd.Substring(0, 300) + '...' }
+    $started = if ($p.CreationDate) { $p.CreationDate.ToString('yyyy-MM-dd HH:mm') } else { '?' }
+    "PROC pid=$($p.ProcessId) started=$started gpu_dedicated_mib=$dedicated gpu_shared_mib=$shared cmd=$cmd"
+}
+
+$cards = @(Get-ChildItem -LiteralPath (Join-Path $home_ 'pc-jobs') -Filter '*.md' -ErrorAction SilentlyContinue)
+'JOB_CARDS=' + $cards.Count
+foreach ($card in $cards) {
+    "=== CARD $($card.Name) ==="
+    $text = @(Get-Content -LiteralPath $card.FullName -TotalCount 60)
+    $text
+    $logLine = $text | Where-Object { $_ -match '^\s*-?\s*log:\s*(.+)$' } | Select-Object -First 1
+    if ($logLine -and ($logLine -match '^\s*-?\s*log:\s*(.+)$')) {
+        $logPath = $Matches[1].Trim().Trim('`').Trim('"')
+        if (Test-Path -LiteralPath $logPath) {
+            $item = Get-Item -LiteralPath $logPath
+            $age = [math]::Round(((Get-Date) - $item.LastWriteTime).TotalMinutes, 1)
+            "LOG path=$logPath bytes=$($item.Length) minutes_since_write=$age"
+            '--- log tail ---'
+            Get-Content -LiteralPath $logPath -Tail 15 | ForEach-Object {
+                if ($_.Length -gt 240) { $_.Substring($_.Length - 240) } else { $_ }
+            }
+            '--- end ---'
+            $hits = @(Get-Content -LiteralPath $logPath -Tail 200 | Select-String -Pattern 'out of memory|OutOfMemoryError|CUDA error|Traceback|MANIFEST|mismatch')
+            'LOG_ERROR_LINES=' + $hits.Count
+            $hits | Select-Object -Last 3 | ForEach-Object { 'ERR: ' + $_.Line.Substring(0, [math]::Min(240, $_.Line.Length)) }
+        } else { "LOG path=$logPath MISSING" }
+    } else { 'LOG none named in card' }
+}
+PS
