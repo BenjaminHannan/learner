@@ -1,0 +1,32 @@
+23:37:36 c[train] n=3000 range 0..4 entropy 2.10 bits  prior-baseline 0.442
+23:37:36 c[dev] n=1000 range 0..4 entropy 2.10 bits  prior-baseline 0.437
+23:37:36 c[validation] n=494 range 0..4 entropy 2.06 bits  prior-baseline 0.462
+23:37:36 D's own count accuracy: {'train': 0.669, 'dev': 0.658, 'validation': 0.543}
+23:37:37 bridge=pooled trainable bridge params 71,573; creative trained; kinds ('add', 'mult')
+/home/user/learner/bridgelab/real/train.py:307: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  hist.append(dict(step=step, loss=float(loss), creative=float(loss_c), ce=float(loss_ce)))
+23:37:40 step 1/300 loss 11.003 creative 7.892 ce 3.112 (2.92s/step)
+23:37:58 step 15/300 loss 9.360 creative 7.145 ce 2.215 (1.39s/step)
+23:38:16 step 30/300 loss 6.611 creative 5.193 ce 1.418 (1.29s/step)
+23:38:35 step 45/300 loss 5.478 creative 4.062 ce 1.416 (1.28s/step)
+23:38:53 step 60/300 loss 4.851 creative 3.512 ce 1.339 (1.26s/step)
+23:39:12 step 75/300 loss 4.518 creative 3.119 ce 1.398 (1.26s/step)
+23:39:31 step 90/300 loss 4.204 creative 2.839 ce 1.366 (1.26s/step)
+23:39:50 step 105/300 loss 4.074 creative 2.735 ce 1.340 (1.26s/step)
+23:40:09 step 120/300 loss 3.772 creative 2.379 ce 1.394 (1.27s/step)
+23:40:29 step 135/300 loss 3.547 creative 2.240 ce 1.307 (1.27s/step)
+23:40:49 step 150/300 loss 3.474 creative 2.183 ce 1.291 (1.28s/step)
+23:41:08 step 165/300 loss 3.312 creative 1.980 ce 1.332 (1.28s/step)
+23:41:28 step 180/300 loss 3.097 creative 1.801 ce 1.296 (1.28s/step)
+23:41:47 step 195/300 loss 3.083 creative 1.821 ce 1.262 (1.28s/step)
+23:42:06 step 210/300 loss 2.741 creative 1.481 ce 1.259 (1.28s/step)
+23:42:26 step 225/300 loss 2.741 creative 1.454 ce 1.287 (1.28s/step)
+23:42:46 step 240/300 loss 2.505 creative 1.249 ce 1.256 (1.29s/step)
+23:43:05 step 255/300 loss 2.480 creative 1.233 ce 1.247 (1.29s/step)
+23:43:26 step 270/300 loss 2.256 creative 1.004 ce 1.252 (1.29s/step)
+23:43:47 step 285/300 loss 2.254 creative 1.050 ce 1.204 (1.30s/step)
+23:44:08 step 300/300 loss 1.984 creative 0.777 ce 1.206 (1.30s/step)
+23:45:28 dev {'real': 0.358, 'off': 0.355, 'shuffle': 0.237, 'mean': 0.346, 'oracle_inject': 0.748, 'prior_inject': 0.355, 'oracle_text': 0.676, 'd_text': 0.451}
+23:45:28 validation {'real': 0.34, 'off': 0.389, 'shuffle': 0.326, 'mean': 0.362, 'oracle_inject': 0.737, 'prior_inject': 0.389, 'oracle_text': 0.656, 'd_text': 0.403}
+23:45:28 wrote bridgelab/real/results/run2/pooled-s0.json

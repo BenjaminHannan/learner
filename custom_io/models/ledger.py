@@ -305,7 +305,8 @@ class Ledger(Model):
         P = self.reader.place.weight[:N_REG]
         Z = torch.cat([self.ctrl.weight, P]).expand(B, -1, -1)
         if self.bridge_in is not None:      # V1 join: D's projected summary added to every controller token (zero-init => identical)
-            Z = Z + self.bridge_in().to(Z.dtype)[None, None, :]
+            v_in = self.bridge_in().to(Z.dtype)
+            Z = Z + (v_in[None, None, :] if v_in.dim() == 1 else v_in[:, None, :])      # [d] shared by the batch (V1) or [B, d] one vector per item (bridgelab/real)
         steps, prog, snaps = [], [], []
         n = self.n_loops if loops is None else loops
         for t in range(n):

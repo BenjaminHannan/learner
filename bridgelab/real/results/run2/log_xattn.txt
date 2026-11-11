@@ -1,0 +1,32 @@
+23:53:16 c[train] n=3000 range 0..4 entropy 2.10 bits  prior-baseline 0.442
+23:53:16 c[dev] n=1000 range 0..4 entropy 2.10 bits  prior-baseline 0.437
+23:53:16 c[validation] n=494 range 0..4 entropy 2.06 bits  prior-baseline 0.462
+23:53:16 D's own count accuracy: {'train': 0.669, 'dev': 0.658, 'validation': 0.543}
+23:53:17 bridge=xattn trainable bridge params 698,775; creative trained; kinds ('add', 'mult')
+/home/user/learner/bridgelab/real/train.py:310: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  hist.append(dict(step=step, loss=float(loss), creative=float(loss_c), ce=float(loss_ce)))
+23:53:21 step 1/300 loss 10.954 creative 7.892 ce 3.062 (4.03s/step)
+23:53:45 step 15/300 loss 9.239 creative 7.150 ce 2.089 (1.84s/step)
+23:54:55 step 30/300 loss 6.568 creative 5.166 ce 1.402 (3.27s/step)
+23:56:11 step 45/300 loss 5.484 creative 4.074 ce 1.410 (3.86s/step)
+23:57:18 step 60/300 loss 4.887 creative 3.548 ce 1.339 (4.01s/step)
+23:58:33 step 75/300 loss 4.527 creative 3.100 ce 1.427 (4.21s/step)
+23:59:46 step 90/300 loss 4.192 creative 2.814 ce 1.378 (4.32s/step)
+00:01:02 step 105/300 loss 4.142 creative 2.788 ce 1.354 (4.43s/step)
+00:02:15 step 120/300 loss 3.732 creative 2.334 ce 1.398 (4.48s/step)
+00:03:29 step 135/300 loss 3.616 creative 2.306 ce 1.309 (4.53s/step)
+00:04:49 step 150/300 loss 3.428 creative 2.137 ce 1.291 (4.61s/step)
+00:06:07 step 165/300 loss 3.244 creative 1.904 ce 1.341 (4.67s/step)
+00:07:19 step 180/300 loss 3.071 creative 1.775 ce 1.296 (4.68s/step)
+00:08:35 step 195/300 loss 3.032 creative 1.748 ce 1.283 (4.71s/step)
+00:09:48 step 210/300 loss 2.637 creative 1.354 ce 1.284 (4.72s/step)
+00:11:02 step 225/300 loss 2.619 creative 1.321 ce 1.298 (4.73s/step)
+00:12:13 step 240/300 loss 2.288 creative 1.024 ce 1.264 (4.73s/step)
+00:13:27 step 255/300 loss 2.378 creative 1.122 ce 1.257 (4.74s/step)
+00:14:41 step 270/300 loss 2.151 creative 0.896 ce 1.255 (4.76s/step)
+00:15:52 step 285/300 loss 2.036 creative 0.796 ce 1.241 (4.75s/step)
+00:17:06 step 300/300 loss 1.906 creative 0.681 ce 1.226 (4.76s/step)
+00:21:12 dev {'real': 0.417, 'off': 0.366, 'shuffle': 0.24, 'mean': 0.372, 'oracle_inject': 0.837, 'prior_inject': 0.364, 'oracle_text': 0.725, 'd_text': 0.478}
+00:21:12 validation {'real': 0.344, 'off': 0.364, 'shuffle': 0.324, 'mean': 0.374, 'oracle_inject': 0.789, 'prior_inject': 0.364, 'oracle_text': 0.68, 'd_text': 0.393}
+00:21:12 wrote bridgelab/real/results/run2/xattn-s0.json
