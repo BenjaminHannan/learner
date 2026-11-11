@@ -1,0 +1,854 @@
+{
+  "title": "English comprehension/paraphrase pilot: synthetic training candidates v3",
+  "status": "TRAINING ONLY — v3 candidate set for independent delta rereview; not checked training data, not evaluation data, and not a frozen run contract",
+  "version": 3,
+  "v1_preservation": {
+    "path": "/workspace/shared/english_analysis/english_training_candidates_v1.json",
+    "sha256": "35f904b0f566d0a676f6d8b782ef75f9e5a5e70a589d229387e81058030c14fb",
+    "instruction": "v1 is preserved unchanged; v2 is a new file."
+  },
+  "design_note": "Both pilot arms use identical comprehension questions. One arm freely generates the original source; the other freely generates its meaning-preserving paraphrase.",
+  "family_scope": {
+    "unambiguous_descriptive_reference": "Four reference-resolution candidates include plausible same-type competitors and an unambiguous distinguishing description or relation.",
+    "two_simple_relations_combined": "These are labeled two-relation fact-binding examples; they make NO multi-hop composition claim."
+  },
+  "free_answer_policy": {
+    "response_type": "short free answers; each question has a canonical answer and an explicit item-specific accepted_answers list",
+    "normalization": [
+      "Unicode NFC",
+      "lowercase",
+      "normalize curly and straight apostrophes to the same form",
+      "trim outer whitespace and terminal punctuation",
+      "collapse repeated internal whitespace"
+    ],
+    "acceptance": "After only those mechanical normalizations, accept an answer only if it matches one of that question's listed accepted_answers. Do not infer synonyms, drop distinguishing attributes, or use an LLM/hidden semantic judge. Add any desired safe variant explicitly before scored use.",
+    "yes_no": "For yes_no questions, the only accepted normalized answers are yes or no exactly as listed.",
+    "disambiguation": "For questions where competing entities share a noun head, require the identifying attribute or relation shown in the accepted_answers; do not accept a bare head noun.",
+    "status": "Provisional answer key for independent rereview; aliases are explicit candidates, not proof the set is exhaustive."
+  },
+  "all_fact_review_instruction": "Independently compare every all_asserted_facts entry against BOTH source_text and paraphrase. Check actor, event, negation, comparison direction, event order, exact temporal/spatial scope, manner, entity attributes, and what is not asserted. The two comprehension questions do not replace proposition-by-proposition review.",
+  "learner_input_boundary": "For any later pilot input assembly, expose only source_text or paraphrase and the identical question strings; keep IDs, family, facts, answers, aliases, and review metadata out of learner input.",
+  "examples": [
+    {
+      "id": "giver_recipient_01",
+      "family": "giver_recipient_roles",
+      "source_text": "At the club meeting, Neri sent a paper kite across the table to Luma.",
+      "paraphrase": "At the club meeting, a paper kite was sent across the table to Luma by Neri.",
+      "all_asserted_facts": [
+        "At the club meeting, Neri sent a paper kite.",
+        "The sending route was across the table.",
+        "Luma was the destination/addressee of the sending; actual receipt is not asserted."
+      ],
+      "questions": [
+        {
+          "question": "To whom did Neri send the paper kite?",
+          "type": "short_answer",
+          "canonical_answer": "Luma",
+          "accepted_answers": [
+            "Luma",
+            "to Luma"
+          ]
+        },
+        {
+          "question": "Who sent the paper kite?",
+          "type": "short_answer",
+          "canonical_answer": "Neri",
+          "accepted_answers": [
+            "Neri",
+            "Neri did"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "giver_recipient_02",
+      "family": "giver_recipient_roles",
+      "source_text": "During Tuesday's cleanup at the fictional archive, Oren handed Tavi a brass key.",
+      "paraphrase": "At the fictional archive during Tuesday's cleanup, a brass key was handed to Tavi by Oren.",
+      "all_asserted_facts": [
+        "During Tuesday's cleanup at the fictional archive, Oren handed a brass key to Tavi.",
+        "The described transfer is a handoff by Oren to Tavi; no additional event or setting is asserted."
+      ],
+      "questions": [
+        {
+          "question": "Who handed Tavi the brass key?",
+          "type": "short_answer",
+          "canonical_answer": "Oren",
+          "accepted_answers": [
+            "Oren",
+            "Oren did"
+          ]
+        },
+        {
+          "question": "To whom did Oren hand the brass key?",
+          "type": "short_answer",
+          "canonical_answer": "Tavi",
+          "accepted_answers": [
+            "Tavi",
+            "to Tavi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "giver_recipient_03",
+      "family": "giver_recipient_roles",
+      "source_text": "For the afternoon, Sela lent Venn a blue notebook during the club's open hour.",
+      "paraphrase": "During the club's open hour, Venn borrowed a blue notebook from Sela for the afternoon.",
+      "all_asserted_facts": [
+        "Sela lent a blue notebook to Venn for the afternoon.",
+        "The lending occurred during the club's open hour.",
+        "No return time or actual return is asserted."
+      ],
+      "questions": [
+        {
+          "question": "Who borrowed the blue notebook?",
+          "type": "short_answer",
+          "canonical_answer": "Venn",
+          "accepted_answers": [
+            "Venn",
+            "Venn did"
+          ]
+        },
+        {
+          "question": "Who lent Venn the blue notebook?",
+          "type": "short_answer",
+          "canonical_answer": "Sela",
+          "accepted_answers": [
+            "Sela",
+            "Sela did"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "giver_recipient_04",
+      "family": "giver_recipient_roles",
+      "source_text": "On Tuesday, Riva mailed the parcel from the station kiosk. Eno received that parcel after the mailing.",
+      "paraphrase": "Eno received the parcel after Riva mailed it from the station kiosk on Tuesday.",
+      "all_asserted_facts": [
+        "Riva mailed the parcel from the station kiosk on Tuesday.",
+        "Eno received the same parcel after it was mailed.",
+        "The date of Eno's receipt is not stated; actual receipt does not identify the original addressed addressee."
+      ],
+      "questions": [
+        {
+          "question": "Who mailed the parcel?",
+          "type": "short_answer",
+          "canonical_answer": "Riva",
+          "accepted_answers": [
+            "Riva",
+            "Riva did"
+          ]
+        },
+        {
+          "question": "Who received the parcel?",
+          "type": "short_answer",
+          "canonical_answer": "Eno",
+          "accepted_answers": [
+            "Eno",
+            "Eno did"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "comparative_direction_01",
+      "family": "comparative_direction",
+      "source_text": "The cedar box is heavier than the willow box; both boxes are on the low shelf.",
+      "paraphrase": "The willow box weighs less than the cedar box; both boxes are on the low shelf.",
+      "all_asserted_facts": [
+        "The cedar box weighs more than the willow box.",
+        "Both the cedar box and willow box are on the low shelf."
+      ],
+      "questions": [
+        {
+          "question": "Which box weighs less?",
+          "type": "short_answer",
+          "canonical_answer": "willow box",
+          "accepted_answers": [
+            "willow box",
+            "the willow box"
+          ]
+        },
+        {
+          "question": "Is the cedar box heavier than the willow box?",
+          "type": "yes_no",
+          "canonical_answer": "Yes",
+          "accepted_answers": [
+            "Yes"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "comparative_direction_02",
+      "family": "comparative_direction",
+      "source_text": "On the blue mat are two toy boats, green and silver; the green boat is longer than the silver boat.",
+      "paraphrase": "The silver toy boat is shorter than the green toy boat; both are on the blue mat.",
+      "all_asserted_facts": [
+        "There are two toy boats on the blue mat: a green boat and a silver boat.",
+        "The green boat is longer than the silver boat; equivalently, the silver boat is shorter than the green boat."
+      ],
+      "questions": [
+        {
+          "question": "Is the silver boat longer than the green boat?",
+          "type": "yes_no",
+          "canonical_answer": "No",
+          "accepted_answers": [
+            "No"
+          ]
+        },
+        {
+          "question": "Which toy boat is longer?",
+          "type": "short_answer",
+          "canonical_answer": "green toy boat",
+          "accepted_answers": [
+            "green toy boat",
+            "the green toy boat",
+            "green boat",
+            "the green boat"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "comparative_direction_03",
+      "family": "comparative_direction",
+      "source_text": "Lio's paper tower is shorter than Kemi's cardboard tower, which stands beside the window.",
+      "paraphrase": "Beside the window stands Kemi's cardboard tower, taller than Lio's paper tower.",
+      "all_asserted_facts": [
+        "Lio owns a paper tower; Kemi owns a cardboard tower.",
+        "Lio's tower is shorter than Kemi's tower, and Kemi's tower stands beside the window."
+      ],
+      "questions": [
+        {
+          "question": "Whose tower is shorter?",
+          "type": "short_answer",
+          "canonical_answer": "Lio",
+          "accepted_answers": [
+            "Lio",
+            "Lio's",
+            "Lio's tower"
+          ]
+        },
+        {
+          "question": "Whose tower is taller?",
+          "type": "short_answer",
+          "canonical_answer": "Kemi",
+          "accepted_answers": [
+            "Kemi",
+            "Kemi's",
+            "Kemi's tower"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "comparative_direction_04",
+      "family": "comparative_direction",
+      "source_text": "The round cushion is wider than the square cushion, but the square cushion is thicker.",
+      "paraphrase": "The square cushion is narrower than the round cushion and thicker than the round cushion.",
+      "all_asserted_facts": [
+        "The round cushion is wider than the square cushion.",
+        "The square cushion is thicker than the round cushion."
+      ],
+      "questions": [
+        {
+          "question": "Which cushion is thicker?",
+          "type": "short_answer",
+          "canonical_answer": "square cushion",
+          "accepted_answers": [
+            "square cushion",
+            "the square cushion"
+          ]
+        },
+        {
+          "question": "Which cushion is wider?",
+          "type": "short_answer",
+          "canonical_answer": "round cushion",
+          "accepted_answers": [
+            "round cushion",
+            "the round cushion"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negation_alternative_01",
+      "family": "explicit_negation_with_positive_alternative",
+      "source_text": "For the display, Mina did not choose the copper cup; Mina chose the white saucer.",
+      "paraphrase": "For the display, Mina chose the white saucer and did not choose the copper cup.",
+      "all_asserted_facts": [
+        "For the display, Mina chose the white saucer.",
+        "In that selection for the display, Mina did not choose the copper cup."
+      ],
+      "questions": [
+        {
+          "question": "Did Mina choose the white saucer for the display?",
+          "type": "yes_no",
+          "canonical_answer": "Yes",
+          "accepted_answers": [
+            "Yes"
+          ]
+        },
+        {
+          "question": "What item did Mina explicitly not choose for the display?",
+          "type": "short_answer",
+          "canonical_answer": "copper cup",
+          "accepted_answers": [
+            "copper cup",
+            "the copper cup"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negation_alternative_02",
+      "family": "explicit_negation_with_positive_alternative",
+      "source_text": "On the packing list, Jori added a canvas pouch; Jori did not add a wool scarf.",
+      "paraphrase": "Jori did not add a wool scarf to the packing list; Jori added a canvas pouch instead.",
+      "all_asserted_facts": [
+        "Jori added a canvas pouch to the packing list.",
+        "Jori did not add a wool scarf to the packing list."
+      ],
+      "questions": [
+        {
+          "question": "What did Jori add to the packing list?",
+          "type": "short_answer",
+          "canonical_answer": "canvas pouch",
+          "accepted_answers": [
+            "canvas pouch",
+            "a canvas pouch",
+            "the canvas pouch"
+          ]
+        },
+        {
+          "question": "Did Jori add a wool scarf to the packing list?",
+          "type": "yes_no",
+          "canonical_answer": "No",
+          "accepted_answers": [
+            "No"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negation_alternative_03",
+      "family": "explicit_negation_with_positive_alternative",
+      "source_text": "For the shelf display, Pelo labeled the jar as basil and did not label the jar as mint.",
+      "paraphrase": "Pelo did not use mint as the jar's label; Pelo labeled the jar as basil for the shelf display.",
+      "all_asserted_facts": [
+        "For the shelf display, Pelo labeled the jar as basil.",
+        "For the described labeling, Pelo did not label the jar as mint.",
+        "The label does not assert what the jar actually contains."
+      ],
+      "questions": [
+        {
+          "question": "Did Pelo label the jar as basil for the shelf display?",
+          "type": "yes_no",
+          "canonical_answer": "Yes",
+          "accepted_answers": [
+            "Yes"
+          ]
+        },
+        {
+          "question": "Which label did Pelo not use for the jar?",
+          "type": "short_answer",
+          "canonical_answer": "mint",
+          "accepted_answers": [
+            "mint",
+            "mint label",
+            "the mint label"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negation_alternative_04",
+      "family": "explicit_negation_with_positive_alternative",
+      "source_text": "The notice states that Arin did not reserve the east desk and reserved the west desk instead.",
+      "paraphrase": "According to the notice, Arin reserved the west desk, not the east desk.",
+      "all_asserted_facts": [
+        "The notice reports that Arin did not reserve the east desk.",
+        "The same notice reports that Arin reserved the west desk instead.",
+        "The passages report the notice's claims; they do not independently assert whether the reservations occurred in the world."
+      ],
+      "questions": [
+        {
+          "question": "Which desk does the notice say Arin reserved instead?",
+          "type": "short_answer",
+          "canonical_answer": "west desk",
+          "accepted_answers": [
+            "west desk",
+            "the west desk"
+          ]
+        },
+        {
+          "question": "According to the notice, did Arin reserve the east desk?",
+          "type": "yes_no",
+          "canonical_answer": "No",
+          "accepted_answers": [
+            "No"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "event_ordering_01",
+      "family": "event_ordering",
+      "source_text": "Nila set a lantern beside the shed door before unlocking the shed.",
+      "paraphrase": "Nila unlocked the shed after setting a lantern beside the shed door.",
+      "all_asserted_facts": [
+        "Nila set a lantern beside the shed door.",
+        "Nila unlocked the shed after the lantern-setting event; the text does not say this happened immediately afterward."
+      ],
+      "questions": [
+        {
+          "question": "Which event happened later?",
+          "type": "short_answer",
+          "canonical_answer": "Nila unlocked the shed",
+          "accepted_answers": [
+            "Nila unlocked the shed",
+            "unlocking the shed by Nila",
+            "unlocking the shed",
+            "Nila unlocking the shed"
+          ]
+        },
+        {
+          "question": "What did Nila set beside the shed door before unlocking the shed?",
+          "type": "short_answer",
+          "canonical_answer": "a lantern",
+          "accepted_answers": [
+            "a lantern",
+            "lantern"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "event_ordering_02",
+      "family": "event_ordering",
+      "source_text": "Toma closed the display case in the quiet gallery, and a red bell rang after the closure.",
+      "paraphrase": "A red bell rang after Toma closed the display case in the quiet gallery.",
+      "all_asserted_facts": [
+        "Toma closed the display case in the quiet gallery.",
+        "A red bell rang after the closure.",
+        "The quiet-gallery location applies to the closing event only; the bell's location and cause are not stated."
+      ],
+      "questions": [
+        {
+          "question": "Which event happened first?",
+          "type": "short_answer",
+          "canonical_answer": "Toma closed the display case",
+          "accepted_answers": [
+            "Toma closed the display case",
+            "the display case was closed by Toma",
+            "Toma shutting the display case",
+            "Toma shut the display case"
+          ]
+        },
+        {
+          "question": "What happened after the case closed?",
+          "type": "short_answer",
+          "canonical_answer": "a red bell rang",
+          "accepted_answers": [
+            "a red bell rang",
+            "the red bell rang"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "event_ordering_03",
+      "family": "event_ordering",
+      "source_text": "Evi turned on a small desk lamp beside the stage after the curtain fell.",
+      "paraphrase": "After the curtain fell, Evi turned on a small desk lamp beside the stage.",
+      "all_asserted_facts": [
+        "The curtain fell.",
+        "After the fall, Evi turned on a small desk lamp.",
+        "The lamp was beside the stage; the stage location does not describe the curtain."
+      ],
+      "questions": [
+        {
+          "question": "What did Evi do after the curtain fell?",
+          "type": "short_answer",
+          "canonical_answer": "turned on a small desk lamp",
+          "accepted_answers": [
+            "turned on a small desk lamp",
+            "Evi turned on a small desk lamp",
+            "switched on a small desk lamp"
+          ]
+        },
+        {
+          "question": "Which event happened first?",
+          "type": "short_answer",
+          "canonical_answer": "the curtain fell",
+          "accepted_answers": [
+            "the curtain fell",
+            "the curtain's fall"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "event_ordering_04",
+      "family": "event_ordering",
+      "source_text": "Before Noren placed the basket beside the workshop doorway, Pavi wrote the label.",
+      "paraphrase": "Pavi wrote the label before Noren placed the basket beside the workshop doorway.",
+      "all_asserted_facts": [
+        "Pavi wrote the label.",
+        "After that, Noren placed the basket beside the workshop doorway.",
+        "The text does not specify how much time passed between the events."
+      ],
+      "questions": [
+        {
+          "question": "What happened first?",
+          "type": "short_answer",
+          "canonical_answer": "Pavi wrote the label",
+          "accepted_answers": [
+            "Pavi wrote the label",
+            "Pavi's label-writing"
+          ]
+        },
+        {
+          "question": "What did Noren do later?",
+          "type": "short_answer",
+          "canonical_answer": "placed the basket beside the workshop doorway",
+          "accepted_answers": [
+            "placed the basket beside the workshop doorway",
+            "Noren placed the basket beside the workshop doorway"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "descriptive_reference_01",
+      "family": "unambiguous_descriptive_reference",
+      "source_text": "Two blue jars were on a shelf: the cracked-lid jar was directly left of the smooth-lid jar. Keo moved the left-hand jar to the cart.",
+      "paraphrase": "Both blue jars were on the shelf: the smooth-lid jar was directly right of the cracked-lid jar. Keo moved the jar on the left to the cart.",
+      "all_asserted_facts": [
+        "There were two blue jars on the shelf, one with a cracked lid and one with a smooth lid.",
+        "The cracked-lid jar was directly left of the smooth-lid jar; the smooth-lid jar was directly right of the cracked-lid jar.",
+        "Keo moved the jar referred to as the left-hand jar to the cart; the destination is to the cart, not specifically onto or inside it."
+      ],
+      "questions": [
+        {
+          "question": "Which blue jar did Keo move?",
+          "type": "short_answer",
+          "canonical_answer": "cracked-lid blue jar",
+          "accepted_answers": [
+            "cracked-lid blue jar",
+            "blue jar with the cracked lid",
+            "the cracked-lid jar",
+            "the left-hand jar",
+            "the jar on the left",
+            "cracked-lid jar",
+            "the blue jar with the cracked lid"
+          ]
+        },
+        {
+          "question": "Where did Keo move the left-hand jar?",
+          "type": "short_answer",
+          "canonical_answer": "to the cart",
+          "accepted_answers": [
+            "to the cart",
+            "the cart",
+            "cart"
+          ]
+        }
+      ],
+      "reference_resolution": {
+        "referent_expression": "the left-hand jar / the jar on the left",
+        "target": "the blue jar with the cracked lid",
+        "competitors": [
+          "the blue jar with the smooth lid"
+        ],
+        "disambiguating_facts": [
+          "cracked-lid jar is directly left of smooth-lid jar",
+          "smooth-lid jar is directly right of cracked-lid jar"
+        ]
+      }
+    },
+    {
+      "id": "descriptive_reference_02",
+      "family": "unambiguous_descriptive_reference",
+      "source_text": "On the tray, a round-headed brass key was beside a blue disk; a square-headed brass key was beside a red disk. Rava picked up the key by the blue disk.",
+      "paraphrase": "On the tray, a square-headed brass key was beside a red disk; a round-headed brass key was beside a blue disk. Rava picked up the key beside the blue disk.",
+      "all_asserted_facts": [
+        "Two brass keys and two disks were on the tray.",
+        "The round-headed brass key was beside the blue disk.",
+        "The square-headed brass key was beside the red disk.",
+        "Rava picked up the key beside the blue disk; this identifies the round-headed brass key."
+      ],
+      "questions": [
+        {
+          "question": "Which key did Rava pick up?",
+          "type": "short_answer",
+          "canonical_answer": "round-headed brass key",
+          "accepted_answers": [
+            "round-headed brass key",
+            "brass key with a round head",
+            "the key with the round head",
+            "the key beside the blue disk",
+            "the key by the blue disk",
+            "the round-headed brass key"
+          ]
+        },
+        {
+          "question": "What disk was beside the key Rava picked up?",
+          "type": "short_answer",
+          "canonical_answer": "blue disk",
+          "accepted_answers": [
+            "blue disk",
+            "the blue disk"
+          ]
+        }
+      ],
+      "reference_resolution": {
+        "referent_expression": "the key by the blue disk / the blue-disk key",
+        "target": "round-headed brass key",
+        "competitors": [
+          "square-headed brass key"
+        ],
+        "disambiguating_facts": [
+          "round-headed key is beside the blue disk",
+          "square-headed key is beside the red disk"
+        ]
+      }
+    },
+    {
+      "id": "descriptive_reference_03",
+      "family": "unambiguous_descriptive_reference",
+      "source_text": "By the door were a striped parcel sealed with red tape and a dotted parcel sealed with green tape. Orin moved the red-taped one to a nearby table.",
+      "paraphrase": "A dotted parcel sealed with green tape and a striped parcel sealed with red tape were by the door. Orin moved the striped one to a nearby table.",
+      "all_asserted_facts": [
+        "A striped parcel sealed with red tape and a dotted parcel sealed with green tape were by the door.",
+        "Orin moved the parcel referred to as the red-taped one / striped one to a nearby table; these descriptions identify the same parcel."
+      ],
+      "questions": [
+        {
+          "question": "Which parcel did Orin move?",
+          "type": "short_answer",
+          "canonical_answer": "striped parcel sealed with red tape",
+          "accepted_answers": [
+            "striped parcel sealed with red tape",
+            "striped parcel with red tape",
+            "red-taped striped parcel",
+            "the red-taped parcel",
+            "the striped parcel",
+            "striped parcel",
+            "the parcel sealed with red tape"
+          ]
+        },
+        {
+          "question": "Where did Orin move the parcel?",
+          "type": "short_answer",
+          "canonical_answer": "to a nearby table",
+          "accepted_answers": [
+            "to a nearby table",
+            "a nearby table",
+            "the nearby table"
+          ]
+        }
+      ],
+      "reference_resolution": {
+        "referent_expression": "the red-taped one / the striped one",
+        "target": "striped parcel sealed with red tape",
+        "competitors": [
+          "dotted parcel sealed with green tape"
+        ],
+        "disambiguating_facts": [
+          "the striped parcel is sealed with red tape",
+          "the dotted parcel is sealed with green tape"
+        ]
+      }
+    },
+    {
+      "id": "descriptive_reference_04",
+      "family": "unambiguous_descriptive_reference",
+      "source_text": "On the shelf were a narrow bottle with a cork and a wide bottle with a screw cap. Yani picked up the screw-capped one.",
+      "paraphrase": "A wide screw-cap bottle and a narrow bottle with a cork were on the shelf. Yani picked up the wider bottle.",
+      "all_asserted_facts": [
+        "A narrow bottle with a cork and a wide bottle with a screw cap were on the shelf.",
+        "Yani picked up the bottle referred to as the screw-capped one / wider bottle; both descriptions identify the wide bottle with a screw cap."
+      ],
+      "questions": [
+        {
+          "question": "Which bottle did Yani pick up?",
+          "type": "short_answer",
+          "canonical_answer": "wide bottle with a screw cap",
+          "accepted_answers": [
+            "wide bottle with a screw cap",
+            "wide screw-cap bottle",
+            "the wider bottle",
+            "the screw-capped bottle",
+            "the bottle with a screw cap",
+            "wide bottle",
+            "wider bottle"
+          ]
+        },
+        {
+          "question": "Where were the bottles?",
+          "type": "short_answer",
+          "canonical_answer": "on the shelf",
+          "accepted_answers": [
+            "on the shelf",
+            "the shelf",
+            "shelf"
+          ]
+        }
+      ],
+      "reference_resolution": {
+        "referent_expression": "the screw-capped one / the wider bottle",
+        "target": "wide bottle with a screw cap",
+        "competitors": [
+          "narrow bottle with a cork"
+        ],
+        "disambiguating_facts": [
+          "the wide bottle has a screw cap",
+          "the narrow bottle has a cork"
+        ]
+      }
+    },
+    {
+      "id": "combined_relations_01",
+      "family": "two_simple_relations_combined",
+      "source_text": "A paper tag hung from a brass key, and the key rested in a blue tray.",
+      "paraphrase": "The brass key rested in a blue tray, with a paper tag hanging from the key.",
+      "all_asserted_facts": [
+        "A paper tag hung from a brass key.",
+        "The same brass key rested in a blue tray."
+      ],
+      "questions": [
+        {
+          "question": "What hung from the brass key?",
+          "type": "short_answer",
+          "canonical_answer": "paper tag",
+          "accepted_answers": [
+            "paper tag",
+            "a paper tag",
+            "the paper tag"
+          ]
+        },
+        {
+          "question": "Where did the brass key rest?",
+          "type": "short_answer",
+          "canonical_answer": "in a blue tray",
+          "accepted_answers": [
+            "in a blue tray",
+            "blue tray",
+            "the blue tray"
+          ]
+        }
+      ],
+      "skill_scope": "two-relation fact binding; NO multi-hop claim"
+    },
+    {
+      "id": "combined_relations_02",
+      "family": "two_simple_relations_combined",
+      "source_text": "A striped tile was beside a round token. The token rested inside a glass case.",
+      "paraphrase": "Inside a glass case, the round token rested; a striped tile was beside the token.",
+      "all_asserted_facts": [
+        "A striped tile was beside a round token.",
+        "The round token rested inside a glass case.",
+        "The tile's inside/outside location relative to the case is not stated."
+      ],
+      "questions": [
+        {
+          "question": "Which item was beside the round token?",
+          "type": "short_answer",
+          "canonical_answer": "striped tile",
+          "accepted_answers": [
+            "striped tile",
+            "the striped tile"
+          ]
+        },
+        {
+          "question": "Where did the round token rest?",
+          "type": "short_answer",
+          "canonical_answer": "inside a glass case",
+          "accepted_answers": [
+            "inside a glass case",
+            "a glass case",
+            "the glass case",
+            "glass case",
+            "in the glass case"
+          ]
+        }
+      ],
+      "skill_scope": "two-relation fact binding; NO multi-hop claim"
+    },
+    {
+      "id": "combined_relations_03",
+      "family": "two_simple_relations_combined",
+      "source_text": "A linen ribbon encircled a red jar, and the jar stood on a low shelf.",
+      "paraphrase": "On a low shelf stood the red jar, encircled by a linen ribbon.",
+      "all_asserted_facts": [
+        "A linen ribbon encircled a red jar.",
+        "The same red jar stood on a low shelf.",
+        "No agent or attachment event is asserted for the ribbon."
+      ],
+      "questions": [
+        {
+          "question": "Which object stood on the low shelf?",
+          "type": "short_answer",
+          "canonical_answer": "red jar",
+          "accepted_answers": [
+            "red jar",
+            "the red jar"
+          ]
+        },
+        {
+          "question": "What encircled the jar?",
+          "type": "short_answer",
+          "canonical_answer": "linen ribbon",
+          "accepted_answers": [
+            "linen ribbon",
+            "a linen ribbon",
+            "the linen ribbon"
+          ]
+        }
+      ],
+      "skill_scope": "two-relation fact binding; NO multi-hop claim"
+    },
+    {
+      "id": "combined_relations_04",
+      "family": "two_simple_relations_combined",
+      "source_text": "Savo attached a wooden clasp to a leather folder; the folder was under a folded cloth.",
+      "paraphrase": "A wooden clasp was attached to a leather folder by Savo, and the folder was under a folded cloth.",
+      "all_asserted_facts": [
+        "Savo performed an attachment event: Savo attached a wooden clasp to a leather folder.",
+        "The same leather folder was under a folded cloth.",
+        "The text does not order the attachment event relative to the folder's under-cloth location."
+      ],
+      "questions": [
+        {
+          "question": "Who attached the wooden clasp?",
+          "type": "short_answer",
+          "canonical_answer": "Savo",
+          "accepted_answers": [
+            "Savo",
+            "Savo did"
+          ]
+        },
+        {
+          "question": "What object was under the folded cloth?",
+          "type": "short_answer",
+          "canonical_answer": "leather folder",
+          "accepted_answers": [
+            "leather folder",
+            "the leather folder",
+            "folder"
+          ]
+        }
+      ],
+      "skill_scope": "two-relation fact binding; NO multi-hop claim"
+    }
+  ],
+  "v2_preservation": {
+    "path": "/workspace/shared/english_analysis/english_training_candidates_v2.json",
+    "sha256": "420b48d7233a1790030dfb3240c3f0112e9c00e24af2a89ba161fd1e6195aedd",
+    "instruction": "v2 is preserved unchanged; v3 is a new file."
+  }
+}
