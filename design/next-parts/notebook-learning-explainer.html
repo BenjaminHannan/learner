@@ -1,0 +1,168 @@
+<title>Notebook Learning Plan</title>
+<style>
+/* Layout: one narrow column; diagrams first, short captions, ladder table last. */
+:root{--bg:#f6f7f9;--fg:#1c2230;--mut:#5b6577;--line:#cfd5e0;--card:#ffffff;--acc:#1f5fd6;--good:#1d7a4b;--bad:#b3392f;--warn:#a8660b;--soft:#e7eefc;
+--display:"Fraunces",Georgia,serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161f;--fg:#e6e9f0;--mut:#9aa4b8;--line:#2f3748;--card:#1a2030;--acc:#7aa5ff;--good:#55c28a;--bad:#f0877d;--warn:#e0a54d;--soft:#1e2b4a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161f;--fg:#e6e9f0;--mut:#9aa4b8;--line:#2f3748;--card:#1a2030;--acc:#7aa5ff;--good:#55c28a;--bad:#f0877d;--warn:#e0a54d;--soft:#1e2b4a;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:24px}
+main{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--display);font-size:2rem;line-height:1.15;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-size:1.25rem;margin:0 0 8px;text-wrap:balance}
+p{margin:0;max-width:65ch}
+.sub{color:var(--mut)}
+figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+figcaption{color:var(--mut);font-size:13px;margin-top:8px;max-width:70ch}
+svg{max-width:100%;height:auto;display:block;color:var(--fg)}
+.scroll{overflow-x:auto}
+svg text{font-family:var(--body);font-size:12px;fill:currentColor}
+svg .m{font-family:var(--mono);font-size:11px}
+svg .t{font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:620px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+.ask{border-left:3px solid var(--acc);padding-left:12px;display:flex;flex-direction:column;gap:6px}
+code{font-family:var(--mono);font-size:12px}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<main>
+<header>
+<p class="sub">Premonition · design only · nothing has been run</p>
+<h1>Notebook learning: does the model really read, write and edit notes?</h1>
+</header>
+
+<figure>
+<div class="scroll"><svg viewBox="0 0 800 150" role="img" aria-label="Roadmap: English pilot, fair scaling, notebook learning (this part), sleep replay, creative prototype later" style="min-width:640px">
+<defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill="currentColor"/></marker></defs>
+<g stroke="currentColor" fill="none" stroke-width="1.4">
+<rect x="10" y="40" width="150" height="60" rx="4"/><rect x="210" y="40" width="150" height="60" rx="4"/>
+<rect x="410" y="34" width="170" height="72" rx="4" stroke="var(--acc)" stroke-width="3" fill="var(--soft)"/>
+<rect x="630" y="40" width="160" height="60" rx="4"/>
+<line x1="160" y1="70" x2="208" y2="70" marker-end="url(#a)"/><line x1="360" y1="70" x2="408" y2="70" marker-end="url(#a)"/><line x1="580" y1="70" x2="628" y2="70" marker-end="url(#a)"/></g>
+<text x="85" y="66" text-anchor="middle" class="t">English pilot</text><text x="85" y="84" text-anchor="middle">current-size skill</text>
+<text x="285" y="66" text-anchor="middle" class="t">Fair scaling</text><text x="285" y="84" text-anchor="middle">same tests, bigger</text>
+<text x="495" y="62" text-anchor="middle" class="t" style="fill:var(--acc)">Notebook learning</text><text x="495" y="80" text-anchor="middle">read · write · edit</text><text x="495" y="96" text-anchor="middle" class="m">THIS PART</text>
+<text x="710" y="66" text-anchor="middle" class="t">Sleep replay</text><text x="710" y="84" text-anchor="middle">verified experience</text>
+<text x="85" y="26" text-anchor="middle" class="m">running now</text><text x="285" y="26" text-anchor="middle" class="m">design thread</text><text x="710" y="26" text-anchor="middle" class="m">design thread</text>
+<text x="400" y="136" text-anchor="middle" class="m">creative prototype and learned stopping come after</text>
+</svg></div>
+<figcaption>Where this part sits. It needs the English pilot's parents and the scaling comparison first, and it hands sleep a trustworthy, correctable log of facts.</figcaption>
+</figure>
+
+<figure>
+<div class="scroll"><svg viewBox="0 0 800 250" role="img" aria-label="Pair test: same question with two notebooks that differ by one fact. A model that reads gets both right; a model with answers in its weights gets at most one." style="min-width:640px">
+<defs><marker id="b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill="currentColor"/></marker></defs>
+<g stroke="currentColor" fill="none" stroke-width="1.4">
+<rect x="10" y="20" width="230" height="64" rx="4"/><rect x="10" y="130" width="230" height="64" rx="4"/>
+<rect x="320" y="75" width="150" height="64" rx="4" stroke="var(--acc)" stroke-width="2.5"/>
+<line x1="240" y1="52" x2="318" y2="98" marker-end="url(#b)"/><line x1="240" y1="162" x2="318" y2="118" marker-end="url(#b)"/>
+<line x1="470" y1="98" x2="548" y2="52" marker-end="url(#b)"/><line x1="470" y1="118" x2="548" y2="162" marker-end="url(#b)"/>
+<rect x="550" y="20" width="240" height="64" rx="4"/><rect x="550" y="130" width="240" height="64" rx="4"/></g>
+<text x="20" y="42" class="m">Notebook A</text><text x="20" y="62">Mara's locker code is 4172.</text>
+<text x="20" y="152" class="m">Notebook B</text><text x="20" y="172">Mara's locker code is 9035.</text>
+<text x="395" y="102" text-anchor="middle" class="t">same question</text><text x="395" y="120" text-anchor="middle">"What is Mara's</text><text x="395" y="134" text-anchor="middle">locker code?"</text>
+<text x="560" y="42" class="m">answer</text><text x="560" y="62" class="t">4172</text>
+<text x="560" y="152" class="m">answer</text><text x="560" y="172" class="t">9035</text>
+<text x="400" y="228" text-anchor="middle">Both right = the pair qualifies. Answers kept in the weights give the same reply twice, so 0 pairs.</text>
+</svg></div>
+<figcaption>The test behind every result here. It needs no arithmetic and cannot be passed by memorising the answers.</figcaption>
+</figure>
+
+<figure>
+<div class="scroll"><svg viewBox="0 0 800 260" role="img" aria-label="Architecture: host notebook log feeds reader notebook channel; reader, four-loop core, eight prefixes, frozen LM; model writes go back to the host as tool calls" style="min-width:680px">
+<defs><marker id="c" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill="currentColor"/></marker></defs>
+<g stroke="currentColor" fill="none" stroke-width="1.4">
+<rect x="10" y="20" width="150" height="70" rx="4" stroke-dasharray="5 3"/>
+<rect x="10" y="150" width="150" height="50" rx="4"/>
+<rect x="210" y="70" width="140" height="80" rx="4"/>
+<rect x="390" y="70" width="110" height="80" rx="4"/>
+<rect x="540" y="70" width="100" height="80" rx="4"/>
+<rect x="680" y="70" width="110" height="80" rx="4"/>
+<line x1="160" y1="55" x2="208" y2="95" marker-end="url(#c)"/><line x1="160" y1="175" x2="208" y2="125" marker-end="url(#c)"/>
+<line x1="350" y1="110" x2="388" y2="110" marker-end="url(#c)"/><line x1="500" y1="110" x2="538" y2="110" marker-end="url(#c)"/><line x1="640" y1="110" x2="678" y2="110" marker-end="url(#c)"/>
+<path d="M735 150 V232 H85 V92" stroke="var(--acc)" stroke-width="2" marker-end="url(#c)"/></g>
+<text x="85" y="46" text-anchor="middle" class="t">Host notebook log</text><text x="85" y="62" text-anchor="middle">append-only, hashed</text><text x="85" y="78" text-anchor="middle" class="m">≤ 512 tokens</text>
+<text x="85" y="172" text-anchor="middle" class="t">Question</text><text x="85" y="188" text-anchor="middle" class="m">≤ 47 + EOS</text>
+<text x="280" y="100" text-anchor="middle" class="t">Contextual reader</text><text x="280" y="118" text-anchor="middle">reads question and</text><text x="280" y="132" text-anchor="middle">notebook separately</text>
+<text x="445" y="104" text-anchor="middle" class="t">4-loop core</text><text x="445" y="120" text-anchor="middle">~9M</text>
+<text x="590" y="104" text-anchor="middle" class="t">8 prefixes</text><text x="590" y="120" text-anchor="middle">2048-d</text>
+<text x="735" y="100" text-anchor="middle" class="t">Frozen LM</text><text x="735" y="116" text-anchor="middle">answer, calculator</text><text x="735" y="130" text-anchor="middle">call, or NOTE{…}</text>
+<text x="410" y="226" text-anchor="middle" style="fill:var(--acc)" class="t">write / edit = text the host validates, then appends (new tool call, needs Ben's yes)</text>
+<text x="410" y="22" text-anchor="middle" class="m">dashed = outside the model · reading already works through the existing notebook channel</text>
+</svg></div>
+<figcaption>Nothing inside the model changes. The frozen LM never sees the question or the notebook, so every exact value must squeeze through 8 prefix vectors. That is the main risk.</figcaption>
+</figure>
+
+<figure>
+<div class="scroll"><svg viewBox="0 0 800 270" role="img" aria-label="Bar chart: earlier results. Fit on 32 TRAIN cases: inline 32 and 32, notebook 24 and 20. Fresh worlds out of 8: 0 in all four settings." style="min-width:600px">
+<g stroke="currentColor" stroke-width="1" opacity=".35"><line x1="70" y1="210" x2="780" y2="210"/><line x1="70" y1="50" x2="780" y2="50"/></g>
+<text x="62" y="214" text-anchor="end" class="m">0</text><text x="62" y="54" text-anchor="end" class="m">100%</text>
+<g>
+<rect x="110" y="50" width="50" height="160" fill="var(--good)"/><rect x="170" y="90" width="50" height="120" fill="var(--warn)"/>
+<rect x="260" y="50" width="50" height="160" fill="var(--good)"/><rect x="320" y="110" width="50" height="100" fill="var(--warn)"/>
+<rect x="470" y="207" width="50" height="3" fill="var(--bad)"/><rect x="530" y="207" width="50" height="3" fill="var(--bad)"/>
+<rect x="620" y="207" width="50" height="3" fill="var(--bad)"/><rect x="680" y="207" width="50" height="3" fill="var(--bad)"/></g>
+<g text-anchor="middle" class="m"><text x="135" y="44">32/32</text><text x="195" y="84">24/32</text><text x="285" y="44">32/32</text><text x="345" y="104">20/32</text>
+<text x="495" y="200">0/8</text><text x="555" y="200">0/8</text><text x="645" y="200">0/8</text><text x="705" y="200">0/8</text></g>
+<g text-anchor="middle"><text x="135" y="226">inline</text><text x="195" y="226">notebook</text><text x="285" y="226">inline</text><text x="345" y="226">notebook</text><text x="495" y="226">inline</text><text x="555" y="226">notebook</text><text x="645" y="226">inline</text><text x="705" y="226">notebook</text>
+<text x="165" y="246" class="t">seed 0</text><text x="315" y="246" class="t">seed 1</text><text x="525" y="246" class="t">seed 0</text><text x="675" y="246" class="t">seed 1</text></g>
+<text x="240" y="30" text-anchor="middle" class="t">Fit on the 32 practice cases</text><text x="600" y="30" text-anchor="middle" class="t">Fresh worlds, notes available</text>
+</svg></div>
+<figcaption>What exists. The notebook route fits practice cases worse than inline, and neither route read new facts. Cross-route use was 1/32 everywhere. So the gap is wider than the notebook: new facts are not being used at all yet.</figcaption>
+</figure>
+
+<section>
+<h2>The ladder: one change per rung</h2>
+<div class="scroll"><svg viewBox="0 0 800 130" role="img" aria-label="Six rungs N0 to N5" style="min-width:680px">
+<defs><marker id="d" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill="currentColor"/></marker></defs>
+<g stroke="currentColor" fill="none" stroke-width="1.4">
+<rect x="4" y="30" width="116" height="64" rx="4"/><rect x="138" y="30" width="116" height="64" rx="4"/><rect x="272" y="30" width="116" height="64" rx="4"/><rect x="406" y="30" width="116" height="64" rx="4"/><rect x="540" y="30" width="116" height="64" rx="4"/><rect x="674" y="30" width="116" height="64" rx="4"/>
+<line x1="120" y1="62" x2="136" y2="62" marker-end="url(#d)"/><line x1="254" y1="62" x2="270" y2="62" marker-end="url(#d)"/><line x1="388" y1="62" x2="404" y2="62" marker-end="url(#d)"/><line x1="522" y1="62" x2="538" y2="62" marker-end="url(#d)"/><line x1="656" y1="62" x2="672" y2="62" marker-end="url(#d)"/></g>
+<g text-anchor="middle"><text x="62" y="58" class="t">N0</text><text x="62" y="74">CPU format</text>
+<text x="196" y="58" class="t">N1</text><text x="196" y="74">read a fact</text>
+<text x="330" y="58" class="t">N2</text><text x="330" y="74">read + calculator</text>
+<text x="464" y="58" class="t">N3</text><text x="464" y="74">read a correction</text>
+<text x="598" y="58" class="t">N4</text><text x="598" y="74">write + edit</text>
+<text x="732" y="58" class="t">N5</text><text x="732" y="74">persist and grow</text></g>
+<text x="196" y="116" text-anchor="middle" class="m">first GPU rung</text><text x="598" y="116" text-anchor="middle" class="m">first model-chosen writes</text>
+</svg></div>
+<p class="sub" style="margin-top:8px">Pass: at least 16 of 32 pairs in both seeds. Partial: 8 to 15. Fail: under 8. A failing control voids a pass.</p>
+</section>
+
+<section>
+<h2>Rungs, pass marks, and what would prove each wrong</h2>
+<div class="scroll"><table>
+<tr><th>Rung</th><th>Tests</th><th>Passes if</th><th>Proved wrong if</th></tr>
+<tr><td>N0</td><td>Entry format, renderer, host log (persistence, torn line, supersede, conflict, token cap)</td><td>All tests green; zero truncation</td><td>Values do not survive tokenization</td></tr>
+<tr><td>N1</td><td>Exact lookup among 1, 4, 8 entries; missing-fact "I don't know"</td><td>16/32 pairs at 4 entries, both seeds</td><td>1-entry band under 8 pairs: exact strings cannot cross the prefixes (triggers Q2)</td></tr>
+<tr><td>N2</td><td>Notebook gives numbers, calculator call uses them</td><td>16/32 pairs on call arguments</td><td>N1 passes but calls under 8</td></tr>
+<tr><td>N3</td><td>Later line corrects an earlier one</td><td>16/32 edit pairs and guard controls ≥ 24/32</td><td>Guards fail: it learned "last number wins"</td></tr>
+<tr><td>N3b</td><td>Two-hop reads, after a correction, and with a missing premise</td><td>16/32 pairs; missing-premise ≥ 24/32</td><td>Old answer survives a correction</td></tr>
+<tr><td>N4</td><td>Model writes notes and corrections itself</td><td>≥ 80% exact writes, ≤ 10% junk, end-to-end 16/32</td><td>Exact writes under 50% while N1 passes</td></tr>
+<tr><td>N5</td><td>Restart between sessions; 4 to 32 entries</td><td>Within 4 pairs of N1; 16 entries ≥ half of 4 entries</td><td>Under 8 pairs at 16 entries</td></tr>
+</table></div>
+</section>
+
+<section>
+<h2>Controls that rule out "it is in the weights"</h2>
+<div class="scroll"><table>
+<tr><th>Control</th><th>If the notebook is used</th></tr>
+<tr><td>Fresh worlds, hash-checked against all training data</td><td>Weights cannot hold the facts</td></tr>
+<tr><td>Empty notebook</td><td>Near 0 pairs</td></tr>
+<tr><td>Swapped notebook from another world</td><td>Answer follows the swapped notebook</td></tr>
+<tr><td>Notebook before the correction</td><td>Answer goes back to the old value</td></tr>
+<tr><td>Entity renamed everywhere</td><td>Answer follows the rename</td></tr>
+<tr><td>Weights-only arm (same facts as plain Q and A)</td><td>Good on seen worlds, 0 pairs on fresh, cannot be edited without more training</td></tr>
+</table></div>
+</section>
+
+<section class="ask">
+<h2>Questions for Ben</h2>
+<p><b>Q0 (default yes):</b> may the notebook runtime use the design's per-loop calculator protocol? The notebook runtime file has none.</p>
+<p><b>Q1 (default yes):</b> may notebook write and edit be typed requests with pointers into the heard text, like calculator calls? (Design v6 prefers this over generated text.) Reader, core, prefixes and LM stay as they are.</p>
+<p><b>Q2 (only if N1 or N4 hits the bottleneck):</b> may the host copy an exact span the model points to?</p>
+<p><b>Q3 (later):</b> for notebooks over 512 tokens, may the host pick entries with plain keyword matching first?</p>
+</section>
+
+<p class="sub">Built against the pushed branch and CURRENT.json; checked against the integrated design v6 working draft (section 11c). Pass marks classify by the lower seed; see the full design for the review amendments. Full design: design/next-parts/notebook-learning.md in the learner repo.</p>
+</main>
