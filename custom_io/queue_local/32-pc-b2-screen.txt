@@ -1,0 +1,7 @@
+# BensPC RTX 5070 Ti (cuda), run FIRST (before queue 30) with:
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\32-pc-b2-screen.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# B2 screen (custom_io/design/design-B2.md, marks in PASS-MARKS.md addendum 2, written before any B2 run): B + content-addressed
+# copy talker, seeds 100 and 101, the same flags as B's screen runs (no time cap). Paired with the existing tf, tfsteps and B runs.
+# MEM 6000
+B2_s100 --model ledger --cfg '{"copy":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 100 --log-every 500 --final-eval
+B2_s101 --model ledger --cfg '{"copy":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 101 --log-every 500 --final-eval

@@ -1,0 +1,10 @@
+# M1 Pro (mps), run with: python -m custom_io.local_runner run --queue custom_io/queue_local/31-mac-probe-fewshot.txt --device mps --par 1
+# 1) speed probes (no eval): how many updates/s each arm gets on MPS, to decide what the Mac can take next;
+# 2) 8-shot same-size pretrained baselines (custom_io/PASS-MARKS.md PASS-2), no training, shots drawn with seed 200.
+# MEM 0
+probe_tf_mps --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4}' --steps 300 --batch 256 --lr 1e-3 --seed 1 --log-every 50
+probe_tfsteps_mps --model plain_tf_steps --cfg '{}' --steps 200 --batch 256 --lr 1e-3 --seed 1 --log-every 50
+probe_A_mps --model register_loop --cfg '{}' --steps 100 --batch 256 --lr 1e-3 --seed 1 --log-every 25
+probe_B_mps --model ledger --cfg '{}' --steps 100 --batch 256 --lr 1e-3 --seed 1 --log-every 25
+hf: fs8_py31_s200 --hf-id EleutherAI/pythia-31m --mode fewshot --shots 8 --seed 200 --eval-batch 32
+hf: fs8_smol135_s200 --hf-id HuggingFaceTB/SmolLM2-135M --mode fewshot --shots 8 --seed 200 --eval-batch 32
