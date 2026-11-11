@@ -1,0 +1,59 @@
+# Swarm screen readout, card S1
+
+**DRY RUN: tiny preset, CPU, T=30 s; the numbers mean nothing**
+
+directory `/home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a`; seeds [0, 1, 2]; T = 30; far_deep minimum 100 items; seconds tolerance 2%
+
+| mark | what | status | bar | value |
+|---|---|---|---|---|
+| M1 | communication adds: far_deep, S1 - S0 | fail | S1 - S0 >= +3.0 pts pooled, p < 0.01, positive on >= 2 of 3 seeds | +0.00 pts pooled (n 186), p 1, per seed +0.00, +0.00, +0.00 |
+| M2 | board is used: S1 intact - S1 lesion=board on far_deep | fail | intact - lesion >= +3.0 pts pooled, p < 0.01, positive on >= 2 of 3 seeds | +0.00 pts pooled (n 186), p 1, per seed +0.00, +0.00, +0.00 |
+| M3 | DEV slip vs D1 (guard): near / overall, S1 vs D1 | pass | S1 vs D1: near slips on < 2 seeds AND overall slips on < 2 seeds (slip = below by more than 3.0 pts) | near slips on 0/3 seeds, overall slips on 0/3 seeds |
+| M4 | desk usage (guard), S1 | fail | every desk ask_rate >= 0.05 and min fetch_count >= 0.1 x max, on >= 2 of 3 seeds | ok on 0/3 seeds |
+| M5 | diversity (guard), S1 | pass | info; collapsed (register_cos > 0.95 and fetch_overlap > 0.8) on >= 2 of 3 seeds -> 'COLLAPSED: the desks are copies' | collapsed on 0/3 seeds; s0: overlap nan cos 0.975 ask [0.0, 0.0, 0.0, 0.0] fetch [0.0, 0.0, 0.0, 0.0] silent 4 / s1: overlap nan cos 0.957 ask [0.0, 0.0, 0.0, 0.0] fetch [0.0, 0.0, 0.0, 0.0] silent 4 / s2: overlap 0.000 cos 0.882 ask [0.0, 0.0, 0.0, 0.22] fetch [0.0, 0.0, 0.0, 3.49] silent 3 // S1 - S0 register_cos per seed +0.282, +0.065, -0.072 |
+| M6 | validity | fail | every train completed, train_seconds within T +- 2% (T from c0.json), loop_mismatches = 0, final loss finite, one data tag and one tokenizer sha256 | 1 problems: seconds: train-D1-s0 train_seconds 30.60 is +2.01% from T 30 |
+| M6b | cells | fail | far_deep has >= 100 items in every eval file (else INSUFFICIENT) | far_deep n: min 62, max 62 over 18 files |
+| KILL-COMM | pooled S1 - S0 <= 0 or S1 < S0 on >= 2 of 3 seeds | fail | a KILL-COMM is shown as fail | pooled +0.00 pts, negative on 0/3 seeds |
+
+VERDICT: VOID (seconds): train-D1-s0 train_seconds 30.60 is +2.01% from T 30
+
+VOID reasons:
+- seconds: train-D1-s0 train_seconds 30.60 is +2.01% from T 30
+
+INSUFFICIENT reasons:
+- far_deep below 100 items in 18 of 18 eval files (smallest 62, largest 62)
+
+## Information (not marks)
+
+Steps in T, per arm (mean over seeds):
+
+| arm | steps per seed | mean | over D1 | parameters |
+|---|---|---|---|---|
+| D1 | [106, 110, 107] | 107.66666666666667 | 1.000 | [304388] |
+| S0 | [95, 99, 95] | 96.33333333333333 | 0.895 | [304516] |
+| S1 | [86, 86, 87] | 86.33333333333333 | 0.802 | [304580] |
+
+Pooled accuracy % (hits/n) over seeds, validation:
+
+| cell | D1 | S0 | S1 |
+|---|---|---|---|
+| overall | 0.0 (0/564) | 0.0 (0/564) | 0.0 (0/564) |
+| near | 0.0 (0/315) | 0.0 (0/315) | 0.0 (0/315) |
+| far | 0.0 (0/219) | 0.0 (0/219) | 0.0 (0/219) |
+| far_deep | 0.0 (0/186) | 0.0 (0/186) | 0.0 (0/186) |
+| multi_hop | 0.0 (0/366) | 0.0 (0/366) | 0.0 (0/366) |
+| depth_1 | 0.0 (0/168) | 0.0 (0/168) | 0.0 (0/168) |
+| depth_2 | 0.0 (0/159) | 0.0 (0/159) | 0.0 (0/159) |
+| depth_3 | 0.0 (0/126) | 0.0 (0/126) | 0.0 (0/126) |
+| depth_4 | 0.0 (0/69) | 0.0 (0/69) | 0.0 (0/69) |
+| depth_5 | 0.0 (0/12) | 0.0 (0/12) | 0.0 (0/12) |
+| depth_6 | n/a (0/0) | n/a (0/0) | n/a (0/0) |
+| changed | 0.0 (0/204) | 0.0 (0/204) | 0.0 (0/204) |
+
+S1 information rows (pooled paired differences, far_deep):
+
+- lesion_board_drop: +0.00 pts (n 186, p 1, seeds positive 0)
+- lesion_notes_drop: +0.00 pts (n 186, p 1, seeds positive 0)
+- lesion_cards_drop: +0.00 pts (n 186, p 1, seeds positive 0)
+- S1_vs_D1_far_deep: +0.00 pts (n 186, p 1, seeds positive 0)
+- S0_vs_D1_far_deep: +0.00 pts (n 186, p 1, seeds positive 0)

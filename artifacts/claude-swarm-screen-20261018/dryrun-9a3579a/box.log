@@ -1,0 +1,77 @@
+2026-10-18T03:33:46Z swarm screen box: PART=all DRYRUN=1 SIZE=tiny DEVICE=cpu MAXH=8.0 CAP=4.20 DPH=0.40 OUT=/home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a
+2026-10-18T03:33:46Z DRYRUN: regenerating scripts/premonition_swarm_manifest.txt first (an uncommitted tree cannot have a committed manifest); the check below is then trivial
+manifest OK
+2026-10-18T03:33:49Z manifest OK (18 files), HEAD == PIN == 9a3579adc227dd194412d3fb29fbcbd10f7bc647
+2026-10-18T03:33:50Z host record -> host.txt (30 lines)
+2026-10-18T03:33:50Z STEP data start: python -B scripts/premonition_swarm_screen.py data --visits tiny --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/data.json --device cpu --size tiny --workers 3
+2026-10-18T03:36:10Z STEP data end rc=0 seconds=140
+2026-10-18T03:36:10Z STEP c0 start: python -B scripts/premonition_swarm_screen.py c0 --data-rel data/village/stream/cache/tiny-seed0-53292765806d --tokenizer data/tokenizer/premonition-tok-v2-fallback.json --dph 0.40 --ckpt-dir artifacts/claude-swarm-screen-20261018/ckpt-dryrun --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/c0.json --device cpu --size tiny --workers 3 --rounds 3 --warmup 2 --timed 4 --chunk 2 --t-override 30 --max-tokens 3000
+2026-10-18T03:38:20Z STEP c0 end rc=0 seconds=130
+2026-10-18T03:38:20Z C0: T = 30 s; ratio S0m4/D1 = 1.032743636747062; stop_and_ask = False; money_stop = False
+2026-10-18T03:38:20Z STEP train-D1-s0 start: python -B scripts/premonition_swarm_screen.py train --arm D1 --seed 0 --seconds 30 --data-rel data/village/stream/cache/tiny-seed0-53292765806d --tokenizer data/tokenizer/premonition-tok-v2-fallback.json --ckpt-dir artifacts/claude-swarm-screen-20261018/ckpt-dryrun --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/train-D1-s0.json --device cpu --size tiny --workers 3 --max-tokens 3000
+2026-10-18T03:39:16Z STEP train-D1-s0 end rc=0 seconds=56
+2026-10-18T03:39:16Z STEP train-S0-s0 start: python -B scripts/premonition_swarm_screen.py train --arm S0 --seed 0 --seconds 30 --data-rel data/village/stream/cache/tiny-seed0-53292765806d --tokenizer data/tokenizer/premonition-tok-v2-fallback.json --ckpt-dir artifacts/claude-swarm-screen-20261018/ckpt-dryrun --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/train-S0-s0.json --device cpu --size tiny --workers 3 --max-tokens 3000
+2026-10-18T03:40:09Z STEP train-S0-s0 end rc=0 seconds=53
+2026-10-18T03:40:09Z STEP train-D1-s1 start: python -B scripts/premonition_swarm_screen.py train --arm D1 --seed 1 --seconds 30 --data-rel data/village/stream/cache/tiny-seed0-53292765806d --tokenizer data/tokenizer/premonition-tok-v2-fallback.json --ckpt-dir artifacts/claude-swarm-screen-20261018/ckpt-dryrun --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/train-D1-s1.json --device cpu --size tiny --workers 3 --max-tokens 3000
+2026-10-18T03:41:04Z STEP train-D1-s1 end rc=0 seconds=55
+2026-10-18T03:41:04Z STEP train-S0-s1 start: python -B scripts/premonition_swarm_screen.py train --arm S0 --seed 1 --seconds 30 --data-rel data/village/stream/cache/tiny-seed0-53292765806d --tokenizer data/tokenizer/premonition-tok-v2-fallback.json --ckpt-dir artifacts/claude-swarm-screen-20261018/ckpt-dryrun --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/train-S0-s1.json --device cpu --size tiny --workers 3 --max-tokens 3000
+2026-10-18T03:41:57Z STEP train-S0-s1 end rc=0 seconds=53
+2026-10-18T03:41:57Z STEP train-D1-s2 start: python -B scripts/premonition_swarm_screen.py train --arm D1 --seed 2 --seconds 30 --data-rel data/village/stream/cache/tiny-seed0-53292765806d --tokenizer data/tokenizer/premonition-tok-v2-fallback.json --ckpt-dir artifacts/claude-swarm-screen-20261018/ckpt-dryrun --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/train-D1-s2.json --device cpu --size tiny --workers 3 --max-tokens 3000
+2026-10-18T03:42:51Z STEP train-D1-s2 end rc=0 seconds=54
+2026-10-18T03:42:51Z STEP train-S0-s2 start: python -B scripts/premonition_swarm_screen.py train --arm S0 --seed 2 --seconds 30 --data-rel data/village/stream/cache/tiny-seed0-53292765806d --tokenizer data/tokenizer/premonition-tok-v2-fallback.json --ckpt-dir artifacts/claude-swarm-screen-20261018/ckpt-dryrun --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/train-S0-s2.json --device cpu --size tiny --workers 3 --max-tokens 3000
+2026-10-18T03:43:45Z STEP train-S0-s2 end rc=0 seconds=54
+2026-10-18T03:43:45Z STEP eval-D1-s0 start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/D1-s0 --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-D1-s0.json --device cpu --size tiny --workers 3
+2026-10-18T03:43:54Z STEP eval-D1-s0 end rc=0 seconds=9
+2026-10-18T03:43:54Z STEP eval-S0-s0 start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S0-s0 --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S0-s0.json --device cpu --size tiny --workers 3
+2026-10-18T03:44:03Z STEP eval-S0-s0 end rc=0 seconds=9
+2026-10-18T03:44:03Z STEP eval-D1-s1 start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/D1-s1 --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-D1-s1.json --device cpu --size tiny --workers 3
+2026-10-18T03:44:12Z STEP eval-D1-s1 end rc=0 seconds=9
+2026-10-18T03:44:12Z STEP eval-S0-s1 start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S0-s1 --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S0-s1.json --device cpu --size tiny --workers 3
+2026-10-18T03:44:21Z STEP eval-S0-s1 end rc=0 seconds=9
+2026-10-18T03:44:21Z STEP eval-D1-s2 start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/D1-s2 --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-D1-s2.json --device cpu --size tiny --workers 3
+2026-10-18T03:44:30Z STEP eval-D1-s2 end rc=0 seconds=9
+2026-10-18T03:44:30Z STEP eval-S0-s2 start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S0-s2 --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S0-s2.json --device cpu --size tiny --workers 3
+2026-10-18T03:44:39Z STEP eval-S0-s2 end rc=0 seconds=9
+2026-10-18T03:44:39Z STEP marks-S0 start: python -B scripts/premonition_swarm_marks.py --card S0 --dir /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/MARKS-S0.json --note DRY RUN: tiny preset, CPU, T=30 s; the numbers mean nothing
+2026-10-18T03:44:39Z STEP marks-S0 end rc=0 seconds=0
+2026-10-18T03:44:39Z STEP marks-S0-minitems1 start: python -B scripts/premonition_swarm_marks.py --card S0 --dir /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/MARKS-S0-minitems1.json --min-items 1 --note DRY RUN: tiny preset, CPU, T=30 s; the numbers mean nothing (second pass: --min-items 1)
+2026-10-18T03:44:39Z STEP marks-S0-minitems1 end rc=0 seconds=0
+2026-10-18T03:44:39Z STEP train-S1-s0 start: python -B scripts/premonition_swarm_screen.py train --arm S1 --seed 0 --seconds 30 --data-rel data/village/stream/cache/tiny-seed0-53292765806d --tokenizer data/tokenizer/premonition-tok-v2-fallback.json --ckpt-dir artifacts/claude-swarm-screen-20261018/ckpt-dryrun --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/train-S1-s0.json --device cpu --size tiny --workers 3 --max-tokens 3000
+2026-10-18T03:45:34Z STEP train-S1-s0 end rc=0 seconds=55
+2026-10-18T03:45:34Z STEP train-S1-s1 start: python -B scripts/premonition_swarm_screen.py train --arm S1 --seed 1 --seconds 30 --data-rel data/village/stream/cache/tiny-seed0-53292765806d --tokenizer data/tokenizer/premonition-tok-v2-fallback.json --ckpt-dir artifacts/claude-swarm-screen-20261018/ckpt-dryrun --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/train-S1-s1.json --device cpu --size tiny --workers 3 --max-tokens 3000
+2026-10-18T03:46:27Z STEP train-S1-s1 end rc=0 seconds=53
+2026-10-18T03:46:27Z STEP train-S1-s2 start: python -B scripts/premonition_swarm_screen.py train --arm S1 --seed 2 --seconds 30 --data-rel data/village/stream/cache/tiny-seed0-53292765806d --tokenizer data/tokenizer/premonition-tok-v2-fallback.json --ckpt-dir artifacts/claude-swarm-screen-20261018/ckpt-dryrun --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/train-S1-s2.json --device cpu --size tiny --workers 3 --max-tokens 3000
+2026-10-18T03:47:21Z STEP train-S1-s2 end rc=0 seconds=54
+2026-10-18T03:47:21Z STEP eval-S1-s0 start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s0 --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s0.json --device cpu --size tiny --workers 3
+2026-10-18T03:47:31Z STEP eval-S1-s0 end rc=0 seconds=10
+2026-10-18T03:47:31Z STEP eval-S1-s0-board start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s0 --lesion board --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s0-board.json --device cpu --size tiny --workers 3
+2026-10-18T03:47:41Z STEP eval-S1-s0-board end rc=0 seconds=10
+2026-10-18T03:47:41Z STEP eval-S1-s0-notes start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s0 --lesion notes --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s0-notes.json --device cpu --size tiny --workers 3
+2026-10-18T03:47:50Z STEP eval-S1-s0-notes end rc=0 seconds=9
+2026-10-18T03:47:50Z STEP eval-S1-s0-cards start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s0 --lesion cards --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s0-cards.json --device cpu --size tiny --workers 3
+2026-10-18T03:48:00Z STEP eval-S1-s0-cards end rc=0 seconds=10
+2026-10-18T03:48:00Z STEP eval-S1-s1 start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s1 --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s1.json --device cpu --size tiny --workers 3
+2026-10-18T03:48:09Z STEP eval-S1-s1 end rc=0 seconds=9
+2026-10-18T03:48:09Z STEP eval-S1-s1-board start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s1 --lesion board --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s1-board.json --device cpu --size tiny --workers 3
+2026-10-18T03:48:18Z STEP eval-S1-s1-board end rc=0 seconds=9
+2026-10-18T03:48:18Z STEP eval-S1-s1-notes start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s1 --lesion notes --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s1-notes.json --device cpu --size tiny --workers 3
+2026-10-18T03:48:27Z STEP eval-S1-s1-notes end rc=0 seconds=9
+2026-10-18T03:48:27Z STEP eval-S1-s1-cards start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s1 --lesion cards --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s1-cards.json --device cpu --size tiny --workers 3
+2026-10-18T03:48:36Z STEP eval-S1-s1-cards end rc=0 seconds=9
+2026-10-18T03:48:36Z STEP eval-S1-s2 start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s2 --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s2.json --device cpu --size tiny --workers 3
+2026-10-18T03:48:45Z STEP eval-S1-s2 end rc=0 seconds=9
+2026-10-18T03:48:45Z STEP eval-S1-s2-board start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s2 --lesion board --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s2-board.json --device cpu --size tiny --workers 3
+2026-10-18T03:48:54Z STEP eval-S1-s2-board end rc=0 seconds=9
+2026-10-18T03:48:54Z STEP eval-S1-s2-notes start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s2 --lesion notes --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s2-notes.json --device cpu --size tiny --workers 3
+2026-10-18T03:49:03Z STEP eval-S1-s2-notes end rc=0 seconds=9
+2026-10-18T03:49:03Z STEP eval-S1-s2-cards start: python -B scripts/premonition_swarm_screen.py eval --checkpoint artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s2 --lesion cards --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/eval-S1-s2-cards.json --device cpu --size tiny --workers 3
+2026-10-18T03:49:12Z STEP eval-S1-s2-cards end rc=0 seconds=9
+2026-10-18T03:49:12Z STEP marks-S1 start: python -B scripts/premonition_swarm_marks.py --card S1 --dir /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/MARKS-S1.json --note DRY RUN: tiny preset, CPU, T=30 s; the numbers mean nothing
+2026-10-18T03:49:12Z STEP marks-S1 end rc=0 seconds=0
+2026-10-18T03:49:12Z STEP marks-S1-minitems1 start: python -B scripts/premonition_swarm_marks.py --card S1 --dir /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a --out /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/MARKS-S1-minitems1.json --min-items 1 --note DRY RUN: tiny preset, CPU, T=30 s; the numbers mean nothing (second pass: --min-items 1)
+2026-10-18T03:49:12Z STEP marks-S1-minitems1 end rc=0 seconds=0
+2026-10-18T03:49:12Z DRYRUN: removing the checkpoints artifacts/claude-swarm-screen-20261018/ckpt-dryrun (the dry run keeps JSON and logs only)
+2026-10-18T03:49:12Z S0 verdict: VERDICT: VOID (seconds): train-D1-s0 train_seconds 30.60 is +2.01% from T 30
+2026-10-18T03:49:12Z packed /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/swarm-screen-out.tgz sha256 5c2412bde13faf079d726c8de3d2c9e46b2cfb9410efd1399f9c8f02109ac4eb (152339 bytes)
+2026-10-18T03:49:13Z DONE. Copy /home/user/learner/artifacts/claude-swarm-screen-20261018/dryrun-9a3579a/swarm-screen-out.tgz back, check its sha256 above, then the rental agent may destroy the box.
+2026-10-18T03:49:13Z EXIT rc=0 after 927 s

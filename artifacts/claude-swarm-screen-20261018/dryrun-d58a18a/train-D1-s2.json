@@ -1,0 +1,402 @@
+{
+ "command": "premonition train",
+ "contender": "D",
+ "parameters": 304388,
+ "device": "cpu",
+ "seed": 2,
+ "data": {
+  "dir": "data/village/stream/cache/tiny-seed0-53292765806d",
+  "tag": "tiny-seed0-53292765806d"
+ },
+ "tokenizer": {
+  "path": "data/tokenizer/premonition-tok-v2-fallback.json",
+  "sha256": "2c9d06aed330932b48bb1b173e42952f4bba6ec752e4781c6a253f63cec0973a"
+ },
+ "detector": "dbb37b46aa94785d73435a527ad5a9685c21df0791112c248309276a8ef2e556",
+ "preprocess": {
+  "format": "premonition.preprocess",
+  "version": 1,
+  "regime": "label-free",
+  "digest": "9add8e2fded136434c37f8b97641f83528b920c640693ff89011bd452b36e3c7"
+ },
+ "seconds_budget": 120.0,
+ "status": "completed",
+ "steps": 402,
+ "tokens": 985429,
+ "seconds": 120.25333896100005,
+ "tokens_per_s": 8194.608220563334,
+ "stop": "seconds budget",
+ "flops": 2736344806641.0186,
+ "flops_total": 2736344806641.0186,
+ "flop_budget": 1e+30,
+ "flops_share": 2.7363448066410184e-18,
+ "tolerance": 0.05,
+ "budget_ok": false,
+ "flops_per_token": 2776805.6416454343,
+ "fit": {
+  "a": 1543069.1249394726,
+  "b": 24632252.247269392,
+  "worst_residual": 0.04240195853547859,
+  "samples": [
+   {
+    "flops": 5081573632,
+    "tokens": 2610,
+    "question_loops": 40
+   },
+   {
+    "flops": 6034864384,
+    "tokens": 2610,
+    "question_loops": 80
+   },
+   {
+    "flops": 7943043328,
+    "tokens": 2610,
+    "question_loops": 160
+   },
+   {
+    "flops": 4477513664,
+    "tokens": 2436,
+    "question_loops": 34
+   },
+   {
+    "flops": 5257353152,
+    "tokens": 2436,
+    "question_loops": 68
+   },
+   {
+    "flops": 6819732672,
+    "tokens": 2436,
+    "question_loops": 136
+   },
+   {
+    "flops": 4856816832,
+    "tokens": 2559,
+    "question_loops": 36
+   },
+   {
+    "flops": 5745695168,
+    "tokens": 2559,
+    "question_loops": 74
+   },
+   {
+    "flops": 7389593280,
+    "tokens": 2559,
+    "question_loops": 144
+   },
+   {
+    "flops": 5484595200,
+    "tokens": 2676,
+    "question_loops": 48
+   },
+   {
+    "flops": 6830179840,
+    "tokens": 2676,
+    "question_loops": 100
+   },
+   {
+    "flops": 9250059264,
+    "tokens": 2676,
+    "question_loops": 192
+   }
+  ],
+  "seconds": 7.288103411999828
+ },
+ "loop_mismatches": 0,
+ "phases": {
+  "gold": {
+   "steps": 29,
+   "flops": 138049862900.7691,
+   "first_step": 1
+  },
+  "teacher": {
+   "steps": 118,
+   "flops": 677118545552.621,
+   "first_step": 30
+  },
+  "own": {
+   "steps": 255,
+   "flops": 1921176398187.632,
+   "first_step": 148
+  }
+ },
+ "final": {
+  "loss": 5.984586715698242,
+  "lm": 2.6519651412963867,
+  "ask": 3.524394989013672,
+  "ans": 1.557600736618042,
+  "halt": 0.1282321959733963,
+  "answer_acc": 0.02631578966975212,
+  "answer_acc_first": 0.02631578966975212,
+  "recall_at_k": 0.23346561193466187
+ },
+ "peak_gpu_reserved_bytes": null,
+ "train_seconds": 120.25163608800017,
+ "validation": {
+  "questions": 213,
+  "accuracy": 0.009389671361502348,
+  "loops_mean": 8.0,
+  "halt_rate": 0.0,
+  "by_depth": {
+   "0": {
+    "n": 12,
+    "accuracy": 0.0,
+    "loops_mean": 8.0
+   },
+   "1": {
+    "n": 72,
+    "accuracy": 0.0,
+    "loops_mean": 8.0
+   },
+   "2": {
+    "n": 57,
+    "accuracy": 0.0,
+    "loops_mean": 8.0
+   },
+   "3": {
+    "n": 44,
+    "accuracy": 0.0,
+    "loops_mean": 8.0
+   },
+   "4": {
+    "n": 24,
+    "accuracy": 0.08333333333333333,
+    "loops_mean": 8.0
+   },
+   "5": {
+    "n": 4,
+    "accuracy": 0.0,
+    "loops_mean": 8.0
+   }
+  },
+  "slices": {
+   "far": {
+    "n": 73,
+    "accuracy": 0.0
+   },
+   "far_deep": {
+    "n": 62,
+    "accuracy": 0.0
+   },
+   "multi_hop": {
+    "n": 122,
+    "accuracy": 0.00819672131147541
+   },
+   "near": {
+    "n": 105,
+    "accuracy": 0.009523809523809525
+   },
+   "not_told": {
+    "n": 10,
+    "accuracy": 0.0
+   },
+   "overall": {
+    "n": 188,
+    "accuracy": 0.005319148936170213
+   }
+  },
+  "seconds": 1.7250802499997917,
+  "accuracy_gold_cards": 0.009389671361502348,
+  "own_minus_gold_cards": 0.0,
+  "loops_mean_gold_cards": 8.0,
+  "gold_recall_at_4": 0.1241810470078122,
+  "gold_any_at_4": 0.2736318407960199,
+  "random_recall_at_4": 0.04949051942398299,
+  "asked_rate": 1.0,
+  "cards": {
+   "full_gold_fetched": 0.31840796019900497,
+   "any_gold_fetched": 0.7014925373134329,
+   "multi_gold_full_fetched": 0.21008403361344538,
+   "questions_multi_gold": 119,
+   "questions_gold_over_10": 2,
+   "fifo_overflow_questions": 200,
+   "fifo_gold_evicted_questions": 80,
+   "ans_early_weight_share": 0.8397887323943662,
+   "ans_never_full_weight": 0.6995305164319249
+  }
+ },
+ "history": [
+  {
+   "step": 250,
+   "flops": 1591477215856.8728,
+   "flops_share": 1.5914772158568727e-18,
+   "phase": "own",
+   "p_own": 0.6976480918958335,
+   "lr": 0.001,
+   "tokens": 613710,
+   "padded_tokens": 619043,
+   "tokens_per_s": 7444.556070654668,
+   "padded_tokens_per_s": 7507.88359456333,
+   "loops_per_question": 8.0,
+   "loss": 7.6647186279296875,
+   "lm": 3.5471105575561523,
+   "ask": 3.694021701812744,
+   "ans": 2.263134717941284,
+   "halt": 0.07462318241596222,
+   "gold_recall_at_4": 0.1607487052679062,
+   "answer_acc": 0.0,
+   "answer_acc_first": 0.0,
+   "grad_norm": 2.5543711185455322,
+   "weight_norm": 105.99602508544922,
+   "dead_mlp_fraction": 0.12219101190567017,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 0.9583333333333334,
+    "any_gold_fetched": 0.9583333333333334,
+    "multi_gold_full_fetched": 1.0,
+    "questions_multi_gold": 15,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 0,
+    "fifo_gold_evicted_questions": 0,
+    "ans_early_weight_share": 0.365,
+    "ans_never_full_weight": 0.04
+   }
+  },
+  {
+   "step": 300,
+   "flops": 1969017554440.099,
+   "flops_share": 1.9690175544400992e-18,
+   "phase": "own",
+   "p_own": 0.75,
+   "lr": 0.001,
+   "tokens": 736645,
+   "padded_tokens": 743030,
+   "tokens_per_s": 7269.3653798829,
+   "padded_tokens_per_s": 7331.572012490675,
+   "loops_per_question": 8.0,
+   "loss": 6.906452178955078,
+   "lm": 3.242117404937744,
+   "ask": 3.8831264972686768,
+   "ans": 1.7180181741714478,
+   "halt": 0.0475190244615078,
+   "gold_recall_at_4": 0.182924285531044,
+   "answer_acc": 0.0,
+   "answer_acc_first": 0.0,
+   "grad_norm": 4.189666748046875,
+   "weight_norm": 109.37919616699219,
+   "dead_mlp_fraction": 0.13132023811340332,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 0.8095238095238095,
+    "any_gold_fetched": 0.8095238095238095,
+    "multi_gold_full_fetched": 0.7777777777777778,
+    "questions_multi_gold": 9,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 2,
+    "fifo_gold_evicted_questions": 2,
+    "ans_early_weight_share": 0.3806818181818182,
+    "ans_never_full_weight": 0.18181818181818182
+   }
+  },
+  {
+   "step": 350,
+   "flops": 2348868760398.7715,
+   "flops_share": 2.3488687603987715e-18,
+   "phase": "own",
+   "p_own": 0.75,
+   "lr": 0.001,
+   "tokens": 859086,
+   "padded_tokens": 866599,
+   "tokens_per_s": 7278.97460016098,
+   "padded_tokens_per_s": 7346.032884142503,
+   "loops_per_question": 8.0,
+   "loss": 6.486132621765137,
+   "lm": 2.994516372680664,
+   "ask": 3.7355096340179443,
+   "ans": 1.6173111200332642,
+   "halt": 0.06550557911396027,
+   "gold_recall_at_4": 0.18885661661624908,
+   "answer_acc": 0.007063491735607386,
+   "answer_acc_first": 0.008015872910618782,
+   "grad_norm": 3.0487124919891357,
+   "weight_norm": 112.59480285644531,
+   "dead_mlp_fraction": 0.05056178569793701,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 0.8125,
+    "any_gold_fetched": 0.875,
+    "multi_gold_full_fetched": 0.8888888888888888,
+    "questions_multi_gold": 9,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 7,
+    "fifo_gold_evicted_questions": 2,
+    "ans_early_weight_share": 0.4609375,
+    "ans_never_full_weight": 0.1875
+   }
+  },
+  {
+   "step": 400,
+   "flops": 2721321162011.6724,
+   "flops_share": 2.721321162011672e-18,
+   "phase": "own",
+   "p_own": 0.75,
+   "lr": 0.001,
+   "tokens": 980847,
+   "padded_tokens": 989332,
+   "tokens_per_s": 7584.066696495295,
+   "padded_tokens_per_s": 7644.609175852343,
+   "loops_per_question": 8.0,
+   "loss": 6.084786415100098,
+   "lm": 2.8014230728149414,
+   "ask": 3.6707468032836914,
+   "ans": 1.4424209594726562,
+   "halt": 0.05569271743297577,
+   "gold_recall_at_4": 0.20406852662563324,
+   "answer_acc": 0.004813852719962597,
+   "answer_acc_first": 0.012020201422274113,
+   "grad_norm": 3.955305576324463,
+   "weight_norm": 115.68336486816406,
+   "dead_mlp_fraction": 0.01615166664123535,
+   "halt_rate": 0.0,
+   "cards": {
+    "full_gold_fetched": 0.8461538461538461,
+    "any_gold_fetched": 1.0,
+    "multi_gold_full_fetched": 0.7142857142857143,
+    "questions_multi_gold": 7,
+    "questions_gold_over_10": 0,
+    "fifo_overflow_questions": 4,
+    "fifo_gold_evicted_questions": 0,
+    "ans_early_weight_share": 0.45535714285714285,
+    "ans_never_full_weight": 0.14285714285714285
+   }
+  },
+  {
+   "step": 402,
+   "flops": 2736344806641.0186,
+   "flops_share": 2.7363448066410184e-18,
+   "phase": "own",
+   "p_own": 0.75,
+   "lr": 0.001,
+   "tokens": 985429,
+   "padded_tokens": 993960,
+   "tokens_per_s": 7419.614620814255,
+   "padded_tokens_per_s": 7494.102240316101,
+   "loops_per_question": 8.0,
+   "loss": 5.984586715698242,
+   "lm": 2.6519651412963867,
+   "ask": 3.524394989013672,
+   "ans": 1.557600736618042,
+   "halt": 0.1282321959733963,
+   "gold_recall_at_4": 0.23346561193466187,
+   "answer_acc": 0.02631578966975212,
+   "answer_acc_first": 0.02631578966975212,
+   "grad_norm": 2.7652719020843506,
+   "weight_norm": 115.77299499511719,
+   "dead_mlp_fraction": null,
+   "halt_rate": null
+  }
+ ],
+ "checkpoint": "/home/user/learner/artifacts/claude-swarm-screen-20261018/ckpt-dryrun/D1-s2",
+ "history_total": 9,
+ "arm": "D1",
+ "seconds_requested": 120.0,
+ "wall_seconds": 138.95040162200007,
+ "size": "tiny",
+ "environment": {
+  "python": "3.13.16",
+  "torch": "2.14.1+cpu",
+  "cuda": null,
+  "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+  "cpu_count": 4,
+  "device": "cpu"
+ }
+}

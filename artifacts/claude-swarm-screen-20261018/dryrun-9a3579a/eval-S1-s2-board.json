@@ -1,0 +1,4636 @@
+{
+ "command": "premonition eval",
+ "experiment": 1,
+ "contender": "D",
+ "wipe": null,
+ "regime": "label-free",
+ "identity": {
+  "regime": "label-free",
+  "purpose": "legacy",
+  "preprocess": {
+   "format": "premonition.preprocess",
+   "version": 1,
+   "regime": "label-free",
+   "digest": "9add8e2fded136434c37f8b97641f83528b920c640693ff89011bd452b36e3c7"
+  },
+  "tokenizer": {
+   "path": "data/tokenizer/premonition-tok-v2-fallback.json",
+   "sha256": "2c9d06aed330932b48bb1b173e42952f4bba6ec752e4781c6a253f63cec0973a",
+   "vocab_size": 7068,
+   "status": "v2"
+  },
+  "model": {
+   "kind": "premonition-mini",
+   "config_sha256": "74e29839ed3b450e53cdf19f4260ca3595963e2a6b815b089901f8e71882dff4",
+   "parameters": 304580
+  },
+  "checkpoint": {
+   "path": "/home/user/learner/artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s2",
+   "manifest_sha256": "d52539b0e39a7b28e300236ac30e4e5ff68fcc7ce9740a76996d66e63bd770e0",
+   "train_preprocess": {
+    "digest": "9add8e2fded136434c37f8b97641f83528b920c640693ff89011bd452b36e3c7",
+    "format": "premonition.preprocess",
+    "regime": "label-free",
+    "version": 1
+   }
+  },
+  "data": {
+   "tag": "tiny-seed0-53292765806d"
+  },
+  "primary": false,
+  "problems": [
+   "shape: model configuration differs from the contender's: d_model 32 (expected 128), key_dim 16 (expected 64)",
+   "purpose: scored as 'legacy'"
+  ],
+  "scope": "design/06 \u00a76 decision cells on label-free items; NOT a full \u00a79/\u00a710 verdict (no visit-clustered bootstrap, no C*/D-noask/D-soft/E-long comparisons, no seeds; see reviews/opus-milestone-01)"
+ },
+ "checkpoint": "artifacts/claude-swarm-screen-20261018/ckpt-dryrun/S1-s2",
+ "parameters": 304580,
+ "device": "cpu",
+ "config": {
+  "contender": "D",
+  "curriculum": {
+   "gold_until": 0.05,
+   "p_own_max": 0.75,
+   "ramp_until": 0.6,
+   "teacher_until": 0.3
+  },
+  "data": {
+   "dir": "data/village/stream/cache/tiny-seed0-53292765806d",
+   "tag": "tiny-seed0-53292765806d"
+  },
+  "detector": {
+   "sha256": "dbb37b46aa94785d73435a527ad5a9685c21df0791112c248309276a8ef2e556"
+  },
+  "flops": {
+   "budget": 1e+30,
+   "fit": {
+    "a": 1510866.63395394,
+    "b": 26021092.844744917,
+    "worst_residual": 0.02505053474740052
+   },
+   "spent": 977378382464.6733,
+   "tolerance": 0.05
+  },
+  "format": "premonition-mini-checkpoint",
+  "format_version": 1,
+  "mini": {
+   "age_buckets": 16,
+   "board_cards": 16,
+   "card_rows": 16,
+   "check_band": true,
+   "d_model": 32,
+   "decoder_mlp": 2,
+   "distractors": [
+    1,
+    2
+   ],
+   "early_ans": 0.2,
+   "eos_id": 2,
+   "kappa_init": 10.0,
+   "key_dim": 16,
+   "max_answer": 32,
+   "max_loops": 8,
+   "n_ent": 16,
+   "n_heads": 4,
+   "pad_id": 0,
+   "pointers": true,
+   "question_rows": 40,
+   "reader": [
+    "gru",
+    "attn",
+    "gru"
+   ],
+   "reader_mlp": 3,
+   "registers": 4,
+   "rope_base": 10000.0,
+   "scan_chunk": 256,
+   "store": true,
+   "swarm_board": true,
+   "swarm_rounds": 4,
+   "think_layers": 2,
+   "think_mlp": 4,
+   "thinkers": 4,
+   "top_k": 4,
+   "vocab_size": 7068,
+   "w_ans": 1.0,
+   "w_ask": 0.5,
+   "w_halt": 0.1,
+   "w_lm": 1.0,
+   "window": 64
+  },
+  "parameters": 304580,
+  "preprocess": {
+   "digest": "9add8e2fded136434c37f8b97641f83528b920c640693ff89011bd452b36e3c7",
+   "format": "premonition.preprocess",
+   "regime": "label-free",
+   "version": 1
+  },
+  "seed": 2,
+  "tokenizer": {
+   "path": "data/tokenizer/premonition-tok-v2-fallback.json",
+   "sha256": "2c9d06aed330932b48bb1b173e42952f4bba6ec752e4781c6a253f63cec0973a"
+  },
+  "train": {
+   "batch": 1,
+   "beta1": 0.9,
+   "beta2": 0.99,
+   "eps": 1e-08,
+   "eval_every": 0,
+   "grad_clip": 1.0,
+   "log_every": 50,
+   "lr": 0.001,
+   "memory_check_every": 50,
+   "memory_limit_bytes": 15032385536,
+   "seq_len": 1,
+   "warmup_steps": 100,
+   "weight_decay": 0.1
+  }
+ },
+ "data": {
+  "dir": "data/village/stream/cache/tiny-seed0-53292765806d",
+  "tag": "tiny-seed0-53292765806d"
+ },
+ "tokenizer": {
+  "path": "data/tokenizer/premonition-tok-v2-fallback.json",
+  "sha256": "2c9d06aed330932b48bb1b173e42952f4bba6ec752e4781c6a253f63cec0973a"
+ },
+ "cut": {
+  "seq_len": 768,
+  "max_new": 32,
+  "max_len": 736
+ },
+ "split": "validation",
+ "directories": {
+  "validation": {
+   "directory": "validation",
+   "source": "validation",
+   "split": "validation",
+   "regime": "label-free",
+   "signatures": "oracle",
+   "plan_worlds": 28,
+   "replay": {
+    "replayed": true,
+    "generator": "learnlab.village.shards:world_visit",
+    "questions": 213,
+    "changed": 78,
+    "ask_errors": 0
+   },
+   "input_audit": {
+    "inputs": 213,
+    "regime": "label-free",
+    "answer_already_in_input": 7,
+    "truncated": 185
+   },
+   "summary": {
+    "items": 213,
+    "decision_items": 188,
+    "decision_cells": {
+     "overall": {
+      "n": 188,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.020024132657813914
+      ],
+      "enough": true,
+      "target_met": false
+     },
+     "near": {
+      "n": 105,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.03529407692910988
+      ],
+      "enough": true,
+      "target_met": false
+     },
+     "far": {
+      "n": 73,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.049992007955731096
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "far_deep": {
+      "n": 62,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.058344072101372456
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "multi_hop": {
+      "n": 122,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.030526178389012854
+      ],
+      "enough": true,
+      "target_met": false
+     }
+    },
+    "decision_cells_ok": false,
+    "cells": {
+     "changed": {
+      "n": 68,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.05347133652007051
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "depth_1": {
+      "n": 56,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.06419393671876339
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "depth_2": {
+      "n": 53,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.06758198857654184
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "depth_3": {
+      "n": 42,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.08379879086570388
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "depth_4": {
+      "n": 23,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.14311661845042678
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "depth_5": {
+      "n": 4,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.4898908364545972
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "excluded": {
+      "n": 25,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.13319225093904843
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "excluded:leak:box_contents": {
+      "n": 10,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.27753279986288915
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "excluded:leak:who_has": {
+      "n": 6,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.39033428790216523
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "excluded:repeat": {
+      "n": 7,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.3543304350666873
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "excluded:repeat_in_visit": {
+      "n": 9,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.299145048419544
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "far": {
+      "n": 73,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.049992007955731096
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "far_deep": {
+      "n": 62,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.058344072101372456
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "fresh_names": {
+      "n": 30,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.11351339317396873
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "multi_hop": {
+      "n": 122,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.030526178389012854
+      ],
+      "enough": true,
+      "target_met": false
+     },
+     "near": {
+      "n": 105,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.03529407692910988
+      ],
+      "enough": true,
+      "target_met": false
+     },
+     "not_told": {
+      "n": 10,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.27753279986288915
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "overall": {
+      "n": 188,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.020024132657813914
+      ],
+      "enough": true,
+      "target_met": false
+     },
+     "reworded": {
+      "n": 188,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.020024132657813914
+      ],
+      "enough": true,
+      "target_met": false
+     },
+     "unchanged": {
+      "n": 120,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.031019166418703472
+      ],
+      "enough": true,
+      "target_met": false
+     }
+    },
+    "per_depth": {
+     "1": {
+      "n": 56,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.06419393671876339
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "2": {
+      "n": 53,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.06758198857654184
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "3": {
+      "n": 42,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.08379879086570388
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "4": {
+      "n": 23,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.14311661845042678
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "5": {
+      "n": 4,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.4898908364545972
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "6": {
+      "n": 0,
+      "hits": 0,
+      "accuracy": null,
+      "wilson95": [
+       null,
+       null
+      ],
+      "enough": false,
+      "target_met": false
+     }
+    },
+    "stale": {
+     "n": 68,
+     "hits": 0,
+     "accuracy": 0.0,
+     "wilson95": [
+      0.0,
+      0.05347133652007051
+     ],
+     "note": "accuracy here = share of changed decision items answered with an older answer"
+    },
+    "changed_unknown": 0,
+    "excluded": {
+     "leak:box_contents": {
+      "n": 10,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.27753279986288915
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "leak:who_has": {
+      "n": 6,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.39033428790216523
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "repeat": {
+      "n": 7,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.3543304350666873
+      ],
+      "enough": false,
+      "target_met": false
+     },
+     "repeat_in_visit": {
+      "n": 9,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.299145048419544
+      ],
+      "enough": false,
+      "target_met": false
+     }
+    },
+    "step1_comparable": {
+     "n": 74,
+     "hits": 0,
+     "accuracy": 0.0,
+     "wilson95": [
+      0.0,
+      0.049349779396386045
+     ],
+     "note": "step 1's headline: visible questions minus repeats under A's cut"
+    },
+    "step1_summary": {
+     "overall": {
+      "n": 206,
+      "hits": 0,
+      "accuracy": 0.0,
+      "wilson95": [
+       0.0,
+       0.01830648167565678
+      ]
+     },
+     "by_split": {
+      "validation": {
+       "n": 206,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.01830648167565678
+       ]
+      }
+     },
+     "by_qtype": {
+      "Q1": {
+       "n": 18,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.17587922364665756
+       ]
+      },
+      "Q10": {
+       "n": 11,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.25883296696803165
+       ]
+      },
+      "Q11": {
+       "n": 4,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.4898908364545972
+       ]
+      },
+      "Q12": {
+       "n": 28,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.12064330476584559
+       ]
+      },
+      "Q13": {
+       "n": 16,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.19360768053443644
+       ]
+      },
+      "Q2": {
+       "n": 6,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.39033428790216523
+       ]
+      },
+      "Q3": {
+       "n": 9,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.299145048419544
+       ]
+      },
+      "Q4": {
+       "n": 29,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.11696979849974071
+       ]
+      },
+      "Q5": {
+       "n": 16,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.19360768053443644
+       ]
+      },
+      "Q6": {
+       "n": 16,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.19360768053443644
+       ]
+      },
+      "Q7": {
+       "n": 5,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.43448246478317465
+       ]
+      },
+      "Q8": {
+       "n": 17,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.18431813500885175
+       ]
+      },
+      "Q9": {
+       "n": 31,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.1102553954604359
+       ]
+      }
+     },
+     "by_depth": {
+      "0": {
+       "n": 11,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.25883296696803165
+       ]
+      },
+      "1": {
+       "n": 69,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.0527372581890517
+       ]
+      },
+      "2": {
+       "n": 55,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.06528490111708635
+       ]
+      },
+      "3": {
+       "n": 44,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.08029560375848063
+       ]
+      },
+      "4": {
+       "n": 23,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.14311661845042678
+       ]
+      },
+      "5": {
+       "n": 4,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.4898908364545972
+       ]
+      }
+     },
+     "by_rule_family": {
+      "R2": {
+       "n": 9,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.299145048419544
+       ]
+      },
+      "R3": {
+       "n": 2,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.6576197724933468
+       ]
+      },
+      "R4": {
+       "n": 5,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.43448246478317465
+       ]
+      },
+      "R5": {
+       "n": 2,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.6576197724933468
+       ]
+      },
+      "R6": {
+       "n": 4,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.4898908364545972
+       ]
+      },
+      "R7": {
+       "n": 1,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.7934506856227626
+       ]
+      },
+      "R8": {
+       "n": 10,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.27753279986288915
+       ]
+      },
+      "none": {
+       "n": 173,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.02172261440451651
+       ]
+      }
+     },
+     "by_heldout_family": {
+      "heldout": {
+       "n": 10,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.27753279986288915
+       ]
+      },
+      "seen": {
+       "n": 196,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.019222531917868137
+       ]
+      }
+     },
+     "by_knowable": {
+      "knowable": {
+       "n": 195,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.01931920457372107
+       ]
+      },
+      "not_told": {
+       "n": 11,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.25883296696803165
+       ]
+      }
+     },
+     "by_template": {
+      "unseen": {
+       "n": 206,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.01830648167565678
+       ]
+      }
+     },
+     "by_style": {
+      "childlike": {
+       "n": 48,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.07410012966611745
+       ]
+      },
+      "plain": {
+       "n": 158,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.023735937927685864
+       ]
+      }
+     },
+     "by_style_status": {
+      "unseen": {
+       "n": 206,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.01830648167565678
+       ]
+      }
+     },
+     "by_name_answer": {
+      "name": {
+       "n": 6,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.39033428790216523
+       ]
+      },
+      "other": {
+       "n": 200,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.018845326377266564
+       ]
+      }
+     },
+     "by_truncated": {
+      "truncated": {
+       "n": 178,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.021125318976251823
+       ]
+      },
+      "whole_visit": {
+       "n": 28,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.12064330476584559
+       ]
+      }
+     },
+     "by_evidence_kept": {
+      "False": {
+       "n": 86,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.042758197285742205
+       ]
+      },
+      "None": {
+       "n": 11,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.25883296696803165
+       ]
+      },
+      "True": {
+       "n": 109,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.03404297375132512
+       ]
+      }
+     },
+     "by_repeat_in_context": {
+      "False": {
+       "n": 206,
+       "hits": 0,
+       "accuracy": 0.0,
+       "wilson95": [
+        0.0,
+        0.01830648167565678
+       ]
+      }
+     }
+    }
+   },
+   "seconds": 3.076515350000136,
+   "retrieval": {
+    "questions": 213,
+    "loops_mean": 4.0,
+    "halt_rate": 0.0,
+    "regime": "label-free",
+    "preprocess": {
+     "format": "premonition.preprocess",
+     "version": 1,
+     "regime": "label-free",
+     "digest": "9add8e2fded136434c37f8b97641f83528b920c640693ff89011bd452b36e3c7"
+    },
+    "targets_unbound": 0,
+    "predictions_with_unbound_entity": 0,
+    "cards": null,
+    "swarm": {
+     "fetch_overlap": 0.0,
+     "register_cos": 0.8544965932067011,
+     "ask_rate": [
+      0.0,
+      0.0,
+      0.0,
+      0.21830986496148536
+     ],
+     "fetch_count": [
+      0.0,
+      0.0,
+      0.0,
+      3.4929578393837657
+     ],
+     "silent_desks": 3,
+     "collapsed": false
+    }
+   }
+  }
+ },
+ "name_gap": {
+  "fresh_names": {
+   "n": 30,
+   "hits": 0,
+   "accuracy": 0.0,
+   "wilson95": [
+    0.0,
+    0.11351339317396873
+   ],
+   "enough": false,
+   "target_met": false
+  }
+ },
+ "items": {
+  "validation": [
+   {
+    "id": "validation-0:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the hut",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-0:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the hut, pick up the black pan",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-0:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "zero",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-0:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the bakery",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-0:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the mill",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-0:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "things left at the bakery go to the playground every evening",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-0:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the bakery",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-0:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the hut",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-0:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the playground",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-0:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-1:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the stable, pick up the red loaf",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-1:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the stable",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-1:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the stable",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-1:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Dagi",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:who_has"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-1:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the grey loaf and the white pot",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:box_contents"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-1:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the tower",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-1:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "only Nuli can open the basket",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-1:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-1:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Feju has it",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-2:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the garden",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-2:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the barn",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-2:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the lighthouse, ask Keku for the yellow egg",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-2:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "two",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-2:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the red egg",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:box_contents"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-2:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "ask Zonu for the green egg",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_5",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-2:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the dairy",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-2:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-2:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the cave",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-2:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the lighthouse",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-3:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the box would open",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-3:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the tower, ask Nulo for the black flute",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-3:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "zero",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-3:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-3:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "one",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-3:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "nothing",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:box_contents"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-3:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:repeat",
+     "excluded:repeat_in_visit"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-3:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": true,
+    "slices": [
+     "overall",
+     "unchanged",
+     "reworded",
+     "not_told"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-3:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "nothing would happen",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-3:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "one",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:repeat",
+     "excluded:repeat_in_visit"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-4:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-4:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "two hoops can be traded for a boot at the harbour",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-4:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the barn",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-4:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the grey whistle",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:box_contents"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-4:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the harbour",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-4:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-5:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "one",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-5:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the gate",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_5",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-5:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-5:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the cottage",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-5:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "ask Juvi for the sack, open the sack, take the blue rattle out of the sack",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-5:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Vezo",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:who_has"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-5:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "zero",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-5:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "west",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-5:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "two kettles can be traded for a cheese at the pond",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the bakery",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the hut",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the quarry, ask Togi for the brown needle",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the bakery",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "nothing",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:box_contents"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "two kettles can be traded for a cheese at the pond",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:repeat_in_visit"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "east",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the quarry",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the bridge",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-6:q10",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "two kettles can be traded for a cheese at the pond",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:repeat",
+     "excluded:repeat_in_visit"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the library, ask Sata for the basket, open the basket, take the grey onion out of the basket",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Vigi follows Giju",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the library",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the hill",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the library",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "ask Rata for the basket, open the basket, take the grey onion out of the basket",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Giju",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:who_has"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "south",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q10",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-7:q11",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Vigi would follow",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the school, pick up the blue onion",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": true,
+    "slices": [
+     "overall",
+     "unchanged",
+     "reworded",
+     "not_told"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": true,
+    "slices": [
+     "overall",
+     "unchanged",
+     "reworded",
+     "not_told"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "north",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the library, ask Junu for the white onion",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the cave, ask Minu for the brown rake",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the school",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "one",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q10",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": true,
+    "slices": [
+     "overall",
+     "unchanged",
+     "reworded",
+     "not_told"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q11",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Sata has it",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q12",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q13",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Sata",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:who_has"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-8:q14",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "one",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:repeat",
+     "excluded:repeat_in_visit"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-9:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the quarry",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-9:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the quarry, pick up the black apron",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-9:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the library",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-9:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": true,
+    "slices": [
+     "overall",
+     "unchanged",
+     "reworded",
+     "not_told"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-9:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the square, pick up the green belt",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-10:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": true,
+    "slices": [
+     "overall",
+     "unchanged",
+     "reworded",
+     "not_told"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-10:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Remo follows Daku",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-10:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "three brooms can be traded for a plum at the lake",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-10:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the school",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-10:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the lighthouse, ask Dasa for the box, open the box, take the green egg out of the box",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-10:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "zero",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-11:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the well",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-11:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the well",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-11:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the inn",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-11:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "two",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-11:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the cave",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the market",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "three teapots can be traded for a bell at the pond",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the market, ask Lora for the box, take the red fork out of the box",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the black doll, the brown plum and the red fork",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:box_contents"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Lora put it there",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the market, ask Lora for the box, take the black doll out of the box",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "zero",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q10",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the smithy",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q11",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Ragi",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:who_has"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q12",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the cave",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_5",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-12:q13",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "south",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-13:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "north",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-13:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "four",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-13:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the cottage",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-13:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the cave",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-13:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the bakery",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-13:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-13:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the bakery",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-14:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "one",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-14:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the harbour",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-14:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-14:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the garden, pick up the blue potato",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-14:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-14:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "take the brown cheese out of the sack",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-15:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-15:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the shed, ask Viku for the chest, take the brown pie out of the chest",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_5",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-15:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the school",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-15:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the harbour",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-15:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "three",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-16:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the meadow, ask Nuzo for the chest, take the yellow cake out of the chest",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-16:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the meadow",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-16:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the cottage, ask Homi for the chest, take the black cake out of the chest",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-16:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the meadow",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-16:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the cottage",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-16:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the playground, ask Hosa for the green hat",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-16:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the black cake and the yellow cake",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:box_contents"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-16:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "south",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-16:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the cottage",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-16:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-17:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "three cakes can be traded for a coat at the square",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-17:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the shed",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-17:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-17:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the meadow, pick up the yellow shirt",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-17:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the square",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_4",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-17:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the shed",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:repeat",
+     "excluded:repeat_in_visit"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-17:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-17:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "three cakes can be traded for a coat at the square",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:repeat_in_visit"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-17:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the meadow",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-17:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": true,
+    "slices": [
+     "overall",
+     "unchanged",
+     "reworded",
+     "not_told"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the red pot",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:box_contents"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "things put in the box turn white",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the farm, ask Kuzo for the blue apple",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the library",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": true,
+    "slices": [
+     "overall",
+     "unchanged",
+     "reworded",
+     "not_told"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:repeat",
+     "excluded:repeat_in_visit"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the field",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_4",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "three",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-18:q10",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Nuli would follow",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "things left at the pond go to the fountain every night",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:box_contents"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the cottage",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the cottage",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the harbour",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "two",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the forest",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "north",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the mill, pick up the grey fork",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the school",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q10",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the school",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q11",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the mill",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-19:q12",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the harbour",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:repeat",
+     "excluded:repeat_in_visit"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-20:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the chest would open",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-20:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "four",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-20:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "only Dagi can open the sack",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-20:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the market",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-20:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-20:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the garden",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-20:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the market",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-21:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the hill",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-21:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the hill, ask Bazo for the red shawl",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-21:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-21:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "things put in the chest turn grey",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-21:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "go to the dairy, ask Kusi for the red cup",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the farm",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the meadow",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": true,
+    "slices": [
+     "overall",
+     "unchanged",
+     "reworded",
+     "not_told"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the dock",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the meadow",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the playground",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q6",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q7",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "not told",
+    "decision": true,
+    "slices": [
+     "overall",
+     "unchanged",
+     "reworded",
+     "not_told"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q8",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Kuba has it",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q9",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Kezo goes to the playground every night",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "depth_1",
+     "unchanged",
+     "fresh_names",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-22:q10",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "no",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_3",
+     "changed",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-23:q0",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the blue hammer, the green axe and the grey mug",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:box_contents"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-23:q1",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "yes",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "multi_hop",
+     "depth_2",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-23:q2",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "the library",
+    "decision": true,
+    "slices": [
+     "overall",
+     "far",
+     "far_deep",
+     "multi_hop",
+     "depth_3",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-23:q3",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "two hammers can be traded for a spoon at the stable",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-23:q4",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "east",
+    "decision": true,
+    "slices": [
+     "overall",
+     "near",
+     "depth_1",
+     "unchanged",
+     "reworded"
+    ],
+    "stale": false
+   },
+   {
+    "id": "validation-23:q5",
+    "correct": false,
+    "exact": false,
+    "prediction": "",
+    "answer": "Kugi",
+    "decision": false,
+    "slices": [
+     "excluded",
+     "excluded:leak:who_has"
+    ],
+    "stale": false
+   }
+  ]
+ },
+ "lesion": "board",
+ "wall_seconds": 3.2025098589999743
+}
