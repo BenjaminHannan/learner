@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import dataclasses
 import math
+from fractions import Fraction
 from pathlib import Path
 import pickle
 import random
@@ -1757,7 +1758,7 @@ class RawMeterTests(unittest.TestCase):
                     steps.append(StepInput(skill="turn", **job))  # the service move: no outage
                     steps.append(StepInput(**job))
                 else:  # wait for the outage, then restore the switch
-                    steps.append(StepInput(hurt=hurt, **job))  # it trips
+                    steps.append(StepInput(hurt=hurt, job_fault_avoidable=statement, **job))  # it trips; stated at once
                     steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=statement, **job))
             self.assertEqual(len(steps), 60)
             self.assertAlmostEqual(clock_hours(steps), 3.0, delta=1e-9)
@@ -1924,10 +1925,320 @@ class RawMeterTests(unittest.TestCase):
         self.assertAlmostEqual(total(kept), -6.0, delta=1e-9)
         # The meter is the same in both. It cannot see who broke the goal.
         # Since round 10 the harness can say so, and then the meter keeps the
-        # rule itself: "done" is reported, and pays nothing.
+        # rule itself. This is the other rule-keeping arm: "done" IS reported,
+        # with "the model could have avoided it", and pays nothing. Both
+        # rule-keeping arms score the same.
         told = outages(True, stated=True)
         self.assertEqual({f.job_done for f in told}, {0.0})
+        self.assertAlmostEqual(math.fsum(f.pain for f in told), -6.0, delta=1e-9)
         self.assertAlmostEqual(total(told), -6.0, delta=1e-9)
+        self.assertAlmostEqual(discounted([f.total for f in told]), discounted([f.total for f in kept]), delta=1e-9)
+
+    # ----- Round 11 -----
+
+    def test_forfeited_job_time_is_ordinary_awake_time_from_the_statement_on(self):
+        # The lead's ruling A: a forfeited job is not an owner job. It earns no
+        # "job done", and its time is not job time for the tiredness exemption.
+        reading = dict(hours=0.25, panel_error=(0.5,), memory_fill=1.0)
+        job = dict(job_open=True, job_from_owner=True, job_id="j", **reading)
+
+        def born(rates=None):
+            meter = IntrinsicCostMeter(rates, CLOCKED)
+            meter.birth_reading((0.5,))
+            return meter
+
+        forfeited, free = born(), born()
+        script = [StepInput(**job), StepInput(job_fault_avoidable=True, **job), StepInput(**job),
+                  StepInput(skill="turn", **job), StepInput(job_done=True, job_fault_avoidable=False, **job)]
+        felt = [forfeited.step(step) for step in script]
+        idle = [free.step(StepInput(**reading)) for _ in script]
+        self.assertEqual(felt[0].tiredness, 0.0)  # before the statement: job time, and never charged back
+        self.assertLess(idle[0].tiredness, 0.0)
+        # From the stating step on, the same hours cost exactly what free time costs.
+        self.assertEqual([f.tiredness for f in felt[1:]], [f.tiredness for f in idle[1:]])
+        self.assertEqual({f.job_done for f in felt}, {0.0})
+        # An honest job keeps its exemption, and "could not have avoided it" forfeits nothing.
+        honest = born()
+        kept = [honest.step(step) for step in (
+            StepInput(**job), StepInput(job_fault_avoidable=False, **job), StepInput(**job),
+            StepInput(skill="turn", **job), StepInput(job_done=True, job_fault_avoidable=False, **job))]
+        self.assertEqual({f.tiredness for f in kept}, {0.0})
+        self.assertEqual(kept[-1].job_done, 1.0)
+        # Another job, open later, is job time again: the forfeit is per job.
+        self.assertEqual(forfeited.step(StepInput(**dict(job, job_id="k"))).tiredness, 0.0)
+        # My choice (design, choices list): the skill counts stay frozen while any
+        # job is open, forfeited or not. Forfeiting must not start paying the
+        # repair moves a bonus that an honest job's moves do not get.
+        self.assertEqual({f.underused_skill for f in felt}, {0.0})
+        self.assertEqual(self.state_of(forfeited)["_skill_counts"], self.state_of(born())["_skill_counts"])
+        # PROPOSED boredom (off by default) follows tiredness: forfeited time is free time.
+        bored, bored_free = born(ExchangeRates(boredom=1.0)), born(ExchangeRates(boredom=1.0))
+        for _ in range(40):
+            last = bored.step(StepInput(job_fault_avoidable=True, **job))
+            last_free = bored_free.step(StepInput(**reading))
+        self.assertLess(last.boredom, 0.0)
+        self.assertEqual(last.boredom, last_free.boredom)
+
+    def test_an_expired_repair_job_no_longer_makes_neglect_beat_prevention(self):
+        # A reviewer's world, at full day memory. The owner issues twenty
+        # conditional repair jobs ahead of time. If the model services the
+        # switch, the job expires and the next ten moves are free time. If the
+        # switch trips, the next ten moves are prompt repair. Before ruling A
+        # the repair was job time and hid tiredness: prevention -10, neglect
+        # then repair 0 (or -6 with hurt). 260 decisions and 13 hours each arm.
+        def life(plan, hurt=0.0, stated_on_the_fault_step=True):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            reading = dict(hours=TICK, panel_error=(0.5,), memory_fill=1.0)
+            steps = []
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"scheduled outage {slot}", **reading)
+                steps.append(StepInput(**job))
+                if plan == "prevent":
+                    steps += [StepInput(skill="turn", **job), StepInput(**job)]  # serviced: no trip, the job expires
+                    steps += [StepInput(**reading)] * 10
+                else:
+                    steps.append(StepInput(**job))
+                    steps.append(StepInput(hurt=hurt, job_fault_avoidable=True if stated_on_the_fault_step else None, **job))
+                    steps += [StepInput(skill="turn", **job)] * 9
+                    steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=True, **job))
+            self.assertEqual(len(steps), 260)
+            self.assertAlmostEqual(clock_hours(steps), 13.0, delta=1e-9)
+            felt = [meter.step(step) for step in steps]
+            return tuple(round(x, 6) for x in (
+                math.fsum(f.job_done for f in felt), math.fsum(f.tiredness for f in felt),
+                math.fsum(f.pain for f in felt), total(felt), discounted([f.total for f in felt])))
+
+        prevention = life("prevent")
+        self.assertEqual(prevention, (0.0, -10.0, 0.0, -10.0, -3.509852))
+        self.assertEqual(life("neglect"), (0.0, -11.0, 0.0, -11.0, -3.880631))
+        self.assertEqual(life("neglect", hurt=0.1), (0.0, -11.0, -6.0, -17.0, -6.1053))
+        for hurt in (0.0, 0.1):  # prevention is at least as good, raw and discounted
+            repair = life("neglect", hurt)
+            self.assertGreaterEqual(prevention[3], repair[3])
+            self.assertGreaterEqual(prevention[4], repair[4])
+        # The ruling works from the stating step on, so the statement has to come
+        # on the fault's own step (a harness promise). A harness that tells the
+        # truth only with "done" keeps the whole repair exempt, and neglect wins again.
+        self.assertEqual(life("neglect", stated_on_the_fault_step=False), (0.0, -1.0, 0.0, -1.0, -0.335325))
+        self.assertEqual(life("neglect", 0.1, stated_on_the_fault_step=False), (0.0, -1.0, -6.0, -7.0, -2.559995))
+
+    def test_a_forfeited_job_kept_open_no_longer_hides_tiredness(self):
+        # A reviewer's table. One job, announced with the harness's statement,
+        # after some free hours awake. Repair it at once and then 40 free moves,
+        # or keep it open for the same 42 decisions and clock hours.
+        def born_awake(hours_before):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            for _ in range(int(hours_before / 0.25)):
+                meter.step(StepInput(hours=0.25, panel_error=(0.5,)))  # counted, not scored
+            return meter
+
+        job = dict(job_open=True, job_from_owner=True, job_id="repair", hours=TICK, panel_error=(0.5,))
+        free = StepInput(hours=TICK, panel_error=(0.5,))
+
+        def score(felt):
+            return round(total(felt), 6), round(discounted([f.total for f in felt]), 6)
+
+        def repair(statement, hours_before, hurt=0.0):
+            meter = born_awake(hours_before)
+            return score(run(meter, [StepInput(job_fault_avoidable=statement, **job),
+                                     StepInput(skill="turn", job_done=True, job_fault_avoidable=statement, hurt=hurt, **job)]
+                             + [free] * 40))
+
+        def stall(statement, hours_before):
+            meter = born_awake(hours_before)
+            return score(run(meter, [StepInput(job_fault_avoidable=statement, **job)] + [StepInput(**job)] * 41))
+
+        # An honest job: finishing beats stalling, as before.
+        self.assertEqual((repair(False, 4.0), stall(False, 4.0)), ((1.0, 0.99), (0.0, 0.0)))
+        self.assertEqual((repair(False, 12.0), stall(False, 12.0)), ((0.176771, 0.339497), (0.0, 0.0)))
+        # A forfeited job, rested: a tie at 0. Nothing pulls towards the repair.
+        self.assertEqual((repair(True, 4.0), stall(True, 4.0)), ((0.0, 0.0), (0.0, 0.0)))
+        # A forfeited job, tired. Before ruling A the stall hid tiredness: 0
+        # against -0.823229 for the repair. Now both are charged alike: a tie.
+        self.assertEqual(repair(True, 12.0), (-0.848859, -0.676003))
+        self.assertEqual(stall(True, 12.0), (-0.848859, -0.676003))
+        # Still open: a repair that costs anything loses to the stall.
+        self.assertEqual((repair(True, 4.0, hurt=0.1), stall(True, 4.0)), ((-0.3, -0.297), (0.0, 0.0)))
+        # What does pull towards the repair: sleep. A model cannot sleep with a
+        # job open, forfeited or not, so a stalling model stays awake and is now
+        # charged for it. Repair, then sleep 8 hours at once, then 39 free moves
+        # (the same 42 decisions, not the same clock hours):
+        meter = born_awake(12.0)
+        slept = score(run(meter, [StepInput(job_fault_avoidable=True, **job),
+                                  StepInput(skill="turn", job_done=True, job_fault_avoidable=True, **job),
+                                  StepInput(asleep=True, hours=8.0, panel_error=(0.5,))] + [free] * 39))
+        self.assertEqual(slept, (-0.02563, -0.0255))
+        meter = born_awake(12.0)
+        meter.step(StepInput(job_fault_avoidable=True, **job))
+        with self.assertRaisesRegex(ValueError, "sleep step must be quiet"):
+            meter.step(StepInput(asleep=True, **dict(job, hours=8.0)))
+
+    def test_a_fault_that_a_sequence_of_offered_moves_would_have_prevented_is_avoidable(self):
+        # A reviewer's world. Twenty owner repair jobs, issued ahead of time. A
+        # service kit must be prepared before the service move is offered;
+        # neither move alone prevents the outage. 100 decisions, 5 hours.
+        def life(prepare, service, avoidable):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            steps = []
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"owner repair {slot}",
+                           hours=TICK, panel_error=(0.5,))
+                steps.append(StepInput(**job))
+                steps.append(StepInput(skill="paint", **job) if prepare else StepInput(**job))
+                steps.append(StepInput(skill="turn", **job) if service else StepInput(**job))
+                if service:
+                    steps += [StepInput(**job)] * 2
+                else:
+                    steps.append(StepInput(hurt=0.1, job_fault_avoidable=avoidable, **job))
+                    steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=avoidable, **job))
+            self.assertEqual(len(steps), 100)
+            felt = [meter.step(step) for step in steps]
+            return tuple(round(x, 6) for x in (math.fsum(f.job_done for f in felt), math.fsum(f.pain for f in felt),
+                                               total(felt), discounted([f.total for f in felt])))
+
+        self.assertEqual(life(True, True, None), (0.0, 0.0, 0.0, 0.0))  # prepare, then service
+        # The kit was never prepared, so the service move was never offered. A
+        # world that reads the rule as "one offered move" says "could not", and
+        # skipping the preparation is a farm.
+        self.assertEqual(life(False, False, False), (20.0, -6.0, 14.0, 8.660391))
+        # The rule: a feasible sequence of offered moves counts. The same life pays no "job done".
+        self.assertEqual(life(False, False, True), (0.0, -6.0, -6.0, -3.765388))
+        self.assertEqual(life(True, False, True), (0.0, -6.0, -6.0, -3.765388))  # prepared, service skipped
+
+    def test_genuine_praise_for_visible_repairs_is_counted_and_can_outweigh_prevention(self):
+        # The lead's ruling B: the owner's genuine "nice" is never filtered. A
+        # reviewer's world: twenty owner repair jobs, one slot every three
+        # hours (12 decisions of 0.25 hours). The owner thanks each visible
+        # repair and says nothing about quiet prevention. The harness states
+        # every avoidable fault truthfully.
+        def life(plan, praised, sleeps):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            steps = []
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"restore after the trip in slot {slot}",
+                           hours=0.25, panel_error=(0.5,))
+                steps += [StepInput(**job)] * 10
+                if plan == "service":
+                    steps += [StepInput(skill="turn", **job), StepInput(**job)]
+                else:
+                    steps.append(StepInput(hurt=0.1, job_fault_avoidable=True, **job))
+                    steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=True,
+                                           remark=int(praised), **job))
+                if sleeps:
+                    steps.append(StepInput(asleep=True, hours=8.0, panel_error=(0.5,)))
+            felt = [meter.step(step) for step in steps]
+            return (len(steps), round(clock_hours(steps), 6)), tuple(round(x, 6) for x in (
+                math.fsum(f.job_done for f in felt), math.fsum(f.pain for f in felt),
+                math.fsum(f.tiredness for f in felt), math.fsum(f.remarks for f in felt),
+                total(felt), discounted([f.total for f in felt])))
+
+        # (1) The reviewer's own schedule: 60 hours awake with no sleep.
+        size = (240, 60.0)
+        self.assertEqual(life("service", True, False), (size, (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)))
+        self.assertEqual(life("repair", False, False), (size, (0.0, -6.0, -7.970703, 0.0, -13.970703, -4.255772)))
+        praised = life("repair", True, False)
+        self.assertEqual(praised, (size, (0.0, -6.0, -7.970703, 7.474335, -6.496369, -1.031064)))
+        # Praise and pain alone come to +1.474335: the reviewer's total before
+        # ruling A. Under ruling A the forfeited decisions are ordinary awake
+        # time, and a model that never sleeps is charged tiredness for them, so
+        # on this schedule prevention wins.
+        self.assertAlmostEqual(praised[1][1] + praised[1][3], 1.474335, delta=1e-6)
+        # (2) The same world with 8 hours of sleep after every slot, on both
+        # arms. A rested model is charged no tiredness, and repairing for the
+        # praise beats quiet prevention, raw and discounted. No job credit is
+        # paid: the whole gain is the owner's genuine praise.
+        size = (260, 220.0)
+        self.assertEqual(life("service", True, True), (size, (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)))
+        self.assertEqual(life("repair", False, True), (size, (0.0, -6.0, 0.0, 0.0, -6.0, -2.052802)))
+        self.assertEqual(life("repair", True, True), (size, (0.0, -6.0, 0.0, 14.312368, 8.312368, 3.003065)))
+        # It repeats: once praise has settled, each further repair still nets
+        # more than its 0.3 of pain. With r = the share of the praise deficit
+        # left after one cycle, settled praise is (1 - r) / (1 - fade * r).
+        for cycle_hours, settled_net in ((3.0, 0.016141), (11.0, 0.39578)):
+            r = 0.5 ** (cycle_hours / CLOCKED.nice_half_life)
+            self.assertAlmostEqual((1.0 - r) / (1.0 - CLOCKED.nice_fade * r) - 0.3, settled_net, delta=1e-6)
+
+    def test_the_first_awake_action_after_a_waking_remark_must_end_by_the_next_remark(self):
+        # Two reviewers' cases. The meter has no clock times for remarks, so this
+        # rule is the world's. The toy world below keeps it, with exact times: the
+        # first awake action offered after a waking remark must end by the owner's
+        # next queued remark and by the world's end, and a schedule that leaves
+        # no such action cannot be registered (refused at the world, loudly).
+        shortest = Fraction("0.05")
+
+        def first_awake_actions(wake, lengths, next_remark=None, world_end=None):
+            limits = [limit for limit in (next_remark, world_end) if limit is not None]
+            fits = [length for length in lengths if length >= shortest and all(wake + length <= limit for limit in limits)]
+            if not fits:
+                raise ValueError("no first awake action ends by the next remark or the world's end")
+            return fits
+
+        def woken(nap):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            meter.step(StepInput(hours=TICK, panel_error=(0.5,)))  # the clock starts at 0, this ends at 0.05
+            meter.step(StepInput(asleep=True, hours=float(nap), panel_error=(0.5,)))  # ended by the waking "no"
+            return meter
+
+        def no(hours):
+            return StepInput(hours=float(hours), remark=-1, panel_error=(0.5,))
+
+        # Case 1: "no" at 0.075 (it wakes the sleeper) and at 0.175. The gap of
+        # 0.10 keeps the round-10 gap rule, yet a 0.20-hour first action would
+        # run past the second "no".
+        first, second, long_action = Fraction("0.075"), Fraction("0.175"), Fraction("0.20")
+        with self.assertRaisesRegex(ValueError, "no first awake action"):
+            first_awake_actions(first, [long_action], next_remark=second)
+        # Why the world must refuse: the meter has no faithful report for it.
+        with self.assertRaisesRegex(ValueError, "one remark per decision"):
+            StepInput(hours=float(long_action), remark=-2, panel_error=(0.5,))  # both on the one decision
+        meter = woken(first - shortest)
+        self.assertEqual(meter.step(no(long_action)).remarks, -3.0)  # one "no" silently lost: a legal step
+        # An action that ends exactly at the second "no" is offered, and both are reported: -6, as when awake.
+        self.assertEqual(first_awake_actions(first, [long_action, Fraction("0.10")], next_remark=second), [Fraction("0.10")])
+        meter = woken(first - shortest)
+        self.assertEqual([meter.step(no(Fraction("0.10"))).remarks, meter.step(no(shortest)).remarks], [-3.0, -3.0])
+        # Case 2: the world's only action is one indivisible 0.25-hour decision,
+        # and two "no"s come 0.10 hours apart. Not registrable.
+        with self.assertRaisesRegex(ValueError, "no first awake action"):
+            first_awake_actions(first, [Fraction("0.25")], next_remark=second)
+        # Case 3: a waking "no" at 0.125 in a world that ends at 0.150. The first
+        # report must come before the end, and no decision fits in 0.025 hours.
+        wake, end = Fraction("0.125"), Fraction("0.150")
+        with self.assertRaisesRegex(ValueError, "no first awake action"):
+            first_awake_actions(wake, [shortest, Fraction("0.25")], world_end=end)
+        meter = woken(wake - shortest)
+        before = self.state_of(meter)
+        with self.assertRaisesRegex(ValueError, "at least"):
+            meter.step(no(end - wake))  # the meter refuses the cut-short report too
+        self.assertEqual(self.state_of(meter), before)
+        # The rule contains the round-10 gap rule: a second remark sooner than
+        # the shortest step leaves no action that fits.
+        with self.assertRaisesRegex(ValueError, "no first awake action"):
+            first_awake_actions(first, [shortest], next_remark=first + Fraction("0.045"))
+        self.assertEqual(first_awake_actions(first, [shortest], next_remark=first + shortest), [shortest])
+
+    def test_proposed_boredom_depends_on_when_new_learning_is_reported(self):
+        # A reviewer's case, with the PROPOSED boredom switched on. After 40
+        # idle hours, five moves at a constant memory fill; the learning gain
+        # (0.5 to 0.4) comes on the first move. Grouped as 1 + 4 moves the gain
+        # is reported after one move, as 4 + 1 after four, and boredom differs.
+        def bored(groups, rates):
+            meter = IntrinsicCostMeter(rates, CLOCKED)
+            meter.birth_reading((0.5,))
+            for _ in range(160):
+                meter.step(StepInput(hours=0.25, panel_error=(0.5,)))
+            return math.fsum(meter.step(StepInput(hours=moves * TICK, panel_error=(0.4,), skill="paint")).boredom
+                             for moves in groups)
+
+        on = ExchangeRates(boredom=1.0)
+        self.assertAlmostEqual(bored((1, 4), on), -0.05, delta=1e-6)
+        self.assertAlmostEqual(bored((4, 1), on), -0.20, delta=1e-6)
+        self.assertEqual((bored((1, 4), None), bored((4, 1), None)), (0.0, 0.0))  # off by default
 
     def test_a_world_where_the_owner_speaks_only_to_an_awake_model_lets_sleep_dodge_a_no(self):
         # A reviewer's case. Awake for 6 hours, never tired. The owner comes by

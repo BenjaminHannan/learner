@@ -198,6 +198,9 @@ class StepInput:
                  break or let break: see job_fault_avoidable.
     job_fault_avoidable  the harness's statement about a fault tied to the
                  open job (something made, or had made, its goal false).
+                 Avoidable means: the model's own move caused it, or some
+                 feasible sequence of offered moves would have prevented it.
+                 It is stated on the fault's own step.
                  REQUIRED on every step that reports the job done (True or
                  False: a "done" step without it is refused), and allowed on
                  any other step with the job open, where None = no fault to
@@ -207,7 +210,9 @@ class StepInput:
                  and NOT TAKEN would have prevented it (an offered move not
                  taken counts as the model's own move). False = it could
                  not, or (on a "done" step) there is no avoidable fault to
-                 report. After a True the job is forfeited for good: reporting
+                 report. After a True the job is forfeited for good, and is
+                 no longer an owner job: from that step on its time is
+                 ordinary awake time (tiredness is charged), and reporting
                  it done pays 0 "job done". The world reports the damage
                  itself as hurt. It may be given on any step with the job
                  open, the announcing step included (the fault came first,
@@ -518,7 +523,16 @@ class IntrinsicCostMeter:
 
     def _feel(self, observed):
         rates, config = self._rates, self._config
-        free_and_awake = not observed.job_open and not observed.asleep
+        # A job tied to a fault the model could have avoided (the harness's
+        # statement, on this step or any earlier one) is forfeited for good.
+        # A forfeited job is not an owner job: it earns no "job done", and
+        # its time is ordinary awake time from the stating step on (tiredness
+        # is charged, and so is the PROPOSED boredom). Nothing is charged
+        # back for the steps before the statement.
+        if observed.job_fault_avoidable:
+            self._forfeit_jobs.add(observed.job_id)
+        job_time = observed.job_open and observed.job_id not in self._forfeit_jobs
+        free_and_awake = not job_time and not observed.asleep
 
         # Curiosity: the change in knowledge on the fixed held-out panel since
         # the reading before (the birth reading, for the first step).
@@ -546,7 +560,9 @@ class IntrinsicCostMeter:
         # lately. Signed, so the total over any stretch is bounded by 1.
         # Free play only: while a job is open the counts are frozen (no use
         # counted, no decay, nothing paid), so a job can neither earn the
-        # bonus nor be charged for using one kind of command.
+        # bonus nor be charged for using one kind of command. That holds for
+        # a forfeited job too: forfeiting must not start paying the repair
+        # moves a bonus that an honest job's moves do not get.
         variety = 0.0
         if observed.skill is not None and not observed.job_open:
             before = self._variety()
@@ -557,7 +573,8 @@ class IntrinsicCostMeter:
             variety = self._variety() - before
 
         # Tiredness: pressure from hours awake and a full day memory. It
-        # builds whenever awake, job or no job, but only costs in free time.
+        # builds whenever awake, job or no job, but only costs in free time
+        # (time with a forfeited job open counts as free time).
         tired = 0.0
         if observed.asleep:
             self._hours_awake = max(0.0, self._hours_awake - config.sleep_payback * observed.hours)
@@ -575,11 +592,8 @@ class IntrinsicCostMeter:
         # Pain: never fades. Hurt above the scale was refused, not cut down.
         hurt = observed.hurt
 
-        # Job done: paid once per job, and only for a job announced earlier.
-        # A job tied to a fault the model could have avoided (the harness's
-        # statement, on this step or any earlier one) is forfeited for good.
-        if observed.job_fault_avoidable:
-            self._forfeit_jobs.add(observed.job_id)
+        # Job done: paid once per job, and only for a job announced earlier
+        # and not forfeited (see the top of this method).
         done = 0.0
         if observed.job_done and observed.job_id not in self._paid_jobs:
             self._paid_jobs.add(observed.job_id)
