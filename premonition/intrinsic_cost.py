@@ -220,7 +220,10 @@ class StepInput:
                  sleeps, the model wakes (a real waking: the sleep step ends
                  there) and the remark is reported on the first awake
                  decision. The world must not make the owner's remarks
-                 depend on whether the model is awake.
+                 depend on whether the model is awake. After a remark that
+                 wakes the sleeper, the owner's next remark comes at least
+                 one shortest awake step later (it would otherwise fall
+                 inside the decision that reports the waking remark).
     panel_error  the world model's error rate (0..1) on each region of the
                  fixed held-out panel, measured at the end of this step
                  (after its training; for a sleep step, on waking). It is a
