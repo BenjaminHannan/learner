@@ -356,7 +356,8 @@ class IntrinsicCostMeter:
             end = self._hours_awake + observed.hours
             if free_and_awake:
                 tired = self._tired_cost(self._hours_awake, end, observed.memory_fill)
-            self._hours_awake = end
+            # Pressure stops at full, so the sleep owed never exceeds one full night.
+            self._hours_awake = min(end, config.hours_to_full)
         self._last_fill = observed.memory_fill
 
         # Pain: never fades.

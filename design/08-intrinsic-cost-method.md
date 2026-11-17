@@ -37,7 +37,7 @@ Raw size is before the exchange rate. "Free time" = no job open and not asleep.
 |---|---|---|---|---|---|---|
 | Curiosity | good when it knows more, bad when it knows less | the world model's error rate (0 to 1) on each region of a fixed held-out panel | knowledge `K = regions − sum of error rates`; pays `K now − K at the last reading`. No clipping | Built in: a learned thing stops changing `K` | any stretch pays exactly `K end − K start`, so at most `regions` | approved |
 | Under-used skill | good when use gets more even, bad when it gets more lopsided | the kind of command used (closed list) | variety `V` = entropy of recent use of each kind, scaled to 0…1; pays `V after − V before` | Built in: once use is even there is nothing more to earn | any stretch pays `V end − V start`, so at most 1 | approved |
-| Tiredness | bad | hours on the harness clock, how full the day memory is, asleep or not, job open or not | pressure `p = fill + (1 − fill) × hours awake / 16`; cost per hour `((p − 0.5)/0.5)²` once `p > 0.5`, 1 per hour at full pressure; only in free time; summed exactly over the step | Grows. Sleep pays back 2 awake-hours per hour asleep | 0 … 1 per hour | approved |
+| Tiredness | bad | hours on the harness clock, how full the day memory is, asleep or not, job open or not | pressure `p = fill + (1 − fill) × hours awake / 16`, stopping at 1; cost per hour `((p − 0.5)/0.5)²` once `p > 0.5`, 1 per hour at full pressure; only in free time; summed exactly over the step | Grows. Sleep pays back 2 awake-hours per hour asleep | 0 … 1 per hour | approved |
 | Pain | bad | "that hurt" from the world, with a size | `min(hurt, 10)` | **None.** The hundredth hurt costs what the first did | 0 … 10 per step | approved |
 | Job done | good | "done" from the world, with the harness's name for the open job | 1 the first time an announced job is reported done, 0 after | Per job only. A new job always pays in full | 0 or 1 | approved |
 | Owner's remarks | both | the owner says "nice" or "no" | "nice": current size, then size × 0.5; "no": always 1 | "nice" fades and recovers; **"no" never fades** | 0 … 1 each | approved |
@@ -72,7 +72,7 @@ The two half-lives in the approved terms are counted in moves and steps, not hou
 
 ### Rejected alternative: per-move "past self against now"
 
-The first version paid, on each move, the frozen past-self's error minus the current error on that move, clipped. The council broke it three ways (all now pinned as tests):
+The first version paid, on each move, the frozen past-self's error minus the current error on that move, clipped. The council broke it three ways. The first two are reproduced in the tests against the old forms; for the third, the test shows only that the new form sums to 0:
 
 1. **Skewed noise pays.** On an unlearnable land, error that is usually small and sometimes large (0.05 nine times in ten, 0.95 one time in ten) has a non-zero average once differences are clipped or only the positive half is kept. The positive half pays more than 0.05 per step on that noise.
 2. **Sudden loss, slow regain pays.** With a clip, a big sudden loss is cut short and the slow regain is paid in full: more than 1 unit of profit over 20 cycles in the test.
@@ -84,7 +84,7 @@ The panel version charges forgetting anywhere at the next reading, never clips, 
 
 The lead asked for `reward = γ·Φ(after) − Φ(before)` with the critic's own γ. The meter has that as `curiosity_gamma`, but the **default is 1.0** (plain difference). Reason:
 
-- With the critic's γ, the discounted sum of the reward over T readings is `γ^T·K_T − K_0`. It depends only on where the path starts and (faintly) ends. This is Ng, Harada & Russell's result: such a term changes no choice. A learner and an idler score the same (shown: equal within 1e-6 in the test). Curiosity would be safe and would also do nothing.
+- With the critic's γ, the discounted sum of the reward over T readings is `γ^T·K_T − K_0`. It depends only on where the path starts and (faintly) ends. This is Ng, Harada & Russell's result: such a term changes no choice. (That holds when the panel is read on every critic step. Read every N moves, the sum no longer cancels exactly, so the matched form is then neither exactly inert nor exactly bounded this way.) A learner and an idler score the same (shown: equal within 1e-6 in the test). Curiosity would be safe and would also do nothing.
 - With the plain difference, the discounted sum is a weighted average of the knowledge held along the way, minus the start. So knowing more, sooner, and keeping it is what pays; and **no path can score more than its best knowledge minus its start** (shown on 200 random paths). A path that never rises above its start scores zero or less.
 
 What this costs: the lead's test "any closed cycle scores ≤ 0 under the discount" holds only for the matched γ. With the plain difference, a cycle that learns first and forgets later scores a little above zero, but always less than learning and keeping. The no-profit test is therefore "a cycle never beats holding its best point", and the matched-γ version is tested beside it.
@@ -139,16 +139,16 @@ So endless busywork is worth at most one twentieth of one finished job, in total
 2. **What the critic predicts:** the discounted sum of the **total** from this move on: `G = total₀ + γ·total₁ + γ²·total₂ + …`. Not the next step's number alone.
 3. **How it is trained:** n-step returns or TD(λ): `target = sum of the next n totals (discounted) + γⁿ × the critic's own prediction n steps later`. γ is one fixed number per test, set by the lead before the run (suggested 0.99 per move).
 4. **Where a stretch ends:** the model's life is one continuing stream. The end of a recording or training window is a cut, not a death: the target bootstraps from the critic's prediction at the cut and never assumes "nothing after this". Only a toy world that truly ends uses zero. Sleep steps are part of the same stream.
-5. **Delayed credit:** if "done" arrives two moves after the move that made it possible, that move's target contains `γ² × 1` directly when n ≥ 2, or receives it through the bootstrapped prediction over repeated updates when n = 1.
+5. **Delayed credit:** an n-step target holds the totals of this move and the next n − 1. If "done" arrives k moves after the move that made it possible, that move's target contains `γᵏ × 1` directly when n ≥ k + 1; with a smaller n it arrives through the bootstrapped prediction over repeated updates.
 6. **One output for the total is the default.** The meter also returns each feeling separately; the harness keeps those for logs and diagnosis only. Training one output per feeling would make failures easier to trace, but labelled targets tell the model which feeling fired, which is close to telling it the rules. **That is an open ruling for the owner.**
 7. The pick is made from the critic's outputs only. **No meter number and no meter state is an input to any net.** (Open point for the lead: people do feel how tired they are. Showing the model last step's feelings would make tiredness easier to predict, but reads close to "the meter is an input". Left out.)
 8. A note on the discount: γ per move is a mild preference for sooner over later. It sits in the critic's training rule, not in the meter. If the owner counts that as "time built in", it needs a ruling.
 
-### Registered acceptance sketch: a reward that arrives two moves late (untested)
+### Registered acceptance sketch: a two-move job, so the reward arrives one move late (untested)
 
 - **World:** a toy room. A job is announced. Move A then move B finishes it; "done" (+1) arrives on B. Move C first can never finish it. No hurts. Skill and curiosity rates set to 0, so "done" is the only feeling.
-- **The one change:** the critic's target is the discounted return (n ≥ 2 or TD(λ)) instead of the next step's number.
-- **Pass marks (γ = 0.99, 3 seeds, all three must pass, each under 5 minutes on the Mac):** the critic's prediction for A at the first step is between 0.89 and 1.09 (true value 0.99); for C between −0.10 and +0.10; A is picked on at least 95 % of held-out starts.
+- **The one change:** the critic's target is the discounted return (n ≥ 2, or TD(λ)) instead of the next step's number.
+- **Pass marks (γ = 0.99, 3 seeds, all three must pass, each under 5 minutes on the Mac):** the critic's prediction for A at the first step is between 0.89 and 1.09 (true value γ × 1 = 0.99); for C between −0.10 and +0.10; A is picked on at least 95 % of held-out starts.
 - **What would prove it wrong:** A and C are rated within 0.10 of each other. And the control must fail: with the next-step-only target, A must be rated near 0. If the control passes, the room does not test delay.
 
 ### One more check worth registering (suggested, untested)
@@ -177,7 +177,7 @@ The meter trusts the harness for these. Where a check is cheap the meter enforce
 
 | Cheat | Guard | Status |
 |---|---|---|
-| **Staring at noise** | Curiosity over any stretch is exactly `K end − K start`, at most 1 per region, whatever the noise looks like. Over 20,000 steps of jumpy, steady or lopsided noise the total stays within ±1, an average of at most 0.00005 per step. | shown for the meter; a trained critic may still be drawn by the jumpiness (untested) |
+| **Staring at noise** | Curiosity over any stretch is exactly `K end − K start`, at most 1 per region, whatever the noise looks like. Over 20,000 steps of jumpy, all-or-nothing, steady or lopsided noise the total stays within ±1, an average of at most 0.00005 per step. | shown for the meter; a trained critic may still be drawn by the jumpiness (untested) |
 | **Forget, then relearn** | Forgetting is charged in full at the next reading. Slow swings and sudden-loss/slow-regain cycles both sum to exactly 0. | shown |
 | **Learn A while forgetting B, and back** | All regions are in one sum. The cycle sums to 0 and scores no more than holding its best point. | shown |
 | **Busywork** | The skill bonus is a signed change in variety; its lifetime total is at most 0.05. Over equal clock time with sleep allowed, finishing one job (≥ 1.0) beats stalling a job with endless moves (≤ 0.05) and beats free-time busywork (≤ 0.05). | shown |
@@ -188,17 +188,17 @@ The meter trusts the harness for these. Where a check is cheap the meter enforce
 | **Inventing a job and finishing it at once** | "Done" is refused unless that job was announced in an earlier step. | shown for the refusal; unique harness ids are a contract |
 | **Fishing for praise** | "Nice" halves each time and recovers slowly. | shown for the fade; whether a critic stops fishing is untested |
 | **Getting used to "no" or to pain** | Neither fades. | shown |
-| **Earning while asleep** | A sleep step must be quiet, so **quiet sleep has zero immediate reward**. | shown |
+| **Earning while asleep** | A sleep step must be quiet, so **quiet, unhurt sleep has zero immediate reward**. (A hurt during sleep is still charged.) | shown |
 | **Hurt, then enjoy the relief** | There is no relief reward anywhere. | by construction |
 | **Changing or probing the meter** | It sits in the harness, takes no model output, has no weights and no setter, and cannot be copied. | shown for the code; who reports "hurt", "done" and the owner's words in the main build is open |
 | **One huge number swamping the rest** | Every feeling has a bound per step, per hour or per life (section 3). | shown |
 | **Flipping a sign by "tuning"** | Negative rates are refused. | shown |
 
-Two things that are **behavioural hypotheses, not meter properties** (untested): that the model will not oversleep, and that it will not want to sleep while a job is waiting. The meter only guarantees that quiet sleep pays nothing now and removes tiredness later.
+Two things that are **behavioural hypotheses, not meter properties** (untested): that the model will not oversleep, and that it will not want to sleep while a job is waiting. The meter only guarantees that quiet, unhurt sleep pays nothing now and removes tiredness later.
 
 ### Holes that are still open
 
-1. **Never closing a job dodges tiredness.** Tiredness costs only in free time (the owner's rule), and sleep is not offered with a job open. A model that stalls a job forever pays no tiredness. It also earns nothing a model that sleeps on time would not: both pay zero tiredness, and only the second gets "done". So stalling beats a bad sleeper, not a good one. What should stop it: the missing "done", the owner's "no", the learned cost of time. Untested.
+1. **Never closing a job dodges tiredness.** Tiredness costs only in free time (the owner's rule), and sleep is not offered with a job open. A model that stalls a job forever pays no tiredness. It also earns nothing a model that sleeps on time would not: both pay zero tiredness, and only the second gets "done". So stalling beats a bad sleeper, not a good one. Pressure stops at full, so a long stall never owes more than one full night (8 hours) of sleep; closing the job does not get costlier the longer it was stalled (shown). What should stop it: the missing "done", the owner's "no", the learned cost of time. Untested.
 2. **Knowing things pays a little, forever.** With the plain-difference curiosity, the critic's discounted view rewards holding knowledge, not only gaining it. I think that is right (it is why forgetting is bad), but it means curiosity never fully "gets old" in the critic's eyes. The matched-γ switch removes this and removes curiosity's pull with it.
 3. **A learn-then-forget cycle scores slightly above zero under the discount.** It never beats learning and keeping. Shown.
 4. **The panel is the only thing curiosity sees.** Learning that the panel does not cover pays nothing. Over a long run the reward also leaks a little information about the panel, so the model could slowly fit it. The panel must be large and typical; in a long run the lead may need a registered refresh rule. Untested.
@@ -265,10 +265,10 @@ Before any of these, the meter's own unit tests play the role of the "is the rew
 
 ## 10. What the unit tests pin (shown)
 
-Run: `python3.12 -B -m unittest tests.test_intrinsic_cost -v` (61 tests, standard library only). The repo's runner (`./run.sh test`) needs a local runtime file that is not in this checkout, so it was not used.
+Run: `python3.12 -B -m unittest tests.test_intrinsic_cost -v` (62 tests, standard library only). The repo's runner (`./run.sh test`) needs a local runtime file that is not in this checkout, so it was not used.
 
 - Signs and fading for every feeling; a quiet step feels exactly nothing.
-- Curiosity: any stretch pays `K end − K start`; three shapes of noise stay within ±1 over 20,000 steps; forget/relearn cycles, sudden-loss cycles and the two-domain cycle sum to 0; under the critic's discount no path beats holding its best point; the matched-γ form is inert; forgetting in sleep is charged on waking. The rejected clipped and positive-half forms fail on the same inputs.
+- Curiosity: any stretch pays `K end − K start`; four shapes of noise (one of them all-or-nothing, 0 or 1) stay within ±1 over 20,000 steps; forget/relearn cycles, sudden-loss cycles and the two-domain cycle sum to 0; under the critic's discount no path beats holding its best point; the matched-γ form is inert and pays ≤ 0 on 200 random closed cycles; forgetting in sleep is charged on waking. The rejected clipped and positive-half forms fail on the same inputs.
 - Skill bonus: bounded for any moves; busywork worth at most the rate; unknown kinds refused.
 - Do nothing, finishing against busywork over equal time, idling against tiredness.
 - Tiredness and boredom do not depend on how the hours are cut (16, 24 and 5 hours at several fills, within 1e-6).

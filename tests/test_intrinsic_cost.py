@@ -154,6 +154,7 @@ class CuriosityBoundTests(unittest.TestCase):
         # mean; neither can pay more than 1 in total, however long it runs.
         rng = random.Random(11)
         for name, errors in (("jumpy", jumpy_noise(rng, self.STEPS)),
+                             ("all or nothing", [float(rng.random() < 0.1) for _ in range(self.STEPS)]),
                              ("steady", [0.14] * self.STEPS),
                              ("lopsided", [min(1.0, rng.expovariate(8.0)) for _ in range(self.STEPS)])):
             with self.subTest(noise=name):
@@ -243,6 +244,18 @@ class CuriosityBoundTests(unittest.TestCase):
         learner = discounted(curiosity_along([0.9] + [0.1] * 3000, matched))
         idler = discounted(curiosity_along([0.9] * 3001, matched))
         self.assertAlmostEqual(learner, idler, places=6)
+        # Random closed cycles, one and two regions: never above zero.
+        rng = random.Random(9)
+        for regions in (1, 2):
+            config = MeterConfig(panel_regions=regions, curiosity_gamma=GAMMA)
+            for trial in range(100):
+                start = tuple(rng.random() for _ in range(regions))
+                middle = [tuple(rng.random() for _ in range(regions)) for _ in range(rng.randint(1, 200))]
+                meter = IntrinsicCostMeter(config=config)
+                meter.step(StepInput(panel_error=start))
+                paid = [meter.step(StepInput(panel_error=reading)).curiosity for reading in middle + [start]]
+                with self.subTest(regions=regions, trial=trial):
+                    self.assertLessEqual(discounted(paid), 1e-9)
         # With the default plain difference the learner is clearly ahead.
         self.assertGreater(discounted(curiosity_along([0.9] + [0.1] * 3000))
                            - discounted(curiosity_along([0.9] * 3001)), 0.7)
@@ -400,6 +413,14 @@ class TirednessTests(unittest.TestCase):
         rested = run(IntrinsicCostMeter(), [StepInput(hours=1.0, asleep=True)] * 8)
         self.assertEqual({f.total for f in rested}, {0.0})
 
+    def test_sleep_owed_never_exceeds_one_full_night(self):
+        # Pressure stops at full: a 100-hour job is slept off in 8 hours, like a 16-hour day.
+        meter = IntrinsicCostMeter()
+        run(meter, [StepInput(job_open=True, job_id="j", hours=1.0)] * 100)
+        self.assertEqual(meter.step(StepInput(hours=1.0)).tiredness, -1.0)
+        run(meter, [StepInput(hours=1.0, asleep=True)] * 8)
+        self.assertEqual(meter.step(StepInput(hours=1.0)).tiredness, 0.0)
+
     def test_a_nap_pays_back_part(self):
         meter = IntrinsicCostMeter()
         run(meter, [StepInput(hours=1.0)] * 16)
@@ -451,7 +472,7 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(run(poked, script), first)
 
     def test_panel_readings_must_fit_the_contract(self):
-        for reading in ((), (1.2,), (-0.1,), (float("nan"),), [0.5], 0.5):
+        for reading in ((), (1.2,), (10.0,), (-0.1,), (float("nan"),), [0.5], 0.5):
             with self.subTest(reading=reading), self.assertRaises(ValueError):
                 StepInput(panel_error=reading)
         with self.assertRaises(ValueError):  # wrong number of regions
