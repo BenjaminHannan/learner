@@ -9,7 +9,8 @@ The wanting does not live here. A learned critic predicts the discounted sum
 of the total, and moves are picked from the critic's predictions. The model
 has no handle on the meter: the harness owns it, ``step`` is the only call
 that returns a number, ``step`` always advances the meter, and the meter
-refuses to be copied or pickled.
+refuses to be copied or pickled. One meter lasts one life: it cannot be
+reset, and the harness must not rebuild it between episodes.
 
 The meter also refuses inputs that break the harness contracts written in
 design/08-intrinsic-cost-method.md (section 5). A refused step changes nothing.
@@ -98,12 +99,13 @@ class MeterConfig:
     hours_to_full: float = 16.0
     tired_onset: float = 0.5
     sleep_payback: float = 2.0
-    # pain: most hurt counted in one step.
+    # pain: the top of the hurt scale. A larger hurt is refused, never cut
+    # down: the harness rescales the world's hurt into 0..hurt_cap.
     hurt_cap: float = 10.0
     # owner's "nice": each one multiplies the next by nice_fade; the size
-    # recovers halfway to full every nice_half_life STEPS.
+    # recovers halfway to full every nice_half_life HOURS on the clock.
     nice_fade: float = 0.5
-    nice_half_life: float = 200.0
+    nice_half_life: float = 10.0
     # PROPOSED boredom: the pool of fresh learning halves every
     # boredom_half_life HOURS of free time; below boredom_floor it is boring.
     boredom_half_life: float = 2.0
@@ -137,15 +139,20 @@ class StepInput:
     job_open     the owner has given a job that is not finished or dropped.
     job_id       the harness's name for that job (given exactly when open).
     job_done     the world says the open job's goal is reached on this step.
-    hurt         how much the world says this step hurt (0 = not at all).
+    hurt         how much the world says this step hurt, on the fixed scale
+                 0..hurt_cap (0 = not at all). More than hurt_cap is refused.
     remark       the owner said "nice" (+1), "no" (-1) or nothing (0).
     panel_error  the world model's error rate (0..1) on each region of the
                  fixed held-out panel, measured after this step's training.
-                 None on steps where the panel was not evaluated.
+                 It is a share of panel items: predicted wrong (exact match)
+                 or, for continuous predictions, off by more than a tolerance
+                 fixed before the run. Never a rescaled loss. Same items, same
+                 order, no sampling noise. None on steps where the panel was
+                 not evaluated.
     skill        kind of command used (None = no move was made).
     hours        clock time this step took, from the harness clock.
-    memory_fill  how full the day memory is, 0..1, taken as constant
-                 through the step.
+    memory_fill  how full the day memory is at the start of the step, 0..1,
+                 taken as constant through the step.
     asleep       this step was spent asleep. A sleep step must be quiet: no
                  job open, no move, no panel reading, no remark, no question.
     asked_owner  PROPOSED: the id of the question put to the owner.
@@ -234,7 +241,18 @@ class IntrinsicCostMeter:
             raise ValueError("config must be a MeterConfig")
         self._rates = rates
         self._config = config
-        self.reset()
+        # The state at birth: rested, nothing used, nothing paid. There is
+        # no way back to it: every "per life" bound rests on that.
+        self._skill_counts = dict.fromkeys(config.skill_kinds, 0.0)
+        self._hours_awake = 0.0
+        self._seen_jobs = set()
+        self._paid_jobs = set()
+        self._nice_size = 1.0
+        self._knowledge = None  # last panel reading, as knowledge
+        self._record = None  # best knowledge so far
+        self._fresh = config.boredom_floor  # pool of fresh learning
+        self._asked = {}
+        self._last_fill = None
 
     @property
     def rates(self):
@@ -249,41 +267,32 @@ class IntrinsicCostMeter:
 
     __copy__ = __deepcopy__ = __reduce__ = __reduce_ex__ = _no_copies
 
-    def reset(self):
-        """Back to the state at birth: rested, nothing used, nothing paid."""
-        self._skill_counts = dict.fromkeys(self._config.skill_kinds, 0.0)
-        self._hours_awake = 0.0
-        self._seen_jobs = set()
-        self._paid_jobs = set()
-        self._nice_size = 1.0
-        self._knowledge = None  # last panel reading, as knowledge
-        self._record = None  # best knowledge so far
-        self._fresh = self._config.boredom_floor  # pool of fresh learning
-        self._asked = {}
-        self._last_fill = None
-
     def _variety(self):
         """How evenly the command kinds were used lately, 0..1 (entropy)."""
         counts = [count for count in self._skill_counts.values() if count > 0.0]
         if len(counts) < 2:
             return 0.0
         whole = math.fsum(counts)
-        return -math.fsum(c / whole * math.log(c / whole) for c in counts) / math.log(len(self._skill_counts))
+        # A share too small to tell from zero adds nothing (0 x log 0 = 0).
+        shares = [share for share in (count / whole for count in counts) if share > 0.0]
+        return -math.fsum(share * math.log(share) for share in shares) / math.log(len(self._skill_counts))
 
     def _tired_cost(self, start, end, fill):
         """Exact tiredness cost of being awake from hour ``start`` to ``end``."""
         config = self._config
         full, onset = config.hours_to_full, config.tired_onset
-        if fill >= 1.0:
-            return end - start
         cost = max(0.0, end - max(start, full))  # at full pressure: 1 per hour
-        if start < full:
-            slope = (1.0 - fill) / (full * (1.0 - onset))
 
-            def level(hour):
-                return max(0.0, (fill + (1.0 - fill) * hour / full - onset) / (1.0 - onset))
+        def level(hour):
+            return min(1.0, max(0.0, (fill + (1.0 - fill) * hour / full - onset) / (1.0 - onset)))
 
-            cost += (level(min(end, full)) ** 3 - level(start) ** 3) / (3.0 * slope)
+        # Below full pressure the level is a straight line once past the
+        # onset, so its square sums to hours x (a*a + a*b + b*b) / 3.
+        begins = full * (onset - fill) / (1.0 - fill) if fill < onset else 0.0
+        low, high = max(start, begins), min(end, full)
+        if high > low:
+            a, b = level(low), level(high)
+            cost += (high - low) * (a * a + a * b + b * b) / 3.0
         return cost
 
     def _bored_cost(self, hours):
@@ -308,6 +317,8 @@ class IntrinsicCostMeter:
             raise ValueError(f"unknown question id {observed.asked_owner!r}")
         if observed.panel_error is not None and len(observed.panel_error) != config.panel_regions:
             raise ValueError(f"the panel must report {config.panel_regions} region(s)")
+        if observed.hurt > config.hurt_cap:
+            raise ValueError(f"hurt must be at most {config.hurt_cap}: rescale it, do not cut it or drop it")
         if observed.job_done and observed.job_id not in self._seen_jobs:
             raise ValueError("a job must be announced open in an earlier step before it can be done")
         if observed.asleep and self._last_fill is not None and observed.memory_fill > self._last_fill:
@@ -360,8 +371,8 @@ class IntrinsicCostMeter:
             self._hours_awake = min(end, config.hours_to_full)
         self._last_fill = observed.memory_fill
 
-        # Pain: never fades.
-        hurt = min(observed.hurt, config.hurt_cap)
+        # Pain: never fades. Hurt above the scale was refused, not cut down.
+        hurt = observed.hurt
 
         # Job done: paid once per job, and only for a job announced earlier.
         done = 0.0
@@ -372,8 +383,8 @@ class IntrinsicCostMeter:
             self._seen_jobs.add(observed.job_id)
 
         # Owner's remarks: "nice" fades when repeated and recovers with
-        # steps; "no" never fades.
-        self._nice_size = 1.0 - (1.0 - self._nice_size) * _keep(config.nice_half_life)
+        # clock hours (not steps); "no" never fades.
+        self._nice_size = 1.0 - (1.0 - self._nice_size) * 0.5 ** (observed.hours / config.nice_half_life)
         nice = no = 0.0
         if observed.remark == 1:
             nice = self._nice_size

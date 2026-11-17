@@ -108,8 +108,21 @@ class FadingTests(unittest.TestCase):
         for earlier, later in zip(sizes, sizes[1:]):
             self.assertLess(later, earlier)
         self.assertLess(sizes[-1], 0.1)
-        run(meter, [StepInput()] * 2000)
+        run(meter, [StepInput()] * 2000)  # steps that take no time bring nothing back
+        self.assertLess(meter.step(StepInput(remark=1)).remarks, sizes[-1])
+        run(meter, [StepInput(hours=1.0, asleep=True)] * 100)
         self.assertGreater(meter.step(StepInput(remark=1)).remarks, 0.99)
+
+    def test_nice_recovery_does_not_depend_on_how_the_hours_are_cut(self):
+        sizes = []
+        for pieces in (1, 20, 4000):
+            meter = IntrinsicCostMeter()
+            run(meter, [StepInput(remark=1)] * 3)
+            run(meter, [StepInput(job_open=True, job_id="j", hours=20.0 / pieces)] * pieces)
+            sizes.append(meter.step(StepInput(remark=1)).remarks)
+        self.assertAlmostEqual(sizes[0], 1.0 - 0.875 * 0.25, delta=1e-9)  # two half-lives of 10 hours
+        for size in sizes[1:]:
+            self.assertAlmostEqual(size, sizes[0], delta=1e-9)
 
     def test_no_never_fades(self):
         meter = IntrinsicCostMeter()
@@ -162,6 +175,25 @@ class CuriosityBoundTests(unittest.TestCase):
                 self.assertLessEqual(abs(math.fsum(paid)), 1.0)
                 self.assertLessEqual(abs(math.fsum(paid)) / len(paid), 1.0 / (self.STEPS - 1))
                 self.assertLessEqual(discounted(paid), 1.0)
+
+    def test_round_one_noise_examples_pay_nothing(self):
+        # The council's round-1 cases, as squared error / 100. A noise value
+        # is 10 with chance p, else 0; two predictors with the same mean error.
+        #   p = 0.1, guesses 2 and 0: errors 0.04/0.64 and 0.00/1.00
+        #   p = 0.2, guesses 3 and 1: errors 0.09/0.49 and 0.01/0.81
+        for name, chance, first, second in (("0.9/0.1", 0.1, (0.04, 0.64), (0.0, 1.0)),
+                                            ("0.8/0.2", 0.2, (0.09, 0.49), (0.01, 0.81))):
+            rng = random.Random(21)
+            hits = [rng.random() < chance for _ in range(self.STEPS)]
+            with self.subTest(case=name):
+                # The panel form: readings that jump between both predictors.
+                readings = [rng.choice((first, second))[hit] for hit in hits]
+                paid = curiosity_along(readings)
+                self.assertAlmostEqual(math.fsum(paid), readings[0] - readings[-1], places=9)
+                self.assertLessEqual(abs(math.fsum(paid)) / len(paid), 1.0 / (self.STEPS - 1))
+                # The rejected per-move form (past error minus present, clipped) pays on it.
+                old = [max(-0.3, min(0.3, first[hit] - second[hit])) for hit in hits]
+                self.assertGreater(math.fsum(old) / len(old), 0.001)
 
     def test_rejected_alternatives_would_be_fooled_by_the_same_noise(self):
         # Why differences are neither clipped nor kept only when positive.
@@ -260,6 +292,15 @@ class CuriosityBoundTests(unittest.TestCase):
         self.assertGreater(discounted(curiosity_along([0.9] + [0.1] * 3000))
                            - discounted(curiosity_along([0.9] * 3001)), 0.7)
 
+    def test_what_sleep_taught_is_paid_on_waking(self):
+        # Sleep pays nothing at the time, but it is not neutral: a gain made
+        # in sleep arrives at the first reading after it (design doc, hole 8).
+        meter = IntrinsicCostMeter()
+        meter.step(StepInput(panel_error=(0.5,)))
+        asleep = run(meter, [StepInput(asleep=True, hours=1.0)] * 8)
+        self.assertEqual({f.total for f in asleep}, {0.0})
+        self.assertAlmostEqual(meter.step(StepInput(panel_error=(0.2,))).curiosity, 0.3)
+
     def test_forgetting_in_sleep_is_charged_on_waking(self):
         meter = IntrinsicCostMeter()
         meter.step(StepInput(panel_error=(0.5,)))
@@ -302,6 +343,15 @@ class SkillBoundTests(unittest.TestCase):
         run(meter, [StepInput(skill=KINDS[i % 4]) for i in range(40)])
         run(meter, [StepInput()] * 5000)
         self.assertGreater(meter.step(StepInput(skill="paint")).underused_skill, -0.01)
+
+    def test_a_kind_unused_for_ages_does_not_crash_the_meter(self):
+        # Its recent-use count shrinks until its share rounds to zero; 0 x log 0 = 0.
+        meter = IntrinsicCostMeter(ExchangeRates(underused_skill=1.0))
+        meter.step(StepInput(skill="turn"))
+        paid = [meter.step(StepInput(skill="paint")).underused_skill for _ in range(56000)]
+        self.assertTrue(all(math.isfinite(value) for value in paid))
+        self.assertLess(abs(math.fsum(paid[-100:])), 1e-9)
+        self.assertGreater(meter.step(StepInput(skill="turn")).underused_skill, 0.0)
 
     def test_unknown_kind_is_refused(self):
         with self.assertRaises(ValueError):
@@ -366,6 +416,24 @@ class DoNothingTests(unittest.TestCase):
         self.assertLessEqual(total(run(IntrinsicCostMeter(), busy_free)), 0.05)
         self.assertGreater(finished, total(run(IntrinsicCostMeter(), stall)) + 0.9)
 
+    def test_under_a_discount_a_far_off_job_can_lose_to_busywork_now(self):
+        # Limit of the claim above (design doc, holes): the totals favour
+        # finishing, but the critic discounts. At 0.99 per move a job is worth
+        # less than the whole skill bonus (0.05) once it is ~298 moves away.
+        def one_kind_job(moves):
+            return ([StepInput(job_open=True, job_id="j")]
+                    + [StepInput(job_open=True, job_id="j", skill="go")] * (moves - 1)
+                    + [StepInput(job_open=True, job_id="j", skill="go", job_done=True)])
+
+        def worth(steps):
+            return discounted([f.total for f in run(IntrinsicCostMeter(), steps)])
+
+        busywork = worth([StepInput(job_open=True, job_id="j", skill=KINDS[i % 4]) for i in range(401)])
+        self.assertGreater(busywork, 0.04)
+        self.assertGreater(worth(one_kind_job(100)), busywork)  # near job: finishing wins
+        self.assertLess(worth(one_kind_job(400)), busywork)  # far job: busywork scores higher
+        self.assertLess(busywork, 0.05 + 1e-12)  # and that is all it can ever score
+
     def test_sitting_still_in_free_time_does_not_dodge_tiredness(self):
         still = run(IntrinsicCostMeter(), [StepInput(hours=1.0)] * 30)
         busy = run(IntrinsicCostMeter(ExchangeRates(underused_skill=0.0)),
@@ -395,6 +463,14 @@ class TirednessTests(unittest.TestCase):
                     self.assertAlmostEqual(cost, costs[0], delta=1e-6)
         self.assertAlmostEqual(self.spend(16.0, 320), -8.0 / 3.0, delta=1e-6)
         self.assertAlmostEqual(self.spend(24.0, 480), -8.0 / 3.0 - 8.0, delta=1e-6)
+
+    def test_never_more_than_one_per_hour_even_with_memory_almost_full(self):
+        for fill in (1.0 - 1e-12, 1.0 - 1e-9, 1.0 - 1e-6, 0.999999999999999, 1.0):
+            for hours, pieces in ((1.0, 1), (1.0, 100), (20.0, 7)):
+                with self.subTest(fill=fill, hours=hours, pieces=pieces):
+                    cost = -self.spend(hours, pieces, fill)
+                    self.assertLessEqual(cost, hours * (1.0 + 1e-12))  # rounding only
+                    self.assertGreater(cost, hours * (1.0 - 1e-5))
 
     def test_open_job_hides_the_cost_but_pressure_still_builds(self):
         meter = IntrinsicCostMeter()
@@ -466,10 +542,21 @@ class ContractTests(unittest.TestCase):
         clean, poked = IntrinsicCostMeter(), IntrinsicCostMeter()
         first = run(clean, script)
         for bad in (StepInput(skill="delete", hours=5.0, hurt=2.0), StepInput(panel_error=(0.1, 0.2)),
+                    StepInput(hurt=10.5, hours=5.0, remark=1),
                     StepInput(asked_owner="q9"), StepInput(job_open=True, job_id="x", job_done=True)):
             with self.assertRaises(ValueError):
                 poked.step(bad)
         self.assertEqual(run(poked, script), first)
+
+    def test_a_hurt_above_the_scale_is_refused_not_cut_down(self):
+        # Cutting it down would make harm cheaper per unit when bundled into one step.
+        meter = IntrinsicCostMeter()
+        self.assertEqual(meter.step(StepInput(hurt=10.0)).pain, -30.0)
+        for hurt in (10.000001, 100.0, 1e9):
+            with self.subTest(hurt=hurt), self.assertRaises(ValueError):
+                meter.step(StepInput(hurt=hurt))
+        self.assertEqual(IntrinsicCostMeter(config=MeterConfig(hurt_cap=100.0)).step(StepInput(hurt=100.0)).pain,
+                         -300.0)
 
     def test_panel_readings_must_fit_the_contract(self):
         for reading in ((), (1.2,), (10.0,), (-0.1,), (float("nan"),), [0.5], 0.5):
@@ -584,10 +671,17 @@ class FixedMeterTests(unittest.TestCase):
         first = run(IntrinsicCostMeter(self.RATES, self.CONFIG), self.script())
         second = run(IntrinsicCostMeter(self.RATES, self.CONFIG), self.script())
         self.assertEqual(first, second)
-        meter = IntrinsicCostMeter(self.RATES, self.CONFIG)
-        run(meter, self.script())
-        meter.reset()
-        self.assertEqual(run(meter, self.script()), first)
+
+    def test_one_meter_per_life_there_is_no_reset(self):
+        # A reset would pay the same job again, wipe tiredness without sleep and
+        # hide forgetting. A new life is a new meter; nothing else starts over.
+        meter = IntrinsicCostMeter()
+        self.assertFalse(hasattr(meter, "reset"))
+        meter.step(StepInput(job_open=True, job_id="j1"))
+        done = StepInput(job_open=True, job_id="j1", job_done=True)
+        self.assertEqual(meter.step(done).job_done, 1.0)
+        run(meter, [StepInput(hours=1.0, asleep=True)] * 50)
+        self.assertEqual(meter.step(done).job_done, 0.0)
 
     def test_every_step_is_bounded(self):
         # Event feelings are bounded per step; tiredness and boredom per hour (1 each).
@@ -600,7 +694,9 @@ class FixedMeterTests(unittest.TestCase):
         for felt in run(meter, self.script()):
             self.assertLessEqual(felt.total, top)
             self.assertGreaterEqual(felt.total, bottom)
-        self.assertEqual(meter.step(StepInput(hurt=1e9)).pain, -rates.pain * config.hurt_cap)
+        self.assertEqual(meter.step(StepInput(hurt=config.hurt_cap)).pain, -rates.pain * config.hurt_cap)
+        with self.assertRaises(ValueError):
+            meter.step(StepInput(hurt=1e9))
 
     def test_nothing_in_the_meter_can_be_trained(self):
         source = Path(intrinsic_cost.__file__).read_text()
@@ -629,7 +725,7 @@ class FixedMeterTests(unittest.TestCase):
 
     def test_step_is_the_only_way_to_get_a_feeling(self):
         public = {name for name in dir(IntrinsicCostMeter) if not name.startswith("_")}
-        self.assertEqual(public, {"step", "reset", "rates", "config"})
+        self.assertEqual(public, {"step", "rates", "config"})
         self.assertEqual(set(Feelings.__dataclass_fields__), set(TERMS))
 
     def test_signs_cannot_be_flipped_from_the_rate_table(self):
