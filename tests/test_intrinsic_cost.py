@@ -570,11 +570,12 @@ class DoNothingTests(unittest.TestCase):
         # Hole 1 (stalling hides tiredness), a reviewer's number. A clocked
         # 400-move job takes 20 hours, so the pressure is full when it closes.
         # Sleeping at once keeps the job's worth. Staying awake in free time
-        # costs 0.05 a move: after 23 such moves, finishing scores below
-        # never closing the job, which scores 0.
-        def worth(awake_moves_after):
+        # costs 0.05 a step: after 23 awake steps with no move, finishing scores
+        # below never closing the job, which scores 0. Varied moves earn the
+        # skill bonus back and shift the break-even by one step, to 24.
+        def worth(awake_steps_after, move=lambda i: None):
             meter = IntrinsicCostMeter(config=CLOCKED)
-            steps = self.long_job(TICK) + [StepInput(hours=TICK)] * awake_moves_after
+            steps = self.long_job(TICK) + [StepInput(hours=TICK, skill=move(i)) for i in range(awake_steps_after)]
             return discounted([f.total for f in run(meter, steps)])
 
         stall = discounted([f.total for f in run(IntrinsicCostMeter(config=CLOCKED),
@@ -584,6 +585,9 @@ class DoNothingTests(unittest.TestCase):
         self.assertAlmostEqual(worth(22), 0.000324392, delta=1e-9)  # still above stalling
         self.assertAlmostEqual(worth(23), -0.000387899, delta=1e-9)  # below stalling for good
         self.assertLess(worth(23), stall)
+        self.assertEqual(worth(23, move=lambda i: "go"), worth(23))  # one kind of move: the same
+        self.assertAlmostEqual(worth(23, move=lambda i: KINDS[i % 4]), 0.000482548, delta=1e-9)
+        self.assertAlmostEqual(worth(24, move=lambda i: KINDS[i % 4]), -0.000221145, delta=1e-9)
         sleeper = IntrinsicCostMeter(config=CLOCKED)
         felt = run(sleeper, self.long_job(TICK) + [StepInput(hours=8.0, asleep=True)] + [StepInput(hours=TICK)] * 23)
         self.assertAlmostEqual(discounted([f.total for f in felt]), 0.99 ** 400, delta=1e-9)  # slept: nothing owed
@@ -849,6 +853,7 @@ class ContractTests(unittest.TestCase):
                 nice_half_life=shape(), boredom_half_life=shape(), boredom_floor=shape(),
                 question_ids=("q",), bother_cap=shape())
             meter = IntrinsicCostMeter(rates, config)
+            after_sleep = False
             for _ in range(30):
                 asleep = rng.random() < 0.2
                 fields = dict(hours=rng.choice((0.0, SMALLEST, 1.0, LARGEST)), hurt=rng.choice((0.0, config.hurt_cap)),
@@ -858,10 +863,13 @@ class ContractTests(unittest.TestCase):
                         remark=rng.choice((-1, 0, 1)), skill=rng.choice((None,) + KINDS),
                         asked_owner=rng.choice((None, "q")),
                         panel_error=rng.choice((None, tuple(rng.choice((0.0, 1.0)) for _ in range(config.panel_regions)))))
-                try:
-                    felt = meter.step(StepInput(**fields))
-                except ValueError:  # the fill rose after a sleep step: refused, fine
+                observed = StepInput(**fields)
+                if after_sleep and observed.memory_fill > 0.0:
+                    with self.assertRaises(ValueError):  # the fill rose after a sleep step
+                        meter.step(observed)
                     continue
+                felt = meter.step(observed)
+                after_sleep = asleep
                 steps_checked += 1
                 self.assertTrue(all(math.isfinite(value) for value in felt.as_dict().values()), (rates, config, fields))
                 self.assertTrue(math.isfinite(felt.total))

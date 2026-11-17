@@ -69,7 +69,7 @@ class ExchangeRates:
     """How much each feeling is worth. Hand numbers, set once per test by the lead.
 
     The owner may change them; testers never tune them. Every rate is a size
-    (zero or more). The sign of each feeling is fixed inside the meter and
+    (zero up to LARGEST). The sign of each feeling is fixed inside the meter and
     cannot be flipped from here. ``curiosity``, ``underused_skill`` and
     ``tiredness`` are placeholders until their own tests fix a scale.
     """
