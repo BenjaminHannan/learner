@@ -193,12 +193,24 @@ class StepInput:
                  catches a harness that forgets the rule, not one that
                  breaks it.
     job_id       the harness's name for that job (given exactly when open).
-    job_done     the world says the open job's goal is reached on this step,
-                 and that the model's own moves did not first break that
-                 goal. If a model move made the goal of an open (or already
-                 issued) job false, the world closes the job without
-                 reporting it done, and reports the damage as hurt. The
-                 meter cannot see causes: a harness promise.
+    job_done     the world says the open job's goal is reached on this step.
+                 "Job done" pays only for a goal the model did not first
+                 break or let break: see job_fault_avoidable.
+    job_fault_avoidable  the harness's statement about a fault tied to the
+                 open job (something made, or had made, its goal false).
+                 None = no fault to report on this step. True = the model
+                 could have avoided the fault: its own move caused it, or a
+                 preventive move that was OFFERED in its earlier decisions
+                 and NOT TAKEN would have prevented it (an offered move not
+                 taken counts as the model's own move). False = it could
+                 not. After a True the job is forfeited for good: reporting
+                 it done pays 0 "job done". The world reports the damage
+                 itself as hurt. It may be given on any step with the job
+                 open, the announcing step included (the fault came first,
+                 the job after). The meter cannot see causes: that the
+                 statement is true, and that a fault is reported at all,
+                 are the harness's promises. A harness that forgets to
+                 report a fault is not caught.
     hurt         how much the world says this step hurt, on the fixed scale
                  0..hurt_cap (0 = not at all). More than hurt_cap is refused.
     remark       the owner said "nice" (+1), "no" (-1) or nothing (0). At
@@ -249,6 +261,7 @@ class StepInput:
     memory_fill: float = 0.0
     asleep: bool = False
     asked_owner: Optional[str] = None
+    job_fault_avoidable: Optional[bool] = None
 
     def __post_init__(self):
         for name in ("job_open", "job_from_owner", "job_done", "asleep"):
@@ -265,6 +278,11 @@ class StepInput:
                              "job_from_owner is True exactly when a job is open")
         if self.job_done and not self.job_open:
             raise ValueError("job_done needs an open job")
+        if self.job_fault_avoidable is not None:
+            if type(self.job_fault_avoidable) is not bool:
+                raise ValueError("job_fault_avoidable must be True, False or None")
+            if not self.job_open:
+                raise ValueError("job_fault_avoidable is a statement about a fault tied to an open job")
         if type(self.remark) is not int or self.remark not in (-1, 0, 1):
             raise ValueError("remark must be -1, 0 or 1: at most one remark per decision")
         _finite(self.hurt, "hurt", low=0.0)
@@ -313,7 +331,7 @@ class IntrinsicCostMeter:
     """The fixed meter. Owned by the harness; ``step`` is its only output."""
 
     __slots__ = ("_rates", "_config", "_skill_counts", "_hours_awake", "_seen_jobs", "_paid_jobs",
-                 "_nice_size", "_knowledge", "_record", "_fresh", "_asked", "_fill_limit",
+                 "_forfeit_jobs", "_nice_size", "_knowledge", "_record", "_fresh", "_asked", "_fill_limit",
                  "_just_slept")
 
     def __init__(self, rates=None, config=None):
@@ -323,18 +341,19 @@ class IntrinsicCostMeter:
             raise ValueError("rates must be an ExchangeRates table")
         if type(config) is not MeterConfig:
             raise ValueError("config must be a MeterConfig")
-        # Checked again here: a table changed behind the frozen dataclass's
-        # back after it was built is refused too.
-        rates.__post_init__()
-        config.__post_init__()
-        self._rates = rates
-        self._config = config
+        # The meter keeps its own copies of both tables, checked again as
+        # they are copied (a table changed behind the frozen dataclass's
+        # back is refused). Whatever happens to the caller's tables after
+        # this line changes nothing in this life.
+        self._rates = rates = ExchangeRates(**{name: getattr(rates, name) for name in rates.__dataclass_fields__})
+        self._config = config = MeterConfig(**{name: getattr(config, name) for name in config.__dataclass_fields__})
         # The state at birth: rested, nothing used, nothing paid. There is
         # no way back to it: every "per life" bound rests on that.
         self._skill_counts = dict.fromkeys(config.skill_kinds, 0.0)
         self._hours_awake = 0.0
         self._seen_jobs = set()
         self._paid_jobs = set()
+        self._forfeit_jobs = set()  # jobs tied to a fault the model could have avoided: "done" pays 0
         self._nice_size = 1.0
         self._knowledge = None  # last panel reading, as knowledge (None until the birth reading)
         self._record = None  # best knowledge so far
@@ -345,11 +364,13 @@ class IntrinsicCostMeter:
 
     @property
     def rates(self):
-        return self._rates
+        """A copy of the rate table. Changing the copy changes nothing in the meter."""
+        return ExchangeRates(**{name: getattr(self._rates, name) for name in self._rates.__dataclass_fields__})
 
     @property
     def config(self):
-        return self._config
+        """A copy of the shape numbers. Changing the copy changes nothing in the meter."""
+        return MeterConfig(**{name: getattr(self._config, name) for name in self._config.__dataclass_fields__})
 
     def _no_copies(self, *args, **kwargs):
         raise TypeError("the meter cannot be copied or pickled: a copy could be asked 'what if'")
@@ -424,11 +445,9 @@ class IntrinsicCostMeter:
         config = self._config
         if type(observed) is not StepInput:
             raise ValueError("step takes a StepInput")
-        # Checked again on every step: a field of the step, or of the meter's
-        # own tables, changed after it was built is refused too.
+        # Checked again on every step: a field of the step changed after it
+        # was built is refused too. (The tables are the meter's own copies.)
         observed.__post_init__()
-        self._rates.__post_init__()
-        config.__post_init__()
         if self._knowledge is None:
             raise ValueError("no step before the birth reading: read the panel before the model's first move")
         if observed.panel_error is None:
@@ -470,8 +489,12 @@ class IntrinsicCostMeter:
                  self._fresh, dict(self._asked), self._fill_limit, self._just_slept)
         new_to_seen = observed.job_id is not None and observed.job_id not in self._seen_jobs
         new_to_paid = observed.job_id is not None and observed.job_id not in self._paid_jobs
+        new_to_forfeit = observed.job_id is not None and observed.job_id not in self._forfeit_jobs
         try:
             return self._feel(observed)
+        # BaseException on purpose: an interrupt (KeyboardInterrupt, SystemExit)
+        # half-way through a step must leave the state whole too. Do not
+        # narrow this to Exception. The error is always raised again.
         except BaseException:
             (self._skill_counts, self._hours_awake, self._nice_size, self._knowledge, self._record,
              self._fresh, self._asked, self._fill_limit, self._just_slept) = saved
@@ -479,6 +502,8 @@ class IntrinsicCostMeter:
                 self._seen_jobs.discard(observed.job_id)
             if new_to_paid:
                 self._paid_jobs.discard(observed.job_id)
+            if new_to_forfeit:
+                self._forfeit_jobs.discard(observed.job_id)
             raise
 
     def _feel(self, observed):
@@ -541,10 +566,15 @@ class IntrinsicCostMeter:
         hurt = observed.hurt
 
         # Job done: paid once per job, and only for a job announced earlier.
+        # A job tied to a fault the model could have avoided (the harness's
+        # statement, on this step or any earlier one) is forfeited for good.
+        if observed.job_fault_avoidable:
+            self._forfeit_jobs.add(observed.job_id)
         done = 0.0
         if observed.job_done and observed.job_id not in self._paid_jobs:
             self._paid_jobs.add(observed.job_id)
-            done = 1.0
+            if observed.job_id not in self._forfeit_jobs:
+                done = 1.0
         if observed.job_open:
             self._seen_jobs.add(observed.job_id)
 

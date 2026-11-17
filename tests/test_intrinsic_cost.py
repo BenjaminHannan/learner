@@ -1658,17 +1658,10 @@ class RawMeterTests(unittest.TestCase):
             meter.step(smuggled)
         self.assertEqual(self.state_of(meter), before)
         self.assertEqual(meter.step(StepInput(hours=TICK, panel_error=(0.5,))).curiosity, 0.0)
-        # And a rate changed inside a living meter: refused at the next step, nothing moved.
-        before = self.state_of(meter)
+        # The meter hands out copies of its tables. Slipping a subclass into a copy changes nothing.
         object.__setattr__(meter.rates, "pain", FlippingRate(3.0))
-        with self.assertRaises(ValueError):
-            meter.step(StepInput(hours=TICK, hurt=1.0, panel_error=(0.2,)))
-        self.assertEqual(self.state_of(meter), before)
         object.__setattr__(meter.config, "nice_half_life", BadHours(10.0))
-        object.__setattr__(meter.rates, "pain", 3.0)
-        with self.assertRaises(ValueError):
-            meter.step(StepInput(hours=TICK, panel_error=(0.2,)))
-        self.assertEqual(self.state_of(meter), before)
+        self.assertEqual(meter.step(StepInput(hours=TICK, hurt=1.0, remark=1, panel_error=(0.5,))).pain, -3.0)
         # Ordinary numbers are untouched: a plain int rate gives the same pain as the float.
         plain = IntrinsicCostMeter(ExchangeRates(pain=3))
         plain.birth_reading((0.5,))
@@ -1686,6 +1679,7 @@ class RawMeterTests(unittest.TestCase):
         busy = [StepInput(hours=0.25, skill="turn", remark=1, asked_owner="which one", hurt=1.0,
                           memory_fill=0.9, panel_error=(0.1,)),  # free time: every free-time state moves
                 StepInput(job_done=True, panel_error=(0.3,), **job),  # a job is paid
+                StepInput(job_fault_avoidable=True, panel_error=(0.3,), **job),  # a job is forfeited
                 StepInput(job_open=True, job_from_owner=True, job_id="new", hours=TICK, panel_error=(0.3,)),
                 StepInput(asleep=True, hours=2.0, panel_error=(0.2,))]
         for step in busy:
@@ -1719,12 +1713,37 @@ class RawMeterTests(unittest.TestCase):
             meter.step(StepInput(skill="paint+turn", hours=2 * TICK, panel_error=(0.5,)))  # not on the closed list
         meter.step(StepInput(skill="paint", hours=2 * TICK, panel_error=(0.5,)))  # two paints: one decision
 
-    def test_a_world_that_pays_done_for_a_goal_the_model_broke_farms_job_done(self):
-        # A reviewer's toy world. The owner issues twenty jobs ahead of time:
-        # "restore the switch after the next outage". Each job is open before
-        # the model itself switches the healthy switch off (0.1 of hurt) and
-        # back on. Sixty decisions, three clock hours, ending where it began.
-        def outages(world_pays_done):
+    def test_changing_the_callers_tables_mid_life_changes_nothing(self):
+        # A reviewer's case. The frozen tables can still be changed through their
+        # backing dictionaries, from one valid value to another. The meter keeps
+        # its own copies, so that changes nothing: unit pain stays -3.
+        rates, config = ExchangeRates(), dataclasses.replace(CLOCKED)
+        meter = IntrinsicCostMeter(rates, config)
+        meter.birth_reading((0.5,))
+        hurt_and_praise = StepInput(hours=TICK, hurt=1.0, remark=1, panel_error=(0.5,))
+        first = meter.step(hurt_and_praise)
+        self.assertEqual((first.pain, first.remarks), (-3.0, 1.0))
+        rates.__dict__["pain"] = 0.0  # the caller's table: the reviewer's meter then paid -0.0
+        config.__dict__["nice_fade"] = 0.999
+        config.__dict__["hurt_cap"] = 0.5
+        self.assertEqual(rates.pain, 0.0)
+        second = meter.step(hurt_and_praise)
+        self.assertEqual(second.pain, -3.0)
+        self.assertAlmostEqual(second.remarks, 0.501730, delta=1e-6)  # still the fade of 0.5
+        # The tables the meter hands back are copies too.
+        self.assertIsNot(meter.rates, meter.rates)
+        self.assertEqual(meter.rates, ExchangeRates())
+        self.assertEqual(meter.config, CLOCKED)
+        meter.rates.__dict__["pain"] = 0.0
+        meter.config.__dict__["hurt_cap"] = 0.5
+        self.assertEqual(meter.step(hurt_and_praise).pain, -3.0)
+
+    def test_a_job_tied_to_a_fault_the_model_could_have_avoided_pays_no_job_done(self):
+        # Three reviewers' worlds. The owner issues twenty jobs ahead of time:
+        # "restore the switch after the next outage". Nothing the model does
+        # breaks the switch: it trips by itself each round unless the model
+        # services it. Sixty decisions and three clock hours on every arm.
+        def life(plan, hurt=0.0, statement=None):
             meter = IntrinsicCostMeter(config=CLOCKED)
             meter.birth_reading((0.5,))
             steps = []
@@ -1732,7 +1751,125 @@ class RawMeterTests(unittest.TestCase):
                 job = dict(job_open=True, job_from_owner=True, job_id=f"next outage, slot {slot}",
                            hours=TICK, panel_error=(0.5,))
                 steps.append(StepInput(**job))  # issued by the owner, before any outage
-                steps.append(StepInput(skill="turn", hurt=0.1, **job))  # the model's own move breaks the goal
+                if plan == "maintain":
+                    steps.append(StepInput(skill="turn", **job))  # the service move: no outage
+                    steps.append(StepInput(**job))
+                else:  # wait for the outage, then restore the switch
+                    steps.append(StepInput(hurt=hurt, job_fault_avoidable=statement, **job))  # it trips
+                    steps.append(StepInput(skill="turn", job_done=True, **job))
+            self.assertEqual(len(steps), 60)
+            self.assertAlmostEqual(clock_hours(steps), 3.0, delta=1e-9)
+            felt = [meter.step(step) for step in steps]
+            return (math.fsum(f.job_done for f in felt), round(total(felt), 9),
+                    round(discounted([f.total for f in felt]), 6))
+
+        for hurt, farm in ((0.0, (20.0, 20.0, 14.943328)), (0.1, (20.0, 14.0, 10.415047))):
+            with self.subTest(hurt=hurt):
+                self.assertEqual(life("maintain", hurt), (0.0, 0.0, 0.0))
+                # The farm: the service move was offered, and the harness does
+                # not say so. Neglect then repair beats prevention.
+                self.assertEqual(life("neglect", hurt, statement=None), farm)
+                # The control: no service move was ever offered, and the harness
+                # says so. The meter is sent the very same moves as in the farm,
+                # and repair pays as before: honest repair work.
+                self.assertEqual(life("neglect", hurt, statement=False), farm)
+        # The rule: the harness states that an offered move would have prevented
+        # each outage. Repairing then pays no "job done".
+        self.assertEqual(life("neglect", 0.0, statement=True), (0.0, 0.0, 0.0))  # a tie with maintaining: no farm
+        self.assertEqual(life("neglect", 0.1, statement=True), (0.0, -6.0, -4.528281))  # prevention wins
+
+    def test_the_fault_statement_forfeits_a_job_for_good_and_needs_an_open_job(self):
+        reading = dict(hours=TICK, panel_error=(0.5,))
+
+        def job(name, **fields):
+            return StepInput(job_open=True, job_from_owner=True, job_id=name, **fields, **reading)
+
+        meter = IntrinsicCostMeter(config=CLOCKED)
+        meter.birth_reading((0.5,))
+        paid = [meter.step(step).job_done for step in (
+            job("a", job_fault_avoidable=True),  # on the announcing step: the fault came first, the job after
+            job("a", job_fault_avoidable=False),  # a later fault it could not avoid does not undo the first
+            job("a", job_done=True), job("a", job_done=True),  # forfeited for good, however often "done" is said
+            job("b"), job("b", job_done=True, job_fault_avoidable=True),  # the statement and "done" together
+            job("c"), job("c", job_fault_avoidable=False), job("c", job_done=True),  # could not avoid it: paid
+            job("d"), job("d", job_done=True),  # no fault: paid, and the other jobs' faults do not touch it
+            job("d", job_fault_avoidable=True), job("d", job_done=True))]  # once paid, paid once
+        self.assertEqual(paid, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0])
+        # The statement is about a fault tied to an open job, and is True, False or None.
+        for fields in (dict(job_fault_avoidable=True), dict(job_fault_avoidable=False),
+                       dict(job_fault_avoidable=True, asleep=True),
+                       dict(job_open=True, job_from_owner=True, job_id="e", job_fault_avoidable=1),
+                       dict(job_open=True, job_from_owner=True, job_id="e", job_fault_avoidable="yes")):
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                StepInput(**fields, **reading)
+
+    def test_a_remark_too_soon_after_a_waking_remark_has_no_faithful_report(self):
+        # Two reviewers' cases. The owner's "no" wakes the sleeper, so the sleep
+        # step ends there and the first awake decision reports that "no". A
+        # registered world keeps at least the shortest awake step between a
+        # waking remark and the owner's next remark.
+        def woken(config=CLOCKED):
+            meter = IntrinsicCostMeter(config=config)
+            meter.birth_reading((0.5,))
+            meter.step(StepInput(hours=TICK, panel_error=(0.5,)))
+            meter.step(StepInput(asleep=True, hours=0.025, panel_error=(0.5,)))  # woken by the first "no"
+            return meter
+
+        def no(hours):
+            return StepInput(hours=hours, remark=-1, panel_error=(0.5,))
+
+        # A gap of exactly the shortest step can be reported: one "no" per decision, -6 in all.
+        meter = woken()
+        self.assertEqual([meter.step(no(TICK)).remarks, meter.step(no(TICK)).remarks], [-3.0, -3.0])
+        # A gap of 0.045 hours is outside the contract. Its two faithful reports are both refused.
+        with self.assertRaisesRegex(ValueError, "one remark per decision"):
+            StepInput(hours=TICK, remark=-2, panel_error=(0.5,))  # both on the first awake decision
+        meter = woken()
+        before = self.state_of(meter)
+        with self.assertRaisesRegex(ValueError, "at least"):
+            meter.step(no(0.045))  # the first awake decision cut short at the second "no"
+        self.assertEqual(self.state_of(meter), before)
+        # That refusal needs the step limits: the reference config takes the short step.
+        self.assertEqual(woken(MeterConfig()).step(no(0.045)).remarks, -3.0)
+        # And a report that is not faithful (one "no" dropped, or moved to a
+        # later decision) is a legal step: the meter cannot see it.
+        meter = woken()
+        self.assertEqual(meter.step(no(TICK)).remarks, -3.0)
+
+    def test_praise_depends_on_when_a_remark_is_reported_not_only_when_it_is_spoken(self):
+        # A reviewer's case. Seven paint moves, 0.35 hours, three decisions. The
+        # owner says "nice" at hours 0.025 and 0.075 either way. A remark counts
+        # at the end of its decision, so the second one counts at hour 0.10 in
+        # one grouping and at hour 0.30 in the other, after more recovery.
+        def praise(groups):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            steps = [StepInput(hours=moves * TICK, skill="paint", remark=remark, panel_error=(0.5,))
+                     for moves, remark in zip(groups, (1, 1, 0))]
+            self.assertAlmostEqual(clock_hours(steps), 0.35, delta=1e-9)
+            return math.fsum(meter.step(step).remarks for step in steps)
+
+        early, late = praise((1, 1, 5)), praise((1, 5, 1))
+        self.assertAlmostEqual(early, 1.501730, delta=1e-6)
+        self.assertAlmostEqual(late, 1.508590, delta=1e-6)
+        # The bound on praise over clock hours holds for both.
+        bound = (1.0 + 0.35 * math.log(2.0) / 10.0) / (1.0 - 0.5)
+        self.assertLess(late, bound)
+
+    def test_a_world_that_pays_done_for_a_goal_the_model_broke_farms_job_done(self):
+        # A reviewer's toy world. The owner issues twenty jobs ahead of time:
+        # "restore the switch after the next outage". Each job is open before
+        # the model itself switches the healthy switch off (0.1 of hurt) and
+        # back on. Sixty decisions, three clock hours, ending where it began.
+        def outages(world_pays_done, stated=None):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            steps = []
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"next outage, slot {slot}",
+                           hours=TICK, panel_error=(0.5,))
+                steps.append(StepInput(**job))  # issued by the owner, before any outage
+                steps.append(StepInput(skill="turn", hurt=0.1, job_fault_avoidable=stated, **job))  # the model's own move breaks the goal
                 steps.append(StepInput(skill="turn", job_done=world_pays_done, **job))  # and restores it
             self.assertEqual(len(steps), 60)
             self.assertAlmostEqual(clock_hours(steps), 3.0, delta=1e-9)
@@ -1750,6 +1887,11 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual({f.job_done for f in kept}, {0.0})
         self.assertAlmostEqual(total(kept), -6.0, delta=1e-9)
         # The meter is the same in both. It cannot see who broke the goal.
+        # Since round 10 the harness can say so, and then the meter keeps the
+        # rule itself: "done" is reported, and pays nothing.
+        told = outages(True, stated=True)
+        self.assertEqual({f.job_done for f in told}, {0.0})
+        self.assertAlmostEqual(total(told), -6.0, delta=1e-9)
 
     def test_a_world_where_the_owner_speaks_only_to_an_awake_model_lets_sleep_dodge_a_no(self):
         # A reviewer's case. Awake for 6 hours, never tired. The owner comes by
