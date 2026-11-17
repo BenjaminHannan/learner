@@ -91,7 +91,8 @@ class MeterConfig:
     panel_regions: int = 1
     curiosity_gamma: float = 1.0
     # under-used skill: the closed list of command kinds; recent-use counts
-    # halve every skill_half_life MOVES (steps without a move do not count).
+    # halve every skill_half_life free-play MOVES (steps without a move, and
+    # every step with a job open, do not count).
     skill_kinds: Tuple[str, ...] = ("paint", "reshape", "turn", "go")
     skill_half_life: float = 50.0
     # tiredness: hours awake that fill the pressure, where it starts to cost,
@@ -114,6 +115,12 @@ class MeterConfig:
     # for one question to the owner.
     question_ids: Tuple[str, ...] = ()
     bother_cap: float = 5.0
+    # step length: the shortest and longest AWAKE step the meter accepts, in
+    # clock hours. Off (None) by default; each registered test file sets both.
+    # With a shortest step set, a world that forgets its clock (hours = 0) is
+    # refused instead of silently switching tiredness off.
+    min_awake_step_hours: Optional[float] = None
+    max_awake_step_hours: Optional[float] = None
 
     def __post_init__(self):
         if type(self.panel_regions) is not int or self.panel_regions < 1:
@@ -130,6 +137,12 @@ class MeterConfig:
             raise ValueError("tired_onset must be within 0..1 (1 excluded)")
         if not 0 < _finite(self.nice_fade, "nice_fade") <= 1:
             raise ValueError("nice_fade must be within 0..1 (0 excluded)")
+        for name in ("min_awake_step_hours", "max_awake_step_hours"):
+            if getattr(self, name) is not None and _finite(getattr(self, name), name) <= 0:
+                raise ValueError(f"{name} must be positive or None")
+        if None not in (self.min_awake_step_hours, self.max_awake_step_hours) \
+                and self.min_awake_step_hours > self.max_awake_step_hours:
+            raise ValueError("min_awake_step_hours must not be above max_awake_step_hours")
 
 
 @dataclass(frozen=True)
@@ -149,10 +162,13 @@ class StepInput:
                  fixed before the run. Never a rescaled loss. Same items, same
                  order, no sampling noise. None on steps where the panel was
                  not evaluated.
-    skill        kind of command used (None = no move was made).
+    skill        kind of command used (None = no move was made). With a job
+                 open it is checked against the closed list and otherwise
+                 ignored: the skill feeling works in free play only.
     hours        clock time this step took, from the harness clock.
     memory_fill  how full the day memory is at the start of the step, 0..1,
-                 taken as constant through the step.
+                 taken as constant through the step. It must not be higher
+                 than at the start of a sleep step just before it.
     asleep       this step was spent asleep. A sleep step must be quiet: no
                  job open, no move, no panel reading, no remark, no question.
     asked_owner  PROPOSED: the id of the question put to the owner.
@@ -230,7 +246,7 @@ class IntrinsicCostMeter:
     """The fixed meter. Owned by the harness; ``step`` is its only output."""
 
     __slots__ = ("_rates", "_config", "_skill_counts", "_hours_awake", "_seen_jobs", "_paid_jobs",
-                 "_nice_size", "_knowledge", "_record", "_fresh", "_asked", "_last_fill")
+                 "_nice_size", "_knowledge", "_record", "_fresh", "_asked", "_fill_limit")
 
     def __init__(self, rates=None, config=None):
         rates = ExchangeRates() if rates is None else rates
@@ -252,7 +268,7 @@ class IntrinsicCostMeter:
         self._record = None  # best knowledge so far
         self._fresh = config.boredom_floor  # pool of fresh learning
         self._asked = {}
-        self._last_fill = None
+        self._fill_limit = 1.0  # most the next step's fill may be (lower right after sleep)
 
     @property
     def rates(self):
@@ -321,8 +337,15 @@ class IntrinsicCostMeter:
             raise ValueError(f"hurt must be at most {config.hurt_cap}: rescale it, do not cut it or drop it")
         if observed.job_done and observed.job_id not in self._seen_jobs:
             raise ValueError("a job must be announced open in an earlier step before it can be done")
-        if observed.asleep and self._last_fill is not None and observed.memory_fill > self._last_fill:
-            raise ValueError("memory_fill must not rise during sleep")
+        if observed.memory_fill > self._fill_limit:
+            raise ValueError("memory_fill must not rise during sleep: this step starts fuller than the "
+                             "sleep step before it started")
+        if not observed.asleep:
+            shortest, longest = config.min_awake_step_hours, config.max_awake_step_hours
+            if shortest is not None and observed.hours < shortest:
+                raise ValueError(f"an awake step must take at least {shortest} hours: the world must report its clock")
+            if longest is not None and observed.hours > longest:
+                raise ValueError(f"an awake step must take at most {longest} hours: cut it into shorter steps")
 
     def step(self, observed):
         """Take what happened on one step; return what it felt like."""
@@ -350,8 +373,11 @@ class IntrinsicCostMeter:
 
         # Under-used skill: the change in how evenly the kinds were used
         # lately. Signed, so the total over any stretch is bounded by 1.
+        # Free play only: while a job is open the counts are frozen (no use
+        # counted, no decay, nothing paid), so a job can neither earn the
+        # bonus nor be charged for using one kind of command.
         variety = 0.0
-        if observed.skill is not None:
+        if observed.skill is not None and not observed.job_open:
             before = self._variety()
             keep = _keep(config.skill_half_life)
             for kind in self._skill_counts:
@@ -370,7 +396,9 @@ class IntrinsicCostMeter:
                 tired = self._tired_cost(self._hours_awake, end, observed.memory_fill)
             # Pressure stops at full, so the sleep owed never exceeds one full night.
             self._hours_awake = min(end, config.hours_to_full)
-        self._last_fill = observed.memory_fill
+        # The fill is read at the start of a step and sleep must not raise it,
+        # so the step after a sleep step may not start fuller than it did.
+        self._fill_limit = observed.memory_fill if observed.asleep else 1.0
 
         # Pain: never fades. Hurt above the scale was refused, not cut down.
         hurt = observed.hurt
@@ -384,7 +412,8 @@ class IntrinsicCostMeter:
             self._seen_jobs.add(observed.job_id)
 
         # Owner's remarks: "nice" fades when repeated and recovers with
-        # clock hours (not steps); "no" never fades.
+        # clock hours (not steps); "no" never fades. A remark counts at the
+        # end of its step: the step's own hours of recovery come first.
         self._nice_size = 1.0 - (1.0 - self._nice_size) * 0.5 ** (observed.hours / config.nice_half_life)
         nice = no = 0.0
         if observed.remark == 1:

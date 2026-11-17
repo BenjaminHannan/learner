@@ -113,6 +113,17 @@ class FadingTests(unittest.TestCase):
         run(meter, [StepInput(hours=1.0, asleep=True)] * 100)
         self.assertGreater(meter.step(StepInput(remark=1)).remarks, 0.99)
 
+    def test_a_nice_counts_at_the_end_of_its_step(self):
+        # The step's own hours of recovery come before the remark is paid.
+        meter = IntrinsicCostMeter()
+        self.assertEqual(meter.step(StepInput(remark=1)).remarks, 1.0)  # size is now 0.5
+        same_step = meter.step(StepInput(remark=1, hours=10.0, job_open=True, job_id="j")).remarks
+        self.assertAlmostEqual(same_step, 0.75, delta=1e-12)  # one half-life back toward 1, then paid
+        split = IntrinsicCostMeter()
+        split.step(StepInput(remark=1))
+        split.step(StepInput(hours=10.0, job_open=True, job_id="j"))
+        self.assertAlmostEqual(split.step(StepInput(remark=1)).remarks, same_step, delta=1e-12)
+
     def test_nice_recovery_does_not_depend_on_how_the_hours_are_cut(self):
         sizes = []
         for pieces in (1, 20, 4000):
@@ -215,6 +226,18 @@ class CuriosityBoundTests(unittest.TestCase):
         self.assertGreater(learn, 0.99)
         self.assertLessEqual(noise, 0.9)
 
+    def test_a_gain_is_kept_until_knowledge_really_gets_worse(self):
+        # A reviewer's case: 0.5 -> 0.2, then the same reading 100 more times.
+        # Reading again repays nothing. If 0.2 was luck on a finite panel and
+        # the weights then stay as they are, the +0.3 is banked.
+        paid = curiosity_along([0.5] + [0.2] * 101)
+        self.assertAlmostEqual(paid[0], 0.3)
+        self.assertEqual(set(paid[1:]), {0.0})
+        self.assertAlmostEqual(math.fsum(paid), 0.3)
+        self.assertAlmostEqual(discounted(paid), 0.3)
+        # It is paid back only when a later reading is worse, and then in full.
+        self.assertAlmostEqual(math.fsum(curiosity_along([0.5] + [0.2] * 101 + [0.5])), 0.0)
+
     def test_forgetting_and_relearning_earns_nothing(self):
         period = 40
         swing = [0.5 + 0.4 * math.sin(2 * math.pi * t / period) for t in range(10 * period + 1)]
@@ -280,10 +303,39 @@ class CuriosityBoundTests(unittest.TestCase):
         self.assertGreater(discounted(early), discounted(late) + 0.7)
         self.assertGreater(discounted(late), discounted(never))
 
-    def test_matched_discount_makes_curiosity_policy_neutral(self):
-        # The form first asked for (curiosity discount = the critic's). A
-        # closed cycle pays <= 0, but so does everything: the discounted sum
-        # depends only on the start, so learning and not learning score alike.
+    def test_matched_discount_is_neutral_only_when_the_discounted_end_is_equal(self):
+        # Matched discount: the score is gamma^T * K_T - K_0, whatever happens between.
+        matched = MeterConfig(curiosity_gamma=GAMMA)
+        # Knowledge held at 0.5 throughout: the score is -0.5 * (1 - gamma^T),
+        # so merely ending later scores lower. Same end knowledge is not enough.
+        short = discounted(curiosity_along([0.5] * 2, matched))
+        long = discounted(curiosity_along([0.5] * 101, matched))
+        self.assertAlmostEqual(short, -0.005, delta=1e-12)
+        self.assertAlmostEqual(long, -0.5 * (1.0 - GAMMA ** 100), delta=1e-12)
+        self.assertAlmostEqual(long, -0.316983829, delta=1e-9)
+        # Same length and same end knowledge: every path scores the same.
+        rng = random.Random(12)
+        for trial in range(50):
+            ends = (rng.random(), rng.random())
+            scores = [discounted(curiosity_along([ends[0]] + [rng.random() for _ in range(49)] + [ends[1]], matched))
+                      for _ in range(3)]
+            with self.subTest(trial=trial):
+                self.assertAlmostEqual(scores[0], GAMMA ** 50 * (1.0 - ends[1]) - (1.0 - ends[0]), delta=1e-9)
+                self.assertAlmostEqual(scores[1], scores[0], delta=1e-9)
+                self.assertAlmostEqual(scores[2], scores[0], delta=1e-9)
+        # Same length, different end knowledge: the end still counts, by gamma^T * difference.
+        gap = (discounted(curiosity_along([0.9] * 50 + [0.1], matched))
+               - discounted(curiosity_along([0.9] * 51, matched)))
+        self.assertAlmostEqual(gap, GAMMA ** 50 * 0.8, delta=1e-9)
+        # With knowledge of zero at the end there is nothing left to differ.
+        self.assertAlmostEqual(discounted(curiosity_along([0.5] + [0.2] * 7 + [1.0], matched)),
+                               discounted(curiosity_along([0.5] + [0.9] * 70 + [1.0], matched)), delta=1e-12)
+
+    def test_matched_discount_in_a_long_life_scores_learner_and_idler_alike(self):
+        # The form first asked for (curiosity discount = the critic's). Over a
+        # long life with a reading on every step, gamma^T * K_T fades to nothing,
+        # so the score depends only on the start: learning and not learning
+        # score alike. A closed cycle pays <= 0.
         matched = MeterConfig(curiosity_gamma=GAMMA)
         cycle = [0.5 + 0.4 * math.sin(2 * math.pi * t / 40) for t in range(401)]
         self.assertLessEqual(discounted(curiosity_along(cycle, matched)), 0.0)
@@ -367,6 +419,32 @@ class SkillBoundTests(unittest.TestCase):
         self.assertLess(abs(math.fsum(paid[-100:])), 1e-9)
         self.assertGreater(meter.step(StepInput(skill="turn")).underused_skill, 0.0)
 
+    def test_no_step_with_a_job_open_pays_or_changes_the_skill_state(self):
+        rng = random.Random(6)
+        meter = IntrinsicCostMeter(ExchangeRates(underused_skill=1.0))
+        twin = IntrinsicCostMeter(ExchangeRates(underused_skill=1.0))  # same life without the job
+        play = [StepInput(skill=rng.choice(KINDS)) for _ in range(60)]
+        run(meter, play)
+        run(twin, play)
+        before = meter._variety()
+        counts = dict(meter._skill_counts)
+        self.assertGreater(before, 0.5)
+        in_job = run(meter, [StepInput(job_open=True, job_id="j", skill="go", hours=0.05) for _ in range(5000)]
+                     + [StepInput(job_open=True, job_id="j", skill="go", job_done=True)])
+        self.assertEqual({f.underused_skill for f in in_job}, {0.0})
+        # The potential just after the job closes is the one just before it opened.
+        self.assertEqual(meter._variety(), before)
+        self.assertEqual(meter._skill_counts, counts)
+        # So free play carries on exactly as if the job had never happened.
+        later = [StepInput(skill=rng.choice(KINDS)) for _ in range(200)]
+        self.assertEqual([f.underused_skill for f in run(meter, later)],
+                         [f.underused_skill for f in run(twin, later)])
+
+    def test_a_job_move_must_still_be_a_known_kind(self):
+        meter = IntrinsicCostMeter()
+        with self.assertRaises(ValueError):
+            meter.step(StepInput(job_open=True, job_id="j", skill="delete"))
+
     def test_unknown_kind_is_refused(self):
         with self.assertRaises(ValueError):
             IntrinsicCostMeter().step(StepInput(skill="delete"))
@@ -393,9 +471,7 @@ class DoNothingTests(unittest.TestCase):
     def test_hurt_free_job_beats_doing_nothing(self):
         moves, idle = self.job(hurt=0.0)
         self.assertEqual(total(run(IntrinsicCostMeter(), idle)), 0.0)
-        self.assertGreater(total(run(IntrinsicCostMeter(), moves)), 1.0)
-        rates = ExchangeRates(underused_skill=0.0)
-        self.assertEqual(total(run(IntrinsicCostMeter(rates), moves)), 1.0)
+        self.assertEqual(total(run(IntrinsicCostMeter(), moves)), 1.0)  # no skill bonus inside a job
 
     def test_choice_follows_the_exchange_rate_when_the_job_must_hurt(self):
         moves, idle = self.job(hurt=1.0)
@@ -426,46 +502,45 @@ class DoNothingTests(unittest.TestCase):
         self.assertEqual(len(finisher), len(busy_free))
         finished = total(run(IntrinsicCostMeter(), finisher))
         self.assertGreaterEqual(finished, 1.0)
-        self.assertLessEqual(total(run(IntrinsicCostMeter(), stall)), 0.05)
+        self.assertEqual(total(run(IntrinsicCostMeter(), stall)), 0.0)  # moves inside a job pay no bonus
         self.assertLessEqual(total(run(IntrinsicCostMeter(), busy_free)), 0.05)
-        self.assertGreater(finished, total(run(IntrinsicCostMeter(), stall)) + 0.9)
+        self.assertGreater(finished, total(run(IntrinsicCostMeter(), busy_free)) + 0.9)
 
-    def test_under_a_discount_a_far_off_job_can_lose_to_busywork_now(self):
-        # Limit of the claim above (design doc, holes): the totals favour
-        # finishing, but the critic discounts. At 0.99 per move a job is worth
-        # less than the whole skill bonus (0.05) once it is ~298 moves away.
-        def one_kind_job(moves):
-            return ([StepInput(job_open=True, job_id="j")]
-                    + [StepInput(job_open=True, job_id="j", skill="go")] * (moves - 1)
-                    + [StepInput(job_open=True, job_id="j", skill="go", job_done=True)])
+    def test_a_long_one_kind_job_scores_exactly_its_discounted_done(self):
+        # One step announces the job, then 400 "go" moves with "done" on the last.
+        script = ([StepInput(job_open=True, job_id="j")]
+                  + [StepInput(job_open=True, job_id="j", skill="go")] * 399
+                  + [StepInput(job_open=True, job_id="j", skill="go", job_done=True)])
+        for name, warm_up in (("fresh meter", []),
+                              ("after 400 varied free-play moves", [StepInput(skill=KINDS[i % 4]) for i in range(400)])):
+            with self.subTest(start=name):
+                meter = IntrinsicCostMeter()
+                run(meter, warm_up)
+                felt = run(meter, script)
+                self.assertEqual({f.underused_skill for f in felt}, {0.0})
+                self.assertAlmostEqual(discounted([f.total for f in felt]), 0.99 ** 400, delta=1e-9)
+                self.assertAlmostEqual(discounted([f.total for f in felt]), 0.017951, delta=1e-6)
 
-        def worth(steps):
-            return discounted([f.total for f in run(IntrinsicCostMeter(), steps)])
+    def test_finishing_a_long_job_beats_every_way_of_stalling_it(self):
+        # Under the critic's discount, from a fresh meter and after the bonus is collected.
+        open_job = dict(job_open=True, job_id="j")
+        finish = ([StepInput(**open_job)] + [StepInput(**open_job, skill="go")] * 399
+                  + [StepInput(**open_job, skill="go", job_done=True)])
+        sit = [StepInput(**open_job)] * 401
+        varied_then_stall = ([StepInput(**open_job)] + [StepInput(**open_job, skill=kind) for kind in KINDS]
+                             + [StepInput(**open_job)] * 396)  # a reviewer's best plan before the freeze
+        busy = [StepInput(**open_job)] + [StepInput(**open_job, skill=KINDS[i % 4]) for i in range(400)]
+        for name, warm_up in (("fresh meter", []),
+                              ("after 400 varied free-play moves", [StepInput(skill=KINDS[i % 4]) for i in range(400)])):
+            def worth(steps):
+                meter = IntrinsicCostMeter()
+                run(meter, warm_up)
+                return discounted([f.total for f in run(meter, steps)])
 
-        busywork = worth([StepInput(job_open=True, job_id="j", skill=KINDS[i % 4]) for i in range(401)])
-        self.assertGreater(busywork, 0.04)
-        self.assertGreater(worth(one_kind_job(100)), busywork)  # near job: finishing wins
-        self.assertLess(worth(one_kind_job(400)), busywork)  # far job: busywork scores higher
-        self.assertLess(busywork, 0.05 + 1e-12)  # and that is all it can ever score
-
-    def test_once_use_is_even_a_far_off_one_kind_job_scores_below_idling(self):
-        # Worse than a delay: with the bonus already collected, a long job of
-        # one kind first gives variety back, and "done" comes too late to
-        # cover it. Idling scores 0. (Hole 11 in the design doc.)
-        def worth_after_varied_use(tail):
-            meter = IntrinsicCostMeter()
-            run(meter, [StepInput(job_open=True, job_id="j", skill=KINDS[i % 4]) for i in range(400)])
-            return discounted([f.total for f in run(meter, tail)])
-
-        def job(moves):
-            return ([StepInput(job_open=True, job_id="j", skill="go")] * (moves - 1)
-                    + [StepInput(job_open=True, job_id="j", skill="go", job_done=True)])
-
-        self.assertEqual(worth_after_varied_use([StepInput(job_open=True, job_id="j")] * 400), 0.0)
-        self.assertAlmostEqual(worth_after_varied_use(job(100)), 0.354, delta=0.001)
-        self.assertAlmostEqual(worth_after_varied_use(job(298)), 0.031, delta=0.001)
-        self.assertLess(worth_after_varied_use(job(400)), 0.0)
-        self.assertGreater(worth_after_varied_use(job(400)), -0.01)
+            with self.subTest(start=name):
+                self.assertGreater(worth(finish), 0.0179)
+                for stalling in (sit, varied_then_stall, busy):
+                    self.assertEqual(worth(stalling), 0.0)
 
     def test_sitting_still_in_free_time_does_not_dodge_tiredness(self):
         still = run(IntrinsicCostMeter(), [StepInput(hours=1.0)] * 30)
@@ -505,6 +580,48 @@ class TirednessTests(unittest.TestCase):
                     # One step: strictly within the bound. Many steps: adding them up may round.
                     self.assertLessEqual(cost, hours if pieces == 1 else hours * (1.0 + 1e-12))
                     self.assertGreater(cost, hours * (1.0 - 1e-5))
+
+    def rising(self, fills, hours):
+        """Tiredness cost of awake free steps of ``hours`` each, with these start-of-step fills."""
+        meter = IntrinsicCostMeter()
+        return -math.fsum(meter.step(StepInput(hours=hours, memory_fill=fill)).tiredness for fill in fills)
+
+    def test_a_fill_that_rises_inside_a_step_is_undercharged_the_reviewers_cases(self):
+        # The fill is read at the start of a step, so a rise inside it is missed.
+        # 1. The fill jumps to 1 after 0.001 hours: one 0.25-hour step against 250 steps.
+        self.assertEqual(self.rising([0.0], 0.25), 0.0)
+        self.assertAlmostEqual(self.rising([0.0] + [1.0] * 249, 0.001), 0.249, delta=1e-9)
+        # 2. The fill climbs evenly from 0 to 1 over 0.25 hours: one step against 1,000.
+        self.assertAlmostEqual(self.rising([i / 1000 for i in range(1000)], 0.25 / 1000), 0.042034451, delta=1e-9)
+        # 3. A 16-hour day with the fill climbing evenly from 0 to 0.8.
+        def day_cost(pieces):
+            return self.rising([0.8 * i / pieces for i in range(pieces)], 16.0 / pieces)
+
+        fine = day_cost(6400)
+        self.assertAlmostEqual(fine, 5.108, delta=0.001)
+        for pieces, missed in ((1, 0.478), (16, 0.031), (64, 0.008)):  # 16-hour, 1-hour, 0.25-hour steps
+            with self.subTest(pieces=pieces):
+                self.assertAlmostEqual(1.0 - day_cost(pieces) / fine, missed, delta=0.001)
+        self.assertLess(1.0 - day_cost(64) / fine, 0.01)  # 0.25-hour steps land within 1 %
+
+    def test_the_undercharge_is_bounded_by_the_rise_and_the_step_length(self):
+        # One step misses at most min(1, 4 x rise in fill) x hours, and never overcharges.
+        rng = random.Random(4)
+        for trial in range(300):
+            awake, hours, low = rng.random() * 16.0, rng.random() * 0.25, rng.random()
+            high = low + rng.random() * (1.0 - low)
+
+            def cost(pieces):
+                meter = IntrinsicCostMeter()
+                meter.step(StepInput(hours=awake, job_open=True, job_id="j"))
+                return -math.fsum(meter.step(StepInput(hours=hours / pieces,
+                                                       memory_fill=low + (high - low) * i / pieces)).tiredness
+                                  for i in range(pieces))
+
+            missed = cost(100) - cost(1)
+            with self.subTest(trial=trial):
+                self.assertGreaterEqual(missed, -1e-12)
+                self.assertLessEqual(missed, min(1.0, 4.0 * (high - low)) * hours + 1e-12)
 
     def test_open_job_hides_the_cost_but_pressure_still_builds(self):
         meter = IntrinsicCostMeter()
@@ -557,6 +674,61 @@ class ContractTests(unittest.TestCase):
         meter.step(StepInput(hours=1.0, memory_fill=0.4, asleep=True))
         with self.assertRaises(ValueError):
             meter.step(StepInput(hours=1.0, memory_fill=0.5, asleep=True))
+
+    def test_sleep_may_start_fuller_than_the_last_awake_step_started(self):
+        # The fill is read at the start of a step. An awake step that starts at
+        # 0.1 and ends at 0.2 is followed by a sleep that starts at 0.2.
+        for awake_start, sleep_start in ((0.1, 0.2), (0.4, 0.8)):  # the reviewers' two cases
+            with self.subTest(awake_start=awake_start, sleep_start=sleep_start):
+                meter = IntrinsicCostMeter()
+                meter.step(StepInput(hours=0.05, memory_fill=awake_start))
+                meter.step(StepInput(hours=0.05, memory_fill=sleep_start, asleep=True))
+                meter.step(StepInput(hours=0.05, memory_fill=sleep_start - 0.05, asleep=True))
+
+    def test_the_three_fill_transitions_around_sleep(self):
+        awake, asleep = dict(hours=0.05), dict(hours=0.05, asleep=True)
+        # awake -> sleep: any fill. sleep -> sleep: no rise. sleep -> awake: no rise.
+        meter = IntrinsicCostMeter()
+        meter.step(StepInput(memory_fill=0.4, **awake))
+        meter.step(StepInput(memory_fill=0.8, **asleep))
+        meter.step(StepInput(memory_fill=0.8, **asleep))  # level is allowed
+        with self.assertRaises(ValueError):
+            meter.step(StepInput(memory_fill=0.81, **asleep))
+        meter.step(StepInput(memory_fill=0.3, **asleep))
+        with self.assertRaises(ValueError):  # waking fuller than the last sleep step started
+            meter.step(StepInput(memory_fill=0.31, **awake))
+        meter.step(StepInput(memory_fill=0.3, **awake))
+        # awake -> awake: the fill may rise freely, and a later sleep may start from there.
+        meter.step(StepInput(memory_fill=0.9, **awake))
+        meter.step(StepInput(memory_fill=0.95, **asleep))
+
+    def test_step_length_limits_are_off_by_default_and_enforced_when_set(self):
+        self.assertIsNone(MeterConfig().min_awake_step_hours)
+        self.assertIsNone(MeterConfig().max_awake_step_hours)
+        free = IntrinsicCostMeter()
+        run(free, [StepInput(), StepInput(hours=24.0)])  # no limits: anything goes
+        meter = IntrinsicCostMeter(config=MeterConfig(min_awake_step_hours=0.05, max_awake_step_hours=0.25))
+        for hours in (0.05, 0.1, 0.25):
+            meter.step(StepInput(hours=hours))
+        for hours in (0.0, 0.049, 0.2500001, 16.0):
+            for fields in (dict(), dict(job_open=True, job_id="j")):
+                with self.subTest(hours=hours, fields=fields), self.assertRaises(ValueError):
+                    meter.step(StepInput(hours=hours, **fields))
+        # Sleep steps are not limited: their sums are exact at any length.
+        run(meter, [StepInput(hours=8.0, asleep=True), StepInput(hours=0.0, asleep=True)])
+        # A refused step changed nothing: tiredness is where three short steps left it.
+        twin = IntrinsicCostMeter()
+        run(twin, [StepInput(hours=h) for h in (0.05, 0.1, 0.25)] + [StepInput(hours=8.0, asleep=True)])
+        self.assertEqual(meter.step(StepInput(hours=0.25)), twin.step(StepInput(hours=0.25)))
+
+    def test_a_world_that_forgets_its_clock_fails_loudly(self):
+        # hours defaults to 0. With a shortest step set, leaving it out is an error,
+        # not a silent end to tiredness and to the recovery of "nice".
+        meter = IntrinsicCostMeter(config=MeterConfig(min_awake_step_hours=0.05, max_awake_step_hours=0.25))
+        for clockless in (StepInput(), StepInput(skill="paint"), StepInput(remark=1),
+                          StepInput(job_open=True, job_id="j"), StepInput(panel_error=(0.5,))):
+            with self.subTest(step=clockless), self.assertRaises(ValueError):
+                meter.step(clockless)
 
     def test_a_job_must_be_announced_before_it_can_be_done(self):
         meter = IntrinsicCostMeter()
@@ -614,7 +786,9 @@ class ContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             IntrinsicCostMeter().step({"hurt": 1.0})
         for fields in (dict(tired_onset=1.0), dict(panel_regions=0), dict(curiosity_gamma=0.0),
-                       dict(curiosity_gamma=1.1), dict(skill_kinds=["paint"]), dict(skill_kinds=("a", "a"))):
+                       dict(curiosity_gamma=1.1), dict(skill_kinds=["paint"]), dict(skill_kinds=("a", "a")),
+                       dict(min_awake_step_hours=0.0), dict(max_awake_step_hours=-1.0),
+                       dict(min_awake_step_hours="0.05"), dict(min_awake_step_hours=0.5, max_awake_step_hours=0.25)):
             with self.subTest(fields=fields), self.assertRaises(ValueError):
                 MeterConfig(**fields)
         with self.assertRaises(ValueError):
@@ -689,7 +863,7 @@ class FixedMeterTests(unittest.TestCase):
         steps = []
         for t in range(700):
             if t % 97 == 96 and t % 7 >= 3:
-                steps.append(StepInput(asleep=True, hours=0.05, memory_fill=0.4,
+                steps.append(StepInput(asleep=True, hours=0.05, memory_fill=0.5,
                                        hurt=float(rng.random() < 0.1)))
                 continue
             working = t % 7 < 3
