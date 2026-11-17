@@ -521,7 +521,7 @@ class DoNothingTests(unittest.TestCase):
                 self.assertAlmostEqual(discounted([f.total for f in felt]), 0.99 ** 400, delta=1e-9)
                 self.assertAlmostEqual(discounted([f.total for f in felt]), 0.017951, delta=1e-6)
 
-    def test_finishing_a_long_job_beats_every_way_of_stalling_it(self):
+    def test_finishing_a_long_job_beats_the_three_stalling_plans(self):
         # Under the critic's discount, from a fresh meter and after the bonus is collected.
         open_job = dict(job_open=True, job_id="j")
         finish = ([StepInput(**open_job)] + [StepInput(**open_job, skill="go")] * 399
