@@ -516,7 +516,7 @@ class DoNothingTests(unittest.TestCase):
         self.assertGreater(total(run(Life(pain_only), idle)),
                            total(run(Life(pain_only), moves)))
 
-    def test_finishing_beats_busywork_forever_over_the_same_time(self):
+    def test_finishing_beats_busywork_in_raw_total_over_the_same_time(self):
         # Raw totals, for these three plans. Same clock time for all three, sleep
         # allowed whenever no job is open. Under the critic's discount a long job
         # can lose to four free-play moves: see
@@ -1351,7 +1351,7 @@ class RawMeterTests(unittest.TestCase):
         self.assertAlmostEqual(done_after(1), 0.990, delta=1e-9)
         self.assertAlmostEqual(done_after(8), 0.922745, delta=1e-6)
 
-    def test_job_done_counts_only_for_jobs_the_owner_gave(self):
+    def test_a_job_needs_the_owner_statement_and_a_false_one_farms_job_done(self):
         # A reviewer's toy world. The model switches a healthy switch off, the
         # world announces a new repair job, the model switches it back on.
         # Twenty rounds end where they began.
@@ -1385,7 +1385,7 @@ class RawMeterTests(unittest.TestCase):
             with self.subTest(fields=fields), self.assertRaises(ValueError):
                 StepInput(**fields, **reading)
 
-    def test_curiosity_discount_is_plain_or_the_critics_own(self):
+    def test_a_curiosity_discount_neither_plain_nor_the_critics_makes_forgetting_win(self):
         # A reviewer's case for the registered-configuration promise. Start with
         # perfect knowledge. Hold it for two decisions, or lose it all and get it back.
         def score(curiosity_gamma, errors):

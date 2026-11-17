@@ -6,7 +6,7 @@ feeling and a total come out. It holds counters and fixed formulas only. It
 has no learned weights and nothing here is ever trained, by day or in sleep.
 
 The wanting does not live here. A learned critic predicts the discounted sum
-of the total, and moves are picked from the critic's predictions. The model
+of each feeling (one output per feeling), and moves are picked from the critic's predictions. The model
 has no handle on the meter: the harness owns it, ``step`` is the only call
 that returns a number, ``step`` always advances the meter, and the meter
 refuses to be copied or pickled. One meter lasts one life: it cannot be
@@ -180,8 +180,8 @@ class StepInput:
                  a job step without it is refused. "Job done" is for the
                  task the owner gave. A job that exists because of what the
                  model did (it broke something, and a repair job appeared)
-                 is not reported as a job at all; damage the model caused
-                 is reported as hurt. The meter cannot see causes: that the
+                 is not reported as a job at all; if the world reports damage
+                 the model caused, it reports it as hurt. The meter cannot see causes: that the
                  statement is true is the harness's promise.
     job_id       the harness's name for that job (given exactly when open).
     job_done     the world says the open job's goal is reached on this step.
