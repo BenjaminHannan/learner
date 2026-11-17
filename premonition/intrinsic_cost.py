@@ -31,6 +31,13 @@ APPROVED_TERMS = ("curiosity", "underused_skill", "tiredness", "pain", "job_done
 PROPOSED_TERMS = ("boredom", "bother")
 TERMS = APPROVED_TERMS + PROPOSED_TERMS
 
+# The supported range. No rate, no step length and no shape number may be
+# above LARGEST, and no shape number below SMALLEST. Inside this range every
+# feeling the meter returns is a finite number: a table such as pain = 1e308
+# is refused when it is built, not turned into "minus infinity" later.
+LARGEST = 1e6
+SMALLEST = 1e-6
+
 
 def _finite(value, name, low=None, high=None):
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -79,7 +86,7 @@ class ExchangeRates:
 
     def __post_init__(self):
         for name in self.__dataclass_fields__:
-            _finite(getattr(self, name), f"rate {name}", low=0.0)
+            _finite(getattr(self, name), f"rate {name}", low=0.0, high=LARGEST)
 
 
 @dataclass(frozen=True)
@@ -116,32 +123,34 @@ class MeterConfig:
     question_ids: Tuple[str, ...] = ()
     bother_cap: float = 5.0
     # step length: the shortest and longest AWAKE step the meter accepts, in
-    # clock hours. Off (None) by default; each registered test file sets both.
-    # With a shortest step set, a world that forgets its clock (hours = 0) is
-    # refused instead of silently switching tiredness off.
+    # clock hours. Off (None) by default; each registered test file sets both
+    # (one alone is refused). With the limits set, a world that forgets its
+    # clock is refused instead of silently switching tiredness off: an awake
+    # step below the shortest step, and a sleep step of 0 hours. Sleep steps
+    # are otherwise not limited (their sums are exact at any length).
     min_awake_step_hours: Optional[float] = None
     max_awake_step_hours: Optional[float] = None
 
     def __post_init__(self):
-        if type(self.panel_regions) is not int or self.panel_regions < 1:
-            raise ValueError("panel_regions must be a positive integer")
+        if type(self.panel_regions) is not int or not 1 <= self.panel_regions <= LARGEST:
+            raise ValueError(f"panel_regions must be a whole number from 1 to {LARGEST:g}")
         if not 0 < _finite(self.curiosity_gamma, "curiosity_gamma") <= 1:
             raise ValueError("curiosity_gamma must be within 0..1 (0 excluded)")
         _names(self.skill_kinds, "skill_kinds")
         _names(self.question_ids, "question_ids")
         for name in ("skill_half_life", "hours_to_full", "sleep_payback", "hurt_cap",
                      "nice_half_life", "boredom_half_life", "boredom_floor", "bother_cap"):
-            if _finite(getattr(self, name), name) <= 0:
-                raise ValueError(f"{name} must be positive")
+            _finite(getattr(self, name), name, low=SMALLEST, high=LARGEST)
         if not 0 <= _finite(self.tired_onset, "tired_onset") < 1:
             raise ValueError("tired_onset must be within 0..1 (1 excluded)")
         if not 0 < _finite(self.nice_fade, "nice_fade") <= 1:
             raise ValueError("nice_fade must be within 0..1 (0 excluded)")
         for name in ("min_awake_step_hours", "max_awake_step_hours"):
-            if getattr(self, name) is not None and _finite(getattr(self, name), name) <= 0:
-                raise ValueError(f"{name} must be positive or None")
-        if None not in (self.min_awake_step_hours, self.max_awake_step_hours) \
-                and self.min_awake_step_hours > self.max_awake_step_hours:
+            if getattr(self, name) is not None:
+                _finite(getattr(self, name), name, low=SMALLEST, high=LARGEST)
+        if (self.min_awake_step_hours is None) != (self.max_awake_step_hours is None):
+            raise ValueError("set both step-length limits or neither")
+        if self.min_awake_step_hours is not None and self.min_awake_step_hours > self.max_awake_step_hours:
             raise ValueError("min_awake_step_hours must not be above max_awake_step_hours")
 
 
@@ -165,7 +174,8 @@ class StepInput:
     skill        kind of command used (None = no move was made). With a job
                  open it is checked against the closed list and otherwise
                  ignored: the skill feeling works in free play only.
-    hours        clock time this step took, from the harness clock.
+    hours        clock time this step took, from the harness clock (at most
+                 LARGEST hours in one step).
     memory_fill  how full the day memory is at the start of the step, 0..1,
                  taken as constant through the step. It must not be higher
                  than at the start of a sleep step just before it.
@@ -201,7 +211,7 @@ class StepInput:
         if type(self.remark) is not int or self.remark not in (-1, 0, 1):
             raise ValueError("remark must be -1, 0 or 1")
         _finite(self.hurt, "hurt", low=0.0)
-        _finite(self.hours, "hours", low=0.0)
+        _finite(self.hours, "hours", low=0.0, high=LARGEST)
         _finite(self.memory_fill, "memory_fill", low=0.0, high=1.0)
         if self.panel_error is not None:
             if type(self.panel_error) is not tuple or not self.panel_error:
@@ -340,8 +350,11 @@ class IntrinsicCostMeter:
         if observed.memory_fill > self._fill_limit:
             raise ValueError("memory_fill must not rise during sleep: this step starts fuller than the "
                              "sleep step before it started")
-        if not observed.asleep:
-            shortest, longest = config.min_awake_step_hours, config.max_awake_step_hours
+        shortest, longest = config.min_awake_step_hours, config.max_awake_step_hours
+        if observed.asleep:
+            if shortest is not None and observed.hours <= 0.0:
+                raise ValueError("a sleep step must take some time: the world must report its clock")
+        else:
             if shortest is not None and observed.hours < shortest:
                 raise ValueError(f"an awake step must take at least {shortest} hours: the world must report its clock")
             if longest is not None and observed.hours > longest:

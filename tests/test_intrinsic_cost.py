@@ -13,11 +13,17 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from premonition import intrinsic_cost
-from premonition.intrinsic_cost import (APPROVED_TERMS, PROPOSED_TERMS, TERMS, ExchangeRates,
+from premonition.intrinsic_cost import (APPROVED_TERMS, LARGEST, PROPOSED_TERMS, SMALLEST, TERMS, ExchangeRates,
                                         Feelings, IntrinsicCostMeter, MeterConfig, StepInput)
 
 GAMMA = 0.99  # the critic's discount in these checks
 KINDS = ("paint", "reshape", "turn", "go")
+TICK = 0.05  # the toy clock: hours per move
+CLOCKED = MeterConfig(min_awake_step_hours=TICK, max_awake_step_hours=0.25)  # what a registered test file sets
+
+
+def clock_hours(steps):
+    return math.fsum(step.hours for step in steps)
 
 
 def run(meter, steps):
@@ -460,12 +466,13 @@ def day(extra, rounds=5, hours=0.05):
 
 
 class DoNothingTests(unittest.TestCase):
-    def job(self, hurt):
-        moves = [StepInput(job_open=True, job_id="j"),
-                 StepInput(job_open=True, job_id="j", skill="paint"),
-                 StepInput(job_open=True, job_id="j", skill="turn", hurt=hurt),
-                 StepInput(job_open=True, job_id="j", skill="paint", job_done=True)]
-        idle = [StepInput(job_open=True, job_id="j")] * 4
+    def job(self, hurt, hours=0.0):
+        open_job = dict(job_open=True, job_id="j", hours=hours)
+        moves = [StepInput(**open_job),
+                 StepInput(**open_job, skill="paint"),
+                 StepInput(**open_job, skill="turn", hurt=hurt),
+                 StepInput(**open_job, skill="paint", job_done=True)]
+        idle = [StepInput(**open_job)] * 4
         return moves, idle
 
     def test_hurt_free_job_beats_doing_nothing(self):
@@ -492,55 +499,94 @@ class DoNothingTests(unittest.TestCase):
 
     def test_finishing_beats_busywork_forever_over_the_same_time(self):
         # Same clock time for all three, sleep allowed whenever no job is open.
-        moves, _ = self.job(hurt=0.0)
-        free = day(lambda i: StepInput(hours=0.05))
+        # Every awake step takes one tick, and the step-length limits are on.
+        moves, _ = self.job(hurt=0.0, hours=TICK)
+        free = day(lambda i: StepInput(hours=TICK))
         finisher = moves + free
-        stall = [StepInput(job_open=True, job_id="j", skill=KINDS[i % 4], hours=0.05)
+        stall = [StepInput(job_open=True, job_id="j", skill=KINDS[i % 4], hours=TICK)
                  for i in range(len(free) + len(moves))]  # never finishes, moves forever
-        busy_free = [StepInput()] * len(moves) + day(lambda i: StepInput(skill=KINDS[i % 4], hours=0.05))
-        self.assertEqual(len(finisher), len(stall))
-        self.assertEqual(len(finisher), len(busy_free))
-        finished = total(run(IntrinsicCostMeter(), finisher))
+        busy_free = [StepInput(hours=TICK)] * len(moves) + day(lambda i: StepInput(skill=KINDS[i % 4], hours=TICK))
+        self.assertAlmostEqual(clock_hours(finisher), 55.2, delta=1e-9)
+        for plan in (stall, busy_free):
+            self.assertEqual(len(plan), len(finisher))
+            self.assertAlmostEqual(clock_hours(plan), clock_hours(finisher), delta=1e-9)
+        finished = total(run(IntrinsicCostMeter(config=CLOCKED), finisher))
         self.assertGreaterEqual(finished, 1.0)
-        self.assertEqual(total(run(IntrinsicCostMeter(), stall)), 0.0)  # moves inside a job pay no bonus
-        self.assertLessEqual(total(run(IntrinsicCostMeter(), busy_free)), 0.05)
-        self.assertGreater(finished, total(run(IntrinsicCostMeter(), busy_free)) + 0.9)
+        self.assertEqual(total(run(IntrinsicCostMeter(config=CLOCKED), stall)), 0.0)  # moves inside a job pay no bonus
+        self.assertLessEqual(total(run(IntrinsicCostMeter(config=CLOCKED), busy_free)), 0.05)
+        self.assertGreater(finished, total(run(IntrinsicCostMeter(config=CLOCKED), busy_free)) + 0.9)
+
+    # The long-job checks run twice: with no clock (the reference config), and
+    # with the toy clock and both step-length limits on, as a registered test
+    # file runs them. The pinned numbers are the same.
+    CLOCKS = (("no clock", None, 0.0), ("toy clock, limits on", CLOCKED, TICK))
+
+    def long_job(self, hours):
+        """One step announces the job, then 400 "go" moves with "done" on the last."""
+        open_job = dict(job_open=True, job_id="j", hours=hours)
+        return ([StepInput(**open_job)] + [StepInput(**open_job, skill="go")] * 399
+                + [StepInput(**open_job, skill="go", job_done=True)])
+
+    def warm_ups(self, hours):
+        return (("fresh meter", []),
+                ("after 400 varied free-play moves", [StepInput(skill=KINDS[i % 4], hours=hours) for i in range(400)]))
 
     def test_a_long_one_kind_job_scores_exactly_its_discounted_done(self):
-        # One step announces the job, then 400 "go" moves with "done" on the last.
-        script = ([StepInput(job_open=True, job_id="j")]
-                  + [StepInput(job_open=True, job_id="j", skill="go")] * 399
-                  + [StepInput(job_open=True, job_id="j", skill="go", job_done=True)])
-        for name, warm_up in (("fresh meter", []),
-                              ("after 400 varied free-play moves", [StepInput(skill=KINDS[i % 4]) for i in range(400)])):
-            with self.subTest(start=name):
-                meter = IntrinsicCostMeter()
-                run(meter, warm_up)
-                felt = run(meter, script)
-                self.assertEqual({f.underused_skill for f in felt}, {0.0})
-                self.assertAlmostEqual(discounted([f.total for f in felt]), 0.99 ** 400, delta=1e-9)
-                self.assertAlmostEqual(discounted([f.total for f in felt]), 0.017951, delta=1e-6)
+        for clock, config, hours in self.CLOCKS:
+            for name, warm_up in self.warm_ups(hours):
+                with self.subTest(clock=clock, start=name):
+                    meter = IntrinsicCostMeter(config=config)
+                    run(meter, warm_up)
+                    felt = run(meter, self.long_job(hours))
+                    self.assertEqual({f.underused_skill for f in felt}, {0.0})
+                    self.assertAlmostEqual(discounted([f.total for f in felt]), 0.99 ** 400, delta=1e-9)
+                    self.assertAlmostEqual(discounted([f.total for f in felt]), 0.017951, delta=1e-6)
 
     def test_finishing_a_long_job_beats_the_three_stalling_plans(self):
         # Under the critic's discount, from a fresh meter and after the bonus is collected.
-        open_job = dict(job_open=True, job_id="j")
-        finish = ([StepInput(**open_job)] + [StepInput(**open_job, skill="go")] * 399
-                  + [StepInput(**open_job, skill="go", job_done=True)])
-        sit = [StepInput(**open_job)] * 401
-        varied_then_stall = ([StepInput(**open_job)] + [StepInput(**open_job, skill=kind) for kind in KINDS]
-                             + [StepInput(**open_job)] * 396)  # a reviewer's best plan before the freeze
-        busy = [StepInput(**open_job)] + [StepInput(**open_job, skill=KINDS[i % 4]) for i in range(400)]
-        for name, warm_up in (("fresh meter", []),
-                              ("after 400 varied free-play moves", [StepInput(skill=KINDS[i % 4]) for i in range(400)])):
-            def worth(steps):
-                meter = IntrinsicCostMeter()
-                run(meter, warm_up)
-                return discounted([f.total for f in run(meter, steps)])
+        for clock, config, hours in self.CLOCKS:
+            open_job = dict(job_open=True, job_id="j", hours=hours)
+            finish = self.long_job(hours)
+            sit = [StepInput(**open_job)] * 401
+            varied_then_stall = ([StepInput(**open_job)] + [StepInput(**open_job, skill=kind) for kind in KINDS]
+                                 + [StepInput(**open_job)] * 396)  # a reviewer's best plan before the freeze
+            busy = [StepInput(**open_job)] + [StepInput(**open_job, skill=KINDS[i % 4]) for i in range(400)]
+            for plan in (sit, varied_then_stall, busy):  # the same clock time as finishing
+                self.assertEqual(len(plan), len(finish))
+                self.assertAlmostEqual(clock_hours(plan), clock_hours(finish), delta=1e-9)
+            self.assertAlmostEqual(clock_hours(finish), 401 * hours, delta=1e-9)
+            for name, warm_up in self.warm_ups(hours):
+                def worth(steps):
+                    meter = IntrinsicCostMeter(config=config)
+                    run(meter, warm_up)
+                    return discounted([f.total for f in run(meter, steps)])
 
-            with self.subTest(start=name):
-                self.assertGreater(worth(finish), 0.0179)
-                for stalling in (sit, varied_then_stall, busy):
-                    self.assertEqual(worth(stalling), 0.0)
+                with self.subTest(clock=clock, start=name):
+                    self.assertGreater(worth(finish), 0.0179)
+                    for stalling in (sit, varied_then_stall, busy):
+                        self.assertEqual(worth(stalling), 0.0)
+
+    def test_known_hole_staying_awake_after_a_long_job_costs_more_than_the_job_paid(self):
+        # Hole 1 (stalling hides tiredness), a reviewer's number. A clocked
+        # 400-move job takes 20 hours, so the pressure is full when it closes.
+        # Sleeping at once keeps the job's worth. Staying awake in free time
+        # costs 0.05 a move: after 23 such moves, finishing scores below
+        # never closing the job, which scores 0.
+        def worth(awake_moves_after):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            steps = self.long_job(TICK) + [StepInput(hours=TICK)] * awake_moves_after
+            return discounted([f.total for f in run(meter, steps)])
+
+        stall = discounted([f.total for f in run(IntrinsicCostMeter(config=CLOCKED),
+                                                 [StepInput(job_open=True, job_id="j", hours=TICK)] * 424)])
+        self.assertEqual(stall, 0.0)
+        self.assertAlmostEqual(worth(0), 0.99 ** 400, delta=1e-9)  # sleeps at once
+        self.assertAlmostEqual(worth(22), 0.000324392, delta=1e-9)  # still above stalling
+        self.assertAlmostEqual(worth(23), -0.000387899, delta=1e-9)  # below stalling for good
+        self.assertLess(worth(23), stall)
+        sleeper = IntrinsicCostMeter(config=CLOCKED)
+        felt = run(sleeper, self.long_job(TICK) + [StepInput(hours=8.0, asleep=True)] + [StepInput(hours=TICK)] * 23)
+        self.assertAlmostEqual(discounted([f.total for f in felt]), 0.99 ** 400, delta=1e-9)  # slept: nothing owed
 
     def test_sitting_still_in_free_time_does_not_dodge_tiredness(self):
         still = run(IntrinsicCostMeter(), [StepInput(hours=1.0)] * 30)
@@ -581,9 +627,9 @@ class TirednessTests(unittest.TestCase):
                     self.assertLessEqual(cost, hours if pieces == 1 else hours * (1.0 + 1e-12))
                     self.assertGreater(cost, hours * (1.0 - 1e-5))
 
-    def rising(self, fills, hours):
+    def rising(self, fills, hours, onset=0.5):
         """Tiredness cost of awake free steps of ``hours`` each, with these start-of-step fills."""
-        meter = IntrinsicCostMeter()
+        meter = IntrinsicCostMeter(config=MeterConfig(tired_onset=onset))
         return -math.fsum(meter.step(StepInput(hours=hours, memory_fill=fill)).tiredness for fill in fills)
 
     def test_a_fill_that_rises_inside_a_step_is_undercharged_the_reviewers_cases(self):
@@ -604,24 +650,44 @@ class TirednessTests(unittest.TestCase):
                 self.assertAlmostEqual(1.0 - day_cost(pieces) / fine, missed, delta=0.001)
         self.assertLess(1.0 - day_cost(64) / fine, 0.01)  # 0.25-hour steps land within 1 %
 
-    def test_the_undercharge_is_bounded_by_the_rise_and_the_step_length(self):
-        # One step misses at most min(1, 4 x rise in fill) x hours, and never overcharges.
+    def test_the_undercharge_is_bounded_by_the_rise_the_onset_and_the_step_length(self):
+        # One step misses at most min(1, 2 x rise in fill / (1 - onset)) x hours, and
+        # never overcharges. At the starting onset 0.5 that is min(1, 4 x rise) x hours.
+        def bound(rise, onset, hours):
+            return min(1.0, 2.0 * rise / (1.0 - onset)) * hours
+
+        self.assertEqual(bound(0.1, 0.5, 1.0), min(1.0, 4.0 * 0.1))
+        # Two reviewers' cases with another onset; both break the old "4 x rise" bound.
+        # Onset 0.99: the fill jumps from 0.99 to 1 after 0.001 hours of a 0.25-hour step.
+        coarse, fine = self.rising([0.99], 0.25, onset=0.99), self.rising([0.99] + [1.0] * 249, 0.001, onset=0.99)
+        self.assertAlmostEqual(coarse, 0.000020345, delta=1e-9)
+        self.assertAlmostEqual(fine - coarse, 0.248979655, delta=1e-9)
+        self.assertGreater(fine - coarse, 4.0 * 0.01 * 0.25)
+        self.assertLessEqual(fine - coarse, bound(0.01, 0.99, 0.25))
+        # Onset 0.9: the fill climbs evenly from 0.95 to 0.96 over one 0.05-hour step.
+        coarse = self.rising([0.95], 0.05, onset=0.9)
+        fine = self.rising([0.95 + 0.01 * i / 1000 for i in range(1000)], 0.05 / 1000, onset=0.9)
+        self.assertAlmostEqual(fine - coarse, 0.002663125, delta=1e-9)
+        self.assertGreater(fine - coarse, 4.0 * 0.01 * 0.05)
+        self.assertLessEqual(fine - coarse, bound(0.01, 0.9, 0.05))
+        # 300 random cases over random onsets (every third at the starting onset).
         rng = random.Random(4)
         for trial in range(300):
+            onset = 0.5 if trial % 3 == 0 else rng.random() * 0.999
             awake, hours, low = rng.random() * 16.0, rng.random() * 0.25, rng.random()
             high = low + rng.random() * (1.0 - low)
 
             def cost(pieces):
-                meter = IntrinsicCostMeter()
+                meter = IntrinsicCostMeter(config=MeterConfig(tired_onset=onset))
                 meter.step(StepInput(hours=awake, job_open=True, job_id="j"))
                 return -math.fsum(meter.step(StepInput(hours=hours / pieces,
                                                        memory_fill=low + (high - low) * i / pieces)).tiredness
                                   for i in range(pieces))
 
             missed = cost(100) - cost(1)
-            with self.subTest(trial=trial):
+            with self.subTest(trial=trial, onset=onset):
                 self.assertGreaterEqual(missed, -1e-12)
-                self.assertLessEqual(missed, min(1.0, 4.0 * (high - low)) * hours + 1e-12)
+                self.assertLessEqual(missed, bound(high - low, onset, hours) + 1e-12)
 
     def test_open_job_hides_the_cost_but_pressure_still_builds(self):
         meter = IntrinsicCostMeter()
@@ -714,8 +780,12 @@ class ContractTests(unittest.TestCase):
             for fields in (dict(), dict(job_open=True, job_id="j")):
                 with self.subTest(hours=hours, fields=fields), self.assertRaises(ValueError):
                     meter.step(StepInput(hours=hours, **fields))
-        # Sleep steps are not limited: their sums are exact at any length.
-        run(meter, [StepInput(hours=8.0, asleep=True), StepInput(hours=0.0, asleep=True)])
+        # Sleep steps have no shortest or longest length (their sums are exact at
+        # any length), but a sleep step of 0 hours is a missing clock: refused.
+        run(meter, [StepInput(hours=8.0, asleep=True), StepInput(hours=0.001, asleep=True)])
+        with self.assertRaises(ValueError):
+            meter.step(StepInput(hours=0.0, asleep=True))
+        free.step(StepInput(hours=0.0, asleep=True))  # no limits: allowed
         # A refused step changed nothing: tiredness is where three short steps left it.
         twin = IntrinsicCostMeter()
         run(twin, [StepInput(hours=h) for h in (0.05, 0.1, 0.25)] + [StepInput(hours=8.0, asleep=True)])
@@ -724,11 +794,79 @@ class ContractTests(unittest.TestCase):
     def test_a_world_that_forgets_its_clock_fails_loudly(self):
         # hours defaults to 0. With a shortest step set, leaving it out is an error,
         # not a silent end to tiredness and to the recovery of "nice".
-        meter = IntrinsicCostMeter(config=MeterConfig(min_awake_step_hours=0.05, max_awake_step_hours=0.25))
+        meter = IntrinsicCostMeter(config=CLOCKED)
         for clockless in (StepInput(), StepInput(skill="paint"), StepInput(remark=1),
                           StepInput(job_open=True, job_id="j"), StepInput(panel_error=(0.5,))):
             with self.subTest(step=clockless), self.assertRaises(ValueError):
                 meter.step(clockless)
+
+    def test_a_world_with_no_clock_in_sleep_fails_loudly(self):
+        # A reviewer's case: a full clocked day awake, then sleep steps that report
+        # 0 hours. They would pay nothing back and make sleep look useless.
+        meter = IntrinsicCostMeter(config=CLOCKED)
+        run(meter, [StepInput(hours=TICK)] * 320)
+        with self.assertRaises(ValueError):  # refused at the first sleep step
+            meter.step(StepInput(asleep=True))
+        # The refused step changed nothing, and a sleep that reports its hours cures.
+        self.assertAlmostEqual(meter.step(StepInput(hours=TICK)).tiredness, -TICK, delta=1e-12)
+        meter.step(StepInput(hours=8.0, asleep=True))
+        self.assertEqual(meter.step(StepInput(hours=TICK)).tiredness, 0.0)
+
+    def test_the_step_length_limits_come_as_a_pair(self):
+        for fields in (dict(min_awake_step_hours=0.05), dict(max_awake_step_hours=0.25)):
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                MeterConfig(**fields)
+        MeterConfig(min_awake_step_hours=0.05, max_awake_step_hours=0.25)
+        MeterConfig()
+
+    def test_every_accepted_rate_and_input_gives_finite_feelings(self):
+        # A reviewer's case: pain = 1e308 with hurt = 10 gave "minus infinity".
+        with self.assertRaises(ValueError):
+            ExchangeRates(pain=1e308)
+        for name in ExchangeRates.__dataclass_fields__:
+            with self.subTest(rate=name), self.assertRaises(ValueError):
+                ExchangeRates(**{name: LARGEST * 1.000001})
+            ExchangeRates(**{name: LARGEST})
+        for fields in (dict(hurt_cap=LARGEST * 2), dict(bother_cap=1e300), dict(panel_regions=10 ** 7),
+                       dict(hours_to_full=1e-320), dict(boredom_half_life=SMALLEST / 2), dict(nice_half_life=0.0),
+                       dict(min_awake_step_hours=0.05, max_awake_step_hours=LARGEST * 2)):
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                MeterConfig(**fields)
+        with self.assertRaises(ValueError):
+            StepInput(hours=LARGEST * 2)
+        # Corners of the supported range: every feeling and the total stay finite.
+        rng = random.Random(7)
+        steps_checked = 0
+        for trial in range(400):
+            def shape():
+                return rng.choice((SMALLEST, 1.0, LARGEST))
+
+            rates = ExchangeRates(**{name: rng.choice((0.0, 1.0, LARGEST)) for name in ExchangeRates.__dataclass_fields__})
+            config = MeterConfig(
+                panel_regions=rng.choice((1, 3)), curiosity_gamma=rng.choice((1e-300, 0.99, 1.0)),
+                skill_half_life=shape(), hours_to_full=shape(), tired_onset=rng.choice((0.0, 0.5, 1.0 - 1e-16)),
+                sleep_payback=shape(), hurt_cap=shape(), nice_fade=rng.choice((1e-300, 0.5, 1.0)),
+                nice_half_life=shape(), boredom_half_life=shape(), boredom_floor=shape(),
+                question_ids=("q",), bother_cap=shape())
+            meter = IntrinsicCostMeter(rates, config)
+            for _ in range(30):
+                asleep = rng.random() < 0.2
+                fields = dict(hours=rng.choice((0.0, SMALLEST, 1.0, LARGEST)), hurt=rng.choice((0.0, config.hurt_cap)),
+                              asleep=asleep, memory_fill=0.0 if asleep else rng.choice((0.0, 0.5, 1.0)))
+                if not asleep:
+                    fields.update(
+                        remark=rng.choice((-1, 0, 1)), skill=rng.choice((None,) + KINDS),
+                        asked_owner=rng.choice((None, "q")),
+                        panel_error=rng.choice((None, tuple(rng.choice((0.0, 1.0)) for _ in range(config.panel_regions)))))
+                try:
+                    felt = meter.step(StepInput(**fields))
+                except ValueError:  # the fill rose after a sleep step: refused, fine
+                    continue
+                steps_checked += 1
+                self.assertTrue(all(math.isfinite(value) for value in felt.as_dict().values()), (rates, config, fields))
+                self.assertTrue(math.isfinite(felt.total))
+                self.assertTrue(math.isfinite(felt.cost))
+        self.assertGreater(steps_checked, 9000)
 
     def test_a_job_must_be_announced_before_it_can_be_done(self):
         meter = IntrinsicCostMeter()
@@ -787,8 +925,10 @@ class ContractTests(unittest.TestCase):
             IntrinsicCostMeter().step({"hurt": 1.0})
         for fields in (dict(tired_onset=1.0), dict(panel_regions=0), dict(curiosity_gamma=0.0),
                        dict(curiosity_gamma=1.1), dict(skill_kinds=["paint"]), dict(skill_kinds=("a", "a")),
-                       dict(min_awake_step_hours=0.0), dict(max_awake_step_hours=-1.0),
-                       dict(min_awake_step_hours="0.05"), dict(min_awake_step_hours=0.5, max_awake_step_hours=0.25)):
+                       dict(min_awake_step_hours=0.0, max_awake_step_hours=0.25),
+                       dict(min_awake_step_hours=0.05, max_awake_step_hours=-1.0),
+                       dict(min_awake_step_hours="0.05", max_awake_step_hours=0.25),
+                       dict(min_awake_step_hours=0.5, max_awake_step_hours=0.25)):
             with self.subTest(fields=fields), self.assertRaises(ValueError):
                 MeterConfig(**fields)
         with self.assertRaises(ValueError):
