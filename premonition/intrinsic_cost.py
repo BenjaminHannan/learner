@@ -198,19 +198,23 @@ class StepInput:
                  break or let break: see job_fault_avoidable.
     job_fault_avoidable  the harness's statement about a fault tied to the
                  open job (something made, or had made, its goal false).
-                 None = no fault to report on this step. True = the model
+                 REQUIRED on every step that reports the job done (True or
+                 False: a "done" step without it is refused), and allowed on
+                 any other step with the job open, where None = no fault to
+                 report on this step. True = the model
                  could have avoided the fault: its own move caused it, or a
                  preventive move that was OFFERED in its earlier decisions
                  and NOT TAKEN would have prevented it (an offered move not
                  taken counts as the model's own move). False = it could
-                 not. After a True the job is forfeited for good: reporting
+                 not, or (on a "done" step) there is no avoidable fault to
+                 report. After a True the job is forfeited for good: reporting
                  it done pays 0 "job done". The world reports the damage
                  itself as hurt. It may be given on any step with the job
                  open, the announcing step included (the fault came first,
                  the job after). The meter cannot see causes: that the
-                 statement is true, and that a fault is reported at all,
-                 are the harness's promises. A harness that forgets to
-                 report a fault is not caught.
+                 statement is true is the harness's promise. The
+                 requirement catches a harness that forgets the rule, not
+                 one that breaks it.
     hurt         how much the world says this step hurt, on the fixed scale
                  0..hurt_cap (0 = not at all). More than hurt_cap is refused.
     remark       the owner said "nice" (+1), "no" (-1) or nothing (0). At
@@ -286,6 +290,9 @@ class StepInput:
                 raise ValueError("job_fault_avoidable must be True, False or None")
             if not self.job_open:
                 raise ValueError("job_fault_avoidable is a statement about a fault tied to an open job")
+        if self.job_done and self.job_fault_avoidable is None:
+            raise ValueError("a job reported done needs the harness's statement job_fault_avoidable (True or False): "
+                             "could the model have avoided a fault tied to this job?")
         if type(self.remark) is not int or self.remark not in (-1, 0, 1):
             raise ValueError("remark must be -1, 0 or 1: at most one remark per decision")
         _finite(self.hurt, "hurt", low=0.0)

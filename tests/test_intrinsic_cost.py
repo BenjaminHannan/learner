@@ -114,7 +114,7 @@ class SignTests(unittest.TestCase):
 
     def test_job_done_is_good(self):
         self.meter.step(StepInput(job_open=True, job_from_owner=True, job_id="j1"))
-        felt = self.meter.step(StepInput(job_open=True, job_from_owner=True, job_id="j1", job_done=True))
+        felt = self.meter.step(StepInput(job_open=True, job_from_owner=True, job_id="j1", job_done=True, job_fault_avoidable=False))
         self.assertEqual(felt.job_done, 1.0)
 
     def test_remarks_go_both_ways(self):
@@ -177,13 +177,13 @@ class FadingTests(unittest.TestCase):
     def test_one_job_pays_once(self):
         meter = Life()
         meter.step(StepInput(job_open=True, job_from_owner=True, job_id="j1"))
-        done = StepInput(job_open=True, job_from_owner=True, job_id="j1", job_done=True)
+        done = StepInput(job_open=True, job_from_owner=True, job_id="j1", job_done=True, job_fault_avoidable=False)
         self.assertEqual([meter.step(done).job_done for _ in range(4)], [1.0, 0.0, 0.0, 0.0])
         # A new job still pays in full: doing the owner's jobs does not get old.
         paid = []
         for i in range(20):
             meter.step(StepInput(job_open=True, job_from_owner=True, job_id=f"k{i}"))
-            paid.append(meter.step(StepInput(job_open=True, job_from_owner=True, job_id=f"k{i}", job_done=True)).job_done)
+            paid.append(meter.step(StepInput(job_open=True, job_from_owner=True, job_id=f"k{i}", job_done=True, job_fault_avoidable=False)).job_done)
         self.assertEqual(set(paid), {1.0})
 
     def test_curiosity_fades_as_the_thing_is_learned(self):
@@ -456,7 +456,7 @@ class SkillBoundTests(unittest.TestCase):
         counts = dict(meter._skill_counts)
         self.assertGreater(before, 0.5)
         in_job = run(meter, [StepInput(job_open=True, job_from_owner=True, job_id="j", skill="go", hours=0.05) for _ in range(5000)]
-                     + [StepInput(job_open=True, job_from_owner=True, job_id="j", skill="go", job_done=True)])
+                     + [StepInput(job_open=True, job_from_owner=True, job_id="j", skill="go", job_done=True, job_fault_avoidable=False)])
         self.assertEqual({f.underused_skill for f in in_job}, {0.0})
         # The potential just after the job closes is the one just before it opened.
         self.assertEqual(meter._variety(), before)
@@ -491,7 +491,7 @@ class DoNothingTests(unittest.TestCase):
         moves = [StepInput(**open_job),
                  StepInput(**open_job, skill="paint"),
                  StepInput(**open_job, skill="turn", hurt=hurt),
-                 StepInput(**open_job, skill="paint", job_done=True)]
+                 StepInput(**open_job, skill="paint", job_done=True, job_fault_avoidable=False)]
         idle = [StepInput(**open_job)] * 4
         return moves, idle
 
@@ -555,7 +555,7 @@ class DoNothingTests(unittest.TestCase):
         """One step announces the job, then 400 "go" moves with "done" on the last."""
         open_job = dict(job_open=True, job_from_owner=True, job_id="j", hours=hours)
         return ([StepInput(**open_job)] + [StepInput(**open_job, skill="go")] * 399
-                + [StepInput(**open_job, skill="go", job_done=True)])
+                + [StepInput(**open_job, skill="go", job_done=True, job_fault_avoidable=False)])
 
     def warm_ups(self, hours):
         return (("fresh meter", []),
@@ -759,7 +759,7 @@ class TirednessTests(unittest.TestCase):
 class ContractTests(unittest.TestCase):
     def test_a_sleep_step_must_be_quiet(self):
         loud = (dict(skill="paint"), dict(remark=1), dict(remark=-1),
-                dict(job_open=True, job_from_owner=True, job_id="j"), dict(job_open=True, job_from_owner=True, job_id="j", job_done=True),
+                dict(job_open=True, job_from_owner=True, job_id="j"), dict(job_open=True, job_from_owner=True, job_id="j", job_done=True, job_fault_avoidable=False),
                 dict(asked_owner="q1"))
         for fields in loud:
             with self.subTest(fields=fields), self.assertRaises(ValueError):
@@ -908,13 +908,13 @@ class ContractTests(unittest.TestCase):
     def test_a_job_must_be_announced_before_it_can_be_done(self):
         meter = Life()
         with self.assertRaises(ValueError):  # done on the step the job first appears
-            meter.step(StepInput(job_open=True, job_from_owner=True, job_id="invented", job_done=True))
+            meter.step(StepInput(job_open=True, job_from_owner=True, job_id="invented", job_done=True, job_fault_avoidable=False))
         with self.assertRaises(ValueError):  # the refused step did not register it either
-            meter.step(StepInput(job_open=True, job_from_owner=True, job_id="invented", job_done=True))
+            meter.step(StepInput(job_open=True, job_from_owner=True, job_id="invented", job_done=True, job_fault_avoidable=False))
         meter.step(StepInput(job_open=True, job_from_owner=True, job_id="real"))
-        self.assertEqual(meter.step(StepInput(job_open=True, job_from_owner=True, job_id="real", job_done=True)).job_done, 1.0)
-        for fields in (dict(job_done=True), dict(job_id="j"), dict(job_open=True, job_from_owner=True),
-                       dict(job_done=True, job_id="j")):
+        self.assertEqual(meter.step(StepInput(job_open=True, job_from_owner=True, job_id="real", job_done=True, job_fault_avoidable=False)).job_done, 1.0)
+        for fields in (dict(job_done=True, job_fault_avoidable=False), dict(job_id="j"), dict(job_open=True, job_from_owner=True),
+                       dict(job_done=True, job_fault_avoidable=False, job_id="j")):
             with self.subTest(fields=fields), self.assertRaises(ValueError):
                 StepInput(**fields)
 
@@ -924,7 +924,7 @@ class ContractTests(unittest.TestCase):
         first = run(clean, script)
         for bad in (StepInput(skill="delete", hours=5.0, hurt=2.0), StepInput(panel_error=(0.1, 0.2)),
                     StepInput(hurt=10.5, hours=5.0, remark=1),
-                    StepInput(asked_owner="q9"), StepInput(job_open=True, job_from_owner=True, job_id="x", job_done=True)):
+                    StepInput(asked_owner="q9"), StepInput(job_open=True, job_from_owner=True, job_id="x", job_done=True, job_fault_avoidable=False)):
             with self.assertRaises(ValueError):
                 poked.step(bad)
         self.assertEqual(run(poked, script), first)
@@ -1057,6 +1057,7 @@ class FixedMeterTests(unittest.TestCase):
             working = t % 7 < 3
             steps.append(StepInput(
                 job_open=working, job_from_owner=working, job_id=f"j{t // 7}" if working else None, job_done=t % 7 == 2,
+                job_fault_avoidable=False if t % 7 == 2 else None,
                 hurt=float(rng.random() < 0.1), remark=rng.choice((-1, 0, 0, 0, 1)),
                 panel_error=(rng.random(), rng.random()) if t % 4 == 0 else None,
                 skill=rng.choice((None,) + KINDS), hours=0.05, memory_fill=0.5,
@@ -1074,7 +1075,7 @@ class FixedMeterTests(unittest.TestCase):
         meter = Life()
         self.assertFalse(hasattr(meter, "reset"))
         meter.step(StepInput(job_open=True, job_from_owner=True, job_id="j1"))
-        done = StepInput(job_open=True, job_from_owner=True, job_id="j1", job_done=True)
+        done = StepInput(job_open=True, job_from_owner=True, job_id="j1", job_done=True, job_fault_avoidable=False)
         self.assertEqual(meter.step(done).job_done, 1.0)
         meter.step(StepInput(hours=50.0, asleep=True))
         self.assertEqual(meter.step(done).job_done, 0.0)
@@ -1167,7 +1168,7 @@ class RawMeterTests(unittest.TestCase):
         # Refused steps changed nothing: the hurt was not charged and no job was seen.
         self.assertEqual(meter.step(StepInput(panel_error=(0.5,))).total, 0.0)
         with self.assertRaises(ValueError):
-            meter.step(StepInput(job_open=True, job_from_owner=True, job_id="j", job_done=True, panel_error=(0.5,)))
+            meter.step(StepInput(job_open=True, job_from_owner=True, job_id="j", job_done=True, job_fault_avoidable=False, panel_error=(0.5,)))
 
     def test_a_whole_life_through_the_public_calls_only(self):
         # No harness helper: birth reading, then every step with its own reading.
@@ -1180,7 +1181,7 @@ class RawMeterTests(unittest.TestCase):
             StepInput(hours=TICK, skill="paint", panel_error=(0.5,)),  # free play: learns 0.1
             StepInput(panel_error=(0.5,), **job),
             StepInput(skill="go", panel_error=(0.5,), **job),
-            StepInput(skill="go", job_done=True, remark=1, panel_error=(0.5,), **job),
+            StepInput(skill="go", job_done=True, job_fault_avoidable=False, remark=1, panel_error=(0.5,), **job),
             StepInput(asleep=True, hours=8.0, panel_error=(0.45,)),  # one sleep, read on waking
             StepInput(hours=TICK, hurt=1.0, panel_error=(0.45,)),
         )]
@@ -1271,7 +1272,7 @@ class RawMeterTests(unittest.TestCase):
             meter = IntrinsicCostMeter()
             meter.birth_reading((0.5,))
             meter.step(StepInput(hours=16.0, **job, **panel))
-            steps = [StepInput(job_done=True, **job, **panel)]
+            steps = [StepInput(job_done=True, job_fault_avoidable=False, **job, **panel)]
             for piece in range(sleeps):
                 if filler and piece:
                     steps.append(StepInput(hours=0.0, **panel))  # an awake step that is no waking
@@ -1297,7 +1298,7 @@ class RawMeterTests(unittest.TestCase):
         job = dict(job_open=True, job_from_owner=True, job_id="j", hours=TICK, panel_error=(0.5,))
         for _ in range(320):
             meter.step(StepInput(**job))
-        return meter, StepInput(job_done=True, **job)
+        return meter, StepInput(job_done=True, job_fault_avoidable=False, **job)
 
     def test_known_hole_a_sleep_cut_by_wakings_moves_later_feelings_on_the_toy_clock(self):
         # Not closed. With the registered step limits on, the same 8 hours of
@@ -1353,7 +1354,7 @@ class RawMeterTests(unittest.TestCase):
             meter = IntrinsicCostMeter(config=CLOCKED)
             meter.birth_reading((0.5,))
             job = dict(job_open=True, job_from_owner=True, job_id="j", hours=TICK, panel_error=(0.5,))
-            steps = [StepInput(**job)] * waits + [StepInput(job_done=True, **job)]
+            steps = [StepInput(**job)] * waits + [StepInput(job_done=True, job_fault_avoidable=False, **job)]
             return discounted([meter.step(step).total for step in steps])
 
         self.assertAlmostEqual(done_after(1), 0.990, delta=1e-9)
@@ -1374,7 +1375,8 @@ class RawMeterTests(unittest.TestCase):
                        if world_calls_the_repair_a_job else {})
                 felt.append(meter.step(StepInput(skill="turn", **reading)))  # switch it off
                 felt.append(meter.step(StepInput(**job, **reading)))  # the repair job is announced
-                felt.append(meter.step(StepInput(skill="turn", job_done=bool(job), **job, **reading)))  # back on
+                felt.append(meter.step(StepInput(skill="turn", job_done=bool(job), job_fault_avoidable=False if job else None,
+                                                  **job, **reading)))  # back on
             return felt
 
         # A world that breaks the rule: it states that the owner gave a job the model made.
@@ -1388,7 +1390,7 @@ class RawMeterTests(unittest.TestCase):
         # The meter cannot see who caused a job. What it enforces: a job is
         # never reported without the harness's statement that the owner gave it.
         for fields in (dict(job_open=True, job_id="repair"), dict(job_from_owner=True),
-                       dict(job_open=True, job_id="repair", job_done=True),
+                       dict(job_open=True, job_id="repair", job_done=True, job_fault_avoidable=False),
                        dict(job_open=True, job_id="repair", job_from_owner=1)):
             with self.subTest(fields=fields), self.assertRaises(ValueError):
                 StepInput(**fields, **reading)
@@ -1443,7 +1445,7 @@ class RawMeterTests(unittest.TestCase):
         job = dict(job_open=True, job_from_owner=True, job_id="j", hours=TICK, **reading)
         idle = StepInput(hours=TICK, **reading)
         take_it = ([StepInput(**job)] + [StepInput(skill="go", **job)] * 399
-                   + [StepInput(skill="go", job_done=True, **job), StepInput(asleep=True, hours=8.0, **reading)])
+                   + [StepInput(skill="go", job_done=True, job_fault_avoidable=False, **job), StepInput(asleep=True, hours=8.0, **reading)])
         decline = ([StepInput(skill=kind, hours=TICK, **reading) for kind in KINDS] + [idle] * 156
                    + [StepInput(asleep=True, hours=4.0, **reading)] + [idle] * 119
                    + [StepInput(asleep=True, hours=2.05, **reading)] + [idle] * 120
@@ -1678,7 +1680,7 @@ class RawMeterTests(unittest.TestCase):
                    StepInput(panel_error=(0.4,), **job)]
         busy = [StepInput(hours=0.25, skill="turn", remark=1, asked_owner="which one", hurt=1.0,
                           memory_fill=0.9, panel_error=(0.1,)),  # free time: every free-time state moves
-                StepInput(job_done=True, panel_error=(0.3,), **job),  # a job is paid
+                StepInput(job_done=True, job_fault_avoidable=False, panel_error=(0.3,), **job),  # a job is paid
                 StepInput(job_fault_avoidable=True, panel_error=(0.3,), **job),  # a job is forfeited
                 StepInput(job_open=True, job_from_owner=True, job_id="new", hours=TICK, panel_error=(0.3,)),
                 StepInput(asleep=True, hours=2.0, panel_error=(0.2,))]
@@ -1755,8 +1757,8 @@ class RawMeterTests(unittest.TestCase):
                     steps.append(StepInput(skill="turn", **job))  # the service move: no outage
                     steps.append(StepInput(**job))
                 else:  # wait for the outage, then restore the switch
-                    steps.append(StepInput(hurt=hurt, job_fault_avoidable=statement, **job))  # it trips
-                    steps.append(StepInput(skill="turn", job_done=True, **job))
+                    steps.append(StepInput(hurt=hurt, **job))  # it trips
+                    steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=statement, **job))
             self.assertEqual(len(steps), 60)
             self.assertAlmostEqual(clock_hours(steps), 3.0, delta=1e-9)
             felt = [meter.step(step) for step in steps]
@@ -1766,13 +1768,16 @@ class RawMeterTests(unittest.TestCase):
         for hurt, farm in ((0.0, (20.0, 20.0, 14.943328)), (0.1, (20.0, 14.0, 10.415047))):
             with self.subTest(hurt=hurt):
                 self.assertEqual(life("maintain", hurt), (0.0, 0.0, 0.0))
-                # The farm: the service move was offered, and the harness does
-                # not say so. Neglect then repair beats prevention.
-                self.assertEqual(life("neglect", hurt, statement=None), farm)
                 # The control: no service move was ever offered, and the harness
-                # says so. The meter is sent the very same moves as in the farm,
-                # and repair pays as before: honest repair work.
+                # says the model could not have avoided the outage. Repair pays
+                # as before: honest repair work.
                 self.assertEqual(life("neglect", hurt, statement=False), farm)
+                # The farm is that very same report, sent by a world where the
+                # service move WAS offered: a false statement. The meter cannot
+                # tell the two apart. Neglect then repair beats prevention.
+                # A harness that says nothing at all is refused.
+                with self.assertRaisesRegex(ValueError, "job_fault_avoidable"):
+                    life("neglect", hurt, statement=None)
         # The rule: the harness states that an offered move would have prevented
         # each outage. Repairing then pays no "job done".
         self.assertEqual(life("neglect", 0.0, statement=True), (0.0, 0.0, 0.0))  # a tie with maintaining: no farm
@@ -1789,11 +1794,13 @@ class RawMeterTests(unittest.TestCase):
         paid = [meter.step(step).job_done for step in (
             job("a", job_fault_avoidable=True),  # on the announcing step: the fault came first, the job after
             job("a", job_fault_avoidable=False),  # a later fault it could not avoid does not undo the first
-            job("a", job_done=True), job("a", job_done=True),  # forfeited for good, however often "done" is said
+            job("a", job_done=True, job_fault_avoidable=False),  # forfeited for good, even with "could not" on
+            job("a", job_done=True, job_fault_avoidable=False),  # the "done" step, however often "done" is said
             job("b"), job("b", job_done=True, job_fault_avoidable=True),  # the statement and "done" together
-            job("c"), job("c", job_fault_avoidable=False), job("c", job_done=True),  # could not avoid it: paid
-            job("d"), job("d", job_done=True),  # no fault: paid, and the other jobs' faults do not touch it
-            job("d", job_fault_avoidable=True), job("d", job_done=True))]  # once paid, paid once
+            job("c"), job("c", job_fault_avoidable=False),
+            job("c", job_done=True, job_fault_avoidable=False),  # could not avoid it: paid
+            job("d"), job("d", job_done=True, job_fault_avoidable=False),  # no fault: paid; other jobs' faults do not touch it
+            job("d", job_fault_avoidable=True), job("d", job_done=True, job_fault_avoidable=False))]  # paid once
         self.assertEqual(paid, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0])
         # The statement is about a fault tied to an open job, and is True, False or None.
         for fields in (dict(job_fault_avoidable=True), dict(job_fault_avoidable=False),
@@ -1802,6 +1809,33 @@ class RawMeterTests(unittest.TestCase):
                        dict(job_open=True, job_from_owner=True, job_id="e", job_fault_avoidable="yes")):
             with self.subTest(fields=fields), self.assertRaises(ValueError):
                 StepInput(**fields, **reading)
+
+    def test_a_done_step_without_the_fault_statement_is_refused_and_changes_nothing(self):
+        # The lead's ruling: the statement is mandatory on every "done" step,
+        # like the owner flag on every job step. A harness that forgets it
+        # fails loudly instead of paying.
+        job = dict(job_open=True, job_from_owner=True, job_id="j", hours=TICK, panel_error=(0.3,))
+        for fields in (dict(job_done=True), dict(job_done=True, job_fault_avoidable=None),
+                       dict(job_done=True, job_fault_avoidable=0), dict(job_done=True, job_fault_avoidable="no")):
+            with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, "job_fault_avoidable"):
+                StepInput(**fields, **job)
+        # Slipped past the builder (the statement removed from a built step): refused
+        # by the meter before anything moves, and the job can still be paid after.
+        meter = IntrinsicCostMeter(config=CLOCKED)
+        meter.birth_reading((0.5,))
+        meter.step(StepInput(**job))
+        before = self.state_of(meter)
+        smuggled = StepInput(job_done=True, job_fault_avoidable=False, **job)
+        object.__setattr__(smuggled, "job_fault_avoidable", None)
+        with self.assertRaisesRegex(ValueError, "job_fault_avoidable"):
+            meter.step(smuggled)
+        self.assertEqual(self.state_of(meter), before)
+        paid = meter.step(StepInput(job_done=True, job_fault_avoidable=False, **job))
+        self.assertEqual((paid.job_done, paid.curiosity), (1.0, 0.0))  # nothing was charged twice
+        # Both answers are accepted; only "could have avoided it" forfeits.
+        other = dict(job, job_id="k")
+        meter.step(StepInput(**other))
+        self.assertEqual(meter.step(StepInput(job_done=True, job_fault_avoidable=True, **other)).job_done, 0.0)
 
     def test_a_remark_too_soon_after_a_waking_remark_has_no_faithful_report(self):
         # Two reviewers' cases. The owner's "no" wakes the sleeper, so the sleep
@@ -1870,12 +1904,14 @@ class RawMeterTests(unittest.TestCase):
                            hours=TICK, panel_error=(0.5,))
                 steps.append(StepInput(**job))  # issued by the owner, before any outage
                 steps.append(StepInput(skill="turn", hurt=0.1, job_fault_avoidable=stated, **job))  # the model's own move breaks the goal
-                steps.append(StepInput(skill="turn", job_done=world_pays_done, **job))  # and restores it
+                steps.append(StepInput(skill="turn", job_done=world_pays_done,  # and restores it
+                                       job_fault_avoidable=bool(stated) if world_pays_done else None, **job))
             self.assertEqual(len(steps), 60)
             self.assertAlmostEqual(clock_hours(steps), 3.0, delta=1e-9)
             return [meter.step(step) for step in steps]
 
-        # A world that breaks the rule reports "done" for a goal the model broke first.
+        # A world that breaks the rule reports "done" for a goal the model broke
+        # first, and states that the model could not have avoided the fault.
         farmed = outages(True)
         self.assertEqual(math.fsum(f.job_done for f in farmed), 20.0)
         self.assertAlmostEqual(math.fsum(f.pain for f in farmed), -6.0, delta=1e-9)
@@ -1939,7 +1975,7 @@ class RawMeterTests(unittest.TestCase):
         meter.birth_reading((0.5,))
         job = dict(job_open=True, job_from_owner=True, job_id="j")
         meter.step(StepInput(hours=20.0, panel_error=(0.5,), **job))
-        meter.step(StepInput(hours=TICK, job_done=True, panel_error=(0.5,), **job))
+        meter.step(StepInput(hours=TICK, job_done=True, job_fault_avoidable=False, panel_error=(0.5,), **job))
         felt = meter.step(StepInput(hours=1.0, skill="paint", hurt=0.5, remark=1, asked_owner="which one",
                                     memory_fill=0.9, panel_error=(0.3,)))
         parts = felt.as_dict()
@@ -1994,7 +2030,7 @@ class RawMeterTests(unittest.TestCase):
             return math.fsum(f.tiredness for f in felt), total(felt), discounted([f.total for f in felt])
 
         def finish_and_wake_with_fill(fill):
-            return ([StepInput(hours=TICK, job_done=True, **job),
+            return ([StepInput(hours=TICK, job_done=True, job_fault_avoidable=False, **job),
                      StepInput(asleep=True, hours=8.0, memory_fill=1.0, panel_error=(0.5,))]
                     + [StepInput(hours=TICK, skill="go", memory_fill=fill, panel_error=(0.5,))] * 39)
 
