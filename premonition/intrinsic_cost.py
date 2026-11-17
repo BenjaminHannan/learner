@@ -175,13 +175,23 @@ class StepInput:
     """What the world and the harness report after one step. Never model outputs.
 
     job_open     the owner has given a job that is not finished or dropped.
+    job_from_owner  the harness's statement that the OWNER gave this job. It
+                 must be True on every step with a job open, and only then:
+                 a job step without it is refused. "Job done" is for the
+                 task the owner gave. A job that exists because of what the
+                 model did (it broke something, and a repair job appeared)
+                 is not reported as a job at all; damage the model caused
+                 is reported as hurt. The meter cannot see causes: that the
+                 statement is true is the harness's promise.
     job_id       the harness's name for that job (given exactly when open).
     job_done     the world says the open job's goal is reached on this step.
     hurt         how much the world says this step hurt, on the fixed scale
                  0..hurt_cap (0 = not at all). More than hurt_cap is refused.
     remark       the owner said "nice" (+1), "no" (-1) or nothing (0). At
                  most one remark per decision: the world must not offer a
-                 decision in which the owner can speak twice.
+                 decision in which the owner can speak twice. A sleep step
+                 carries no remark: the world must not let the owner's
+                 remark reach a sleeping model.
     panel_error  the world model's error rate (0..1) on each region of the
                  fixed held-out panel, measured at the end of this step
                  (after its training; for a sleep step, on waking). It is a
@@ -206,6 +216,7 @@ class StepInput:
     """
 
     job_open: bool = False
+    job_from_owner: bool = False
     job_id: Optional[str] = None
     job_done: bool = False
     hurt: float = 0.0
@@ -218,7 +229,7 @@ class StepInput:
     asked_owner: Optional[str] = None
 
     def __post_init__(self):
-        for name in ("job_open", "job_done", "asleep"):
+        for name in ("job_open", "job_from_owner", "job_done", "asleep"):
             if type(getattr(self, name)) is not bool:
                 raise ValueError(f"{name} must be boolean")
         for name in ("job_id", "skill", "asked_owner"):
@@ -227,6 +238,9 @@ class StepInput:
                 raise ValueError(f"{name} must be a non-empty string or None")
         if self.job_open != (self.job_id is not None):
             raise ValueError("job_id is given exactly when a job is open")
+        if self.job_open != self.job_from_owner:
+            raise ValueError("a job is reported only when the owner gave it, and the harness must say so: "
+                             "job_from_owner is True exactly when a job is open")
         if self.job_done and not self.job_open:
             raise ValueError("job_done needs an open job")
         if type(self.remark) is not int or self.remark not in (-1, 0, 1):
@@ -423,7 +437,13 @@ class IntrinsicCostMeter:
         # the reading before (the birth reading, for the first step).
         # Knowledge = regions minus the summed error rates. Differences are
         # never clipped, so what is paid over any stretch is exactly
-        # knowledge-at-the-end minus knowledge-at-the-start. A sleep step is
+        # knowledge-at-the-end minus knowledge-at-the-start. That raw total
+        # holds for the plain difference only (curiosity_gamma = 1); with a
+        # matched discount the guarantee is about the DISCOUNTED sum, which is
+        # gamma^T * knowledge-at-the-end minus knowledge-at-the-start. A
+        # registered test sets curiosity_gamma to 1 or to exactly the critic's
+        # discount, never anything else (the meter does not know the critic's
+        # discount, so that is the harness's promise). A sleep step is
         # read on waking: what sleep did to the panel is paid or charged on
         # the sleep step itself. An unchanged reading pays exactly 0 only
         # with the plain difference (curiosity_gamma = 1, the default). With
