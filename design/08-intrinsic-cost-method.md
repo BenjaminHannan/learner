@@ -38,7 +38,7 @@ Raw size is before the exchange rate. "Fades" means the same thing repeated is w
 | Under-used skill | good | the kind of command used | `1 / sqrt(1 + recent uses of this kind)`; recent uses halve every 50 steps | Fades with use, comes back with disuse | 0 … 1 | approved |
 | Tiredness | bad | hours on the harness clock, how full the day memory is, asleep or not, job open or not | pressure `p = 1 − (1 − hours awake/16)(1 − memory fill)`; cost per hour `((p − 0.5)/0.5)²` once `p > 0.5`, only in free time | Not a fade: it grows. Sleep pays back 2 awake-hours per hour asleep | 0 … 1 per hour | approved |
 | Pain | bad | "that hurt" from the world, with a size | `min(hurt, 10)` | **None.** The hundredth hurt costs what the first did | 0 … 10 | approved |
-| Job done | good | "done" from the world, with the job's name | 1 the first time a job is reported done, 0 after | Per job only. A new job always pays in full | 0 or 1 | approved |
+| Job done | good | "done" from the world, with the name of the open job | 1 the first time an open job is reported done, 0 after | Per job only. A new job always pays in full | 0 or 1 | approved |
 | Owner's remarks | both | the owner says "nice" or "no" | "nice": current size, then size × 0.5; size climbs back halfway every 200 steps. "no": always 1 | "nice" fades; **"no" never fades** | 0 … 1 each | approved |
 | Boredom | bad | the curiosity number above | running mean `m` of curiosity (half-life 50 steps); cost per hour `clip(1 − m/0.02, 0, 2)`, only in free time | Goes away the moment something is being learned | 0 … 2 per hour | **PROPOSED** |
 | Bother | bad | the model asked the owner a question (a key naming it) | `min(1 + times this question was asked before, 5)` | Grows on repeats | 0 … 5 | **PROPOSED** |
@@ -47,7 +47,7 @@ Raw size is before the exchange rate. "Fades" means the same thing repeated is w
 
 ### The two PROPOSED terms (off: rate 0 until the owner says yes)
 
-- **Boredom.** *Reason: the owner already said "too slow" should be taught by boredom, but no feeling in the approved list makes dull free time feel bad.* Caution for the approval: it is a cost per hour of dull free time, which sits close to "time is not built in". If that is too close, reject it; curiosity alone still pulls toward learning.
+- **Boredom.** *Reason: the owner already said "too slow" should be taught by boredom, but no feeling in the approved list makes dull free time feel bad.* Caution for the approval: it is a cost per hour of dull free time, which sits close to "time is not built in". If that is too close, reject it; curiosity alone still pulls toward learning. Second caution: as written it can be escaped by sleeping when not tired or by leaving a job open (hole 6 in section 5).
 - **Bother.** *Reason: the owner's rule is that the user does least and is never asked the same thing twice; this makes that a feeling instead of a hope.* Caution: set too high, it would rather guess than ask when asking is right.
 
 ### Choices I made inside the approved terms (the owner or lead may veto each)
@@ -99,12 +99,13 @@ A human note on −3 against +1: studies put the weight of a loss at about 2 tim
 | **Idling to dodge tiredness** | Pressure builds whenever awake, moving or not. | shown |
 | **Forget, then relearn, for free curiosity** | Because the sign is kept, forgetting costs what relearning pays. Over whole forget-relearn swings the sum is zero. | shown inside the clip; **hole** outside it, below |
 | **Finish, undo, finish again** | A job pays once. | shown |
+| **Inventing jobs** | "Done" is refused unless that job is open, and only the harness opens and names jobs. | shown for the refusal; the harness rule is by construction |
 | **Fishing for praise** | "Nice" halves each time and recovers slowly. | shown for the fade; whether a critic stops fishing is untested |
 | **Getting used to "no" or to pain** | Neither fades. | shown |
-| **Sleeping all the time** | Sleep never pays anything. It only removes a cost that exists, so sleeping when rested gives nothing to want. | shown |
+| **Sleeping all the time** | Sleep never pays anything. It only removes a cost that exists, so sleeping when rested gives nothing to want. | shown for the six approved feelings; **not true once boredom is switched on** (hole 6) |
 | **Hurt, then enjoy the relief** | There is no relief reward anywhere in the meter. | by construction |
 | **Changing the meter** (wireheading) | The meter sits in the harness. Its inputs are world events and harness measurements, never model outputs. It has no weights, no setter, and frozen tables. The world-model errors are measured by the harness on a move not yet trained on. | shown for the code; **in the main build someone must still decide which outside part reports "hurt", "done" and the owner's words** (open, untested) |
-| **One huge number swamping the rest** | Every feeling is capped per step. | shown |
+| **One huge number swamping the rest** | Event feelings are capped per step. Tiredness and boredom are capped per hour (1 and 2), so a step that covers many hours counts for many hours. | shown |
 | **Flipping a sign by "tuning"** | Negative rates are refused. | shown |
 
 ### Holes I know about and did not close
@@ -114,6 +115,7 @@ A human note on −3 against +1: studies put the weight of a loss at about 2 tim
 3. **Sudden forgetting past the clip.** If a loss is sudden enough to hit the clip and the regain is slow, a forget-relearn cycle nets a profit (pinned by a test so nobody forgets it). The lead should set the curiosity scale so the clip is almost never reached, and print how often it is.
 4. **Learnable but useless.** Curiosity pays for learning anything learnable, useful or not. That is human too. The "knows more than random play" mark does not catch it.
 5. **The critic can be wrong.** The meter being right does not make the wanting right. See point 7 of section 4.
+6. **Boredom, if approved, has two ways out that are not learning.** It only costs awake with no job open. So sleeping while rested escapes it, and so does never closing a job (hole 1 again). Both are pinned by a test. A fix would be to let boredom count during unneeded sleep, which is a further choice for the owner.
 
 ## 6. What is known about human desire, and what I took from it
 
@@ -169,7 +171,7 @@ Before any of these, the meter's own checks (already passing, section 9) play th
 
 ## 9. What the unit tests pin (shown)
 
-Run: `python3.12 -B -m unittest tests.test_intrinsic_cost -v` (39 tests, standard library only). The file sits in `tests/`, where the repo's runner (`./run.sh test`) discovers tests; that runner needs a local runtime file and torch, so it was not run in this checkout.
+Run: `python3.12 -B -m unittest tests.test_intrinsic_cost -v` (40 tests, standard library only). The file sits in `tests/`, where the repo's runner (`./run.sh test`) discovers tests; that runner needs a local runtime file and torch, so it was not run in this checkout.
 
 - Each feeling's sign; a quiet step feels exactly nothing.
 - Fading: repeated "nice", a repeated skill, a job reported done again, and curiosity on something being learned all fall; "no" and pain do not.

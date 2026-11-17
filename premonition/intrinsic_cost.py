@@ -120,7 +120,8 @@ class StepInput:
 
     job_open     the owner has given a job that is not finished or dropped.
     job_id       name of that job; needed when job_done is reported.
-    job_done     the world says the job's goal is reached on this step.
+    job_done     the world says the open job's goal is reached on this step.
+                 Only the harness names jobs; a job nobody opened cannot pay.
     hurt         how much the world says this move hurt (0 = not at all).
     remark       the owner said "nice" (+1), "no" (-1) or nothing (0).
     error_past   error of the frozen past-self world model on this move's
@@ -154,8 +155,8 @@ class StepInput:
             value = getattr(self, name)
             if value is not None and (type(value) is not str or not value):
                 raise ValueError(f"{name} must be a non-empty string or None")
-        if self.job_done and self.job_id is None:
-            raise ValueError("job_done needs a job_id")
+        if self.job_done and (self.job_id is None or not self.job_open):
+            raise ValueError("job_done needs an open job and its job_id")
         if type(self.remark) is not int or self.remark not in (-1, 0, 1):
             raise ValueError("remark must be -1, 0 or 1")
         _finite(self.hurt, "hurt", low=0.0)

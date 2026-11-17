@@ -293,6 +293,18 @@ class ProposedTermTests(unittest.TestCase):
         self.assertEqual({f.boredom for f in learn}, {0.0})
         self.assertEqual({f.boredom for f in at_work}, {0.0})
 
+    def test_known_hole_boredom_can_be_dodged_by_sleeping_or_an_open_job(self):
+        # Documented limit: boredom only costs awake with no job open, so
+        # with it switched on, sleeping while rested (or never closing a job)
+        # escapes it. Stated in the design doc for the owner's approval.
+        rates = ExchangeRates(boredom=1.0)
+        still = run(IntrinsicCostMeter(rates), [StepInput(hours=0.1)] * 400)
+        dozing = run(IntrinsicCostMeter(rates), [StepInput(hours=0.1, asleep=True)] * 400)
+        stalling = run(IntrinsicCostMeter(rates), [StepInput(hours=0.1, job_open=True, job_id="j")] * 400)
+        self.assertLess(total(still), -20.0)
+        self.assertEqual(total(dozing), 0.0)
+        self.assertEqual(total(stalling), 0.0)
+
     def test_bother_when_switched_on(self):
         meter = IntrinsicCostMeter(ExchangeRates(bother=0.5))
         asked = [meter.step(StepInput(asked_owner="which folder?")).bother for _ in range(8)]
@@ -326,6 +338,8 @@ class FixedMeterTests(unittest.TestCase):
         self.assertEqual(run(meter, self.script()), first)
 
     def test_every_step_is_bounded(self):
+        # Event feelings are capped per step; tiredness and boredom are capped
+        # per hour (at most 1 and 2), so their step size follows the clock.
         rates, config = ExchangeRates(boredom=0.3, bother=0.2), MeterConfig()
         top = rates.curiosity * config.curiosity_clip + rates.underused_skill + rates.job_done + rates.nice
         bottom = -(rates.curiosity * config.curiosity_clip + rates.pain * config.hurt_cap + rates.no
@@ -376,7 +390,7 @@ class FixedMeterTests(unittest.TestCase):
     def test_bad_inputs_are_refused(self):
         bad = (dict(hurt=-1.0), dict(hurt=float("nan")), dict(remark=2), dict(remark=True),
                dict(error_past=0.5), dict(error_past=0.5, error_now=float("inf")),
-               dict(job_done=True), dict(memory_fill=1.5), dict(hours=-1.0), dict(job_open=1),
+               dict(job_done=True), dict(job_done=True, job_id="made-up"), dict(memory_fill=1.5), dict(hours=-1.0), dict(job_open=1),
                dict(skill=""))
         for fields in bad:
             with self.subTest(fields=fields), self.assertRaises(ValueError):
