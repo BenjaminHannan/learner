@@ -1116,7 +1116,9 @@ class FixedMeterTests(unittest.TestCase):
 
 
 class RawMeterTests(unittest.TestCase):
-    """The round-6 contracts, on the raw meter with no test harness around it.
+    """The round-6 contracts. Every test here builds IntrinsicCostMeter itself,
+    gives the birth reading itself and names a panel reading on every step:
+    the Life helper above is not used.
 
     One critic step = one decision = one panel reading: a birth reading
     before the first move, a reading on every step, one sleep per step.
@@ -1191,7 +1193,12 @@ class RawMeterTests(unittest.TestCase):
     def test_a_cycle_read_on_every_step_does_not_beat_holding(self):
         # A reviewer's case: from error 0.5, repeat 0.9 -> 0.1 -> 0.9 -> 0.5 fifty times.
         cycle = [0.9, 0.1, 0.9, 0.5] * 50
-        paid = curiosity_along([0.5] + cycle)
+        def along(errors):  # born at the first error, then one step per later reading
+            meter = IntrinsicCostMeter()
+            meter.birth_reading((errors[0],))
+            return [meter.step(StepInput(panel_error=(error,))).curiosity for error in errors[1:]]
+
+        paid = along([0.5] + cycle)
         self.assertAlmostEqual(discounted(paid), -0.087042, delta=1e-6)
         self.assertLess(discounted(paid), 0.0)  # holding at 0.5 scores 0
         self.assertAlmostEqual(math.fsum(paid), 0.0, places=9)
@@ -1208,9 +1215,10 @@ class RawMeterTests(unittest.TestCase):
         # two moves has one critic step per reading. The dip inside a decision
         # is then not seen, and the cycle scores as learning then forgetting,
         # over and over: above holding at the start, below learning and keeping.
-        grouped = discounted(curiosity_along([0.5] + cycle[1::2]))
+        grouped = discounted(along([0.5] + cycle[1::2]))
         self.assertAlmostEqual(grouped, 0.127431, delta=1e-6)
-        self.assertLess(grouped, discounted(curiosity_along([0.5] + [0.1] * 100)))  # learn once and keep it: 0.4
+        self.assertGreater(grouped, 0.0)  # it does beat holding: hole 3, decision by decision
+        self.assertLess(grouped, discounted(along([0.5] + [0.1] * 100)))  # learn once and keep it: 0.4
 
     def test_one_sleep_is_one_step(self):
         def reading(**fields):
@@ -1226,6 +1234,8 @@ class RawMeterTests(unittest.TestCase):
         # hours awake, so the next hour runs from 8 to 9 hours awake and costs 1/192.
         # Had the second piece counted, it would cost nothing.
         self.assertAlmostEqual(meter.step(reading(hours=1.0)).tiredness, -1.0 / 192.0, delta=1e-12)
+        # Choosing sleep again straight after waking is refused too: the harness
+        # must not offer it (a promise), or must report both as one sleep.
         # Naps and waking early are single, shorter sleep steps, with awake steps between.
         for nap in (0.001, 0.5, 2.0):
             meter.step(reading(hours=nap, asleep=True))
@@ -1237,19 +1247,28 @@ class RawMeterTests(unittest.TestCase):
         # A reviewer's case: finish a 16-hour job (+1), sleep the 8 hours owed,
         # then one hurt (-3). Reported as 128 sleep steps the hurt was pushed
         # 128 discount steps away and the total changed sign.
-        def life(sleep_steps):
-            meter = Life()
-            job = dict(job_open=True, job_id="j")
-            meter.step(StepInput(hours=16.0, **job))
-            steps = ([StepInput(job_done=True, **job)]
-                     + [StepInput(asleep=True, hours=8.0 / sleep_steps)] * sleep_steps + [StepInput(hurt=1.0)])
-            return discounted([f.total for f in run(meter, steps)])
+        def life(sleeps, filler=False):
+            panel, job = dict(panel_error=(0.5,)), dict(job_open=True, job_id="j")
+            meter = IntrinsicCostMeter()
+            meter.birth_reading((0.5,))
+            meter.step(StepInput(hours=16.0, **job, **panel))
+            steps = [StepInput(job_done=True, **job, **panel)]
+            for piece in range(sleeps):
+                if filler and piece:
+                    steps.append(StepInput(hours=0.0, **panel))  # an awake step that is no waking
+                steps.append(StepInput(asleep=True, hours=8.0 / sleeps, **panel))
+            steps.append(StepInput(hurt=1.0, **panel))
+            return discounted([meter.step(step).total for step in steps])
 
-        self.assertAlmostEqual(life(1), -1.9403, delta=1e-9)  # the only way to report it now
-        for pieces in (2, 128):
+        self.assertAlmostEqual(life(1), -1.9403, delta=1e-9)
+        for pieces in (2, 128):  # sleep steps back to back are refused
             with self.subTest(pieces=pieces), self.assertRaises(ValueError):
                 life(pieces)
         self.assertAlmostEqual(1.0 - 3.0 * GAMMA ** 129, 0.179533, delta=1e-6)  # what 128 pieces paid before
+        # Not closed: a harness that puts an empty awake step between the pieces
+        # still moves the hurt. That step must be a real waking (harness promise).
+        self.assertAlmostEqual(life(2, filler=True), 1.0 - 3.0 * GAMMA ** 4, delta=1e-9)
+        self.assertNotAlmostEqual(life(2, filler=True), life(1), delta=0.01)
 
     def test_constant_fill_cost_is_exact_with_fill_and_onset_next_to_one(self):
         # Two reviewers' cases. Fill and onset are both the largest number below 1,
@@ -1257,9 +1276,10 @@ class RawMeterTests(unittest.TestCase):
         edge = math.nextafter(1.0, 0.0)
 
         def spend(hours_to_full, hours, pieces):
-            meter = Life(config=MeterConfig(tired_onset=edge, hours_to_full=hours_to_full))
-            return -math.fsum(meter.step(StepInput(hours=hours / pieces, memory_fill=edge)).tiredness
-                              for _ in range(pieces))
+            meter = IntrinsicCostMeter(config=MeterConfig(tired_onset=edge, hours_to_full=hours_to_full))
+            meter.birth_reading((0.5,))
+            step = StepInput(hours=hours / pieces, memory_fill=edge, panel_error=(0.5,))
+            return -math.fsum(meter.step(step).tiredness for _ in range(pieces))
 
         for pieces in (1, 2, 5):  # a quarter hour to full: 0.25 / 3, however it is cut (was 0.1666667 in two)
             with self.subTest(case="quarter hour", pieces=pieces):
@@ -1273,13 +1293,17 @@ class RawMeterTests(unittest.TestCase):
     def test_praise_always_fades(self):
         # nice_fade = 1 is refused, so a burst of praise in no time at all is
         # worth at most 1 / (1 - nice_fade), however long it goes on.
+        self.assertEqual(MeterConfig().nice_fade, 0.5)  # the starting value: a burst is worth at most 2
         for fade in (0.5, 0.9, 0.99):
-            meter = Life(config=MeterConfig(nice_fade=fade))
-            sizes = [meter.step(StepInput(remark=1)).remarks for _ in range(3000)]
+            meter = IntrinsicCostMeter(config=MeterConfig(nice_fade=fade))
+            meter.birth_reading((0.5,))
+            sizes = [meter.step(StepInput(remark=1, panel_error=(0.5,))).remarks for _ in range(3000)]
             with self.subTest(nice_fade=fade):
                 self.assertLess(sizes[1], sizes[0])
                 self.assertLessEqual(math.fsum(sizes), 1.0 / (1.0 - fade) + 1e-9)
-        self.assertLessEqual(math.fsum(Life().step(StepInput(remark=1)).remarks for _ in range(1)), 2.0)
+        for fade in (1.0, 1.5, 0.0):
+            with self.subTest(refused=fade), self.assertRaises(ValueError):
+                MeterConfig(nice_fade=fade)
 
 
 if __name__ == "__main__":
