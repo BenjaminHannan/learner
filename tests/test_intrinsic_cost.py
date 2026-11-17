@@ -928,12 +928,12 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(Life(config=MeterConfig(hurt_cap=100.0)).step(StepInput(hurt=100.0)).pain,
                          -300.0)
         # No clipping: ten units of harm are the same RAW pain in one step or in ten.
-        spread = [Life().step(StepInput(hurt=10.0)).pain]
+        bundled = [Life().step(StepInput(hurt=10.0)).pain]
         meter = Life()
         apart = [meter.step(StepInput(hurt=1.0)).pain for _ in range(10)]
-        self.assertAlmostEqual(math.fsum(spread), math.fsum(apart), delta=1e-9)  # -30 and -30
+        self.assertAlmostEqual(math.fsum(bundled), math.fsum(apart), delta=1e-9)  # -30 and -30
         # Timing is a separate matter: under the critic's discount the spread-out harm weighs less.
-        self.assertEqual(discounted(spread), -30.0)
+        self.assertEqual(discounted(bundled), -30.0)
         self.assertAlmostEqual(discounted(apart), -28.685377, delta=1e-6)
 
     def test_panel_readings_must_fit_the_contract(self):

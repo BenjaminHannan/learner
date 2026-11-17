@@ -142,6 +142,8 @@ class MeterConfig:
     # clock is refused instead of silently switching tiredness off: an awake
     # step below the shortest step, and a sleep step of 0 hours. Sleep steps
     # are otherwise not limited (their sums are exact at any length).
+    # The longest step is a limit on the world: it must not offer an awake
+    # decision longer than that. A longer decision is never cut into steps.
     min_awake_step_hours: Optional[float] = None
     max_awake_step_hours: Optional[float] = None
 
@@ -177,7 +179,9 @@ class StepInput:
     job_done     the world says the open job's goal is reached on this step.
     hurt         how much the world says this step hurt, on the fixed scale
                  0..hurt_cap (0 = not at all). More than hurt_cap is refused.
-    remark       the owner said "nice" (+1), "no" (-1) or nothing (0).
+    remark       the owner said "nice" (+1), "no" (-1) or nothing (0). At
+                 most one remark per decision: the world must not offer a
+                 decision in which the owner can speak twice.
     panel_error  the world model's error rate (0..1) on each region of the
                  fixed held-out panel, measured at the end of this step
                  (after its training; for a sleep step, on waking). It is a
