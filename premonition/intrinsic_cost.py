@@ -31,8 +31,14 @@ APPROVED_TERMS = ("curiosity", "underused_skill", "tiredness", "pain", "job_done
 PROPOSED_TERMS = ("boredom", "bother")
 TERMS = APPROVED_TERMS + PROPOSED_TERMS
 
-# The supported range. No rate, no step length and no shape number may be
-# above LARGEST, and no shape number below SMALLEST. Inside this range every
+# The supported range. Nothing may be above LARGEST: no exchange rate, no
+# step's hours, not panel_regions, and none of the settings named next. These
+# may not be below SMALLEST: skill_half_life, hours_to_full, sleep_payback,
+# hurt_cap, nice_half_life, boredom_half_life, boredom_floor, bother_cap, and
+# the two step-length limits when set. SMALLEST does not apply to exchange
+# rates and a step's hours (0 is allowed), nor to the ratios curiosity_gamma
+# and nice_fade (above 0, up to 1) and tired_onset (0 up to, not including,
+# 1). Inside this range every
 # feeling the meter returns is a finite number: a table such as pain = 1e308
 # is refused when it is built, not turned into "minus infinity" later.
 LARGEST = 1e6
