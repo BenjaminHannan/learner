@@ -12,6 +12,12 @@ that returns a number, ``step`` always advances the meter, and the meter
 refuses to be copied or pickled. One meter lasts one life: it cannot be
 reset, and the harness must not rebuild it between episodes.
 
+One step of the meter is one step of the critic: one decision of the model,
+and one reading of the held-out panel. The critic's discount counts
+decisions, not reports. So the harness gives a birth reading of the panel
+before the model's first move (``birth_reading``: no step, nothing paid),
+every step carries a panel reading, and one sleep is one step however long.
+
 The meter also refuses inputs that break the harness contracts written in
 design/08-intrinsic-cost-method.md (section 5). A refused step changes nothing.
 
@@ -37,8 +43,8 @@ TERMS = APPROVED_TERMS + PROPOSED_TERMS
 # hurt_cap, nice_half_life, boredom_half_life, boredom_floor, bother_cap, and
 # the two step-length limits when set. SMALLEST does not apply to exchange
 # rates and a step's hours (0 is allowed), nor to the ratios curiosity_gamma
-# and nice_fade (above 0, up to 1) and tired_onset (0 up to, not including,
-# 1). Inside this range every
+# (above 0, up to 1), nice_fade (above 0, below 1) and tired_onset (0 up to,
+# not including, 1). Inside this range every
 # feeling the meter returns is a finite number: a table such as pain = 1e308
 # is refused when it is built, not turned into "minus infinity" later.
 LARGEST = 1e6
@@ -118,6 +124,8 @@ class MeterConfig:
     hurt_cap: float = 10.0
     # owner's "nice": each one multiplies the next by nice_fade; the size
     # recovers halfway to full every nice_half_life HOURS on the clock.
+    # nice_fade is below 1, so praise always fades: any burst of "nice" in
+    # no time at all is worth at most 1 / (1 - nice_fade) in total.
     nice_fade: float = 0.5
     nice_half_life: float = 10.0
     # PROPOSED boredom: the pool of fresh learning halves every
@@ -149,8 +157,8 @@ class MeterConfig:
             _finite(getattr(self, name), name, low=SMALLEST, high=LARGEST)
         if not 0 <= _finite(self.tired_onset, "tired_onset") < 1:
             raise ValueError("tired_onset must be within 0..1 (1 excluded)")
-        if not 0 < _finite(self.nice_fade, "nice_fade") <= 1:
-            raise ValueError("nice_fade must be within 0..1 (0 excluded)")
+        if not 0 < _finite(self.nice_fade, "nice_fade") < 1:
+            raise ValueError("nice_fade must be above 0 and below 1: praise must fade")
         for name in ("min_awake_step_hours", "max_awake_step_hours"):
             if getattr(self, name) is not None:
                 _finite(getattr(self, name), name, low=SMALLEST, high=LARGEST)
@@ -171,12 +179,13 @@ class StepInput:
                  0..hurt_cap (0 = not at all). More than hurt_cap is refused.
     remark       the owner said "nice" (+1), "no" (-1) or nothing (0).
     panel_error  the world model's error rate (0..1) on each region of the
-                 fixed held-out panel, measured after this step's training.
-                 It is a share of panel items: predicted wrong (exact match)
-                 or, for continuous predictions, off by more than a tolerance
-                 fixed before the run. Never a rescaled loss. Same items, same
-                 order, no sampling noise. None on steps where the panel was
-                 not evaluated.
+                 fixed held-out panel, measured at the end of this step
+                 (after its training; for a sleep step, on waking). It is a
+                 share of panel items: predicted wrong (exact match) or, for
+                 continuous predictions, off by more than a tolerance fixed
+                 before the run. Never a rescaled loss. Same items, same
+                 order, no sampling noise. Required on every step: the meter
+                 refuses a step without it.
     skill        kind of command used (None = no move was made). With a job
                  open it is checked against the closed list and otherwise
                  ignored: the skill feeling works in free play only.
@@ -186,7 +195,9 @@ class StepInput:
                  taken as constant through the step. It must not be higher
                  than at the start of a sleep step just before it.
     asleep       this step was spent asleep. A sleep step must be quiet: no
-                 job open, no move, no panel reading, no remark, no question.
+                 job open, no move, no remark, no question. One sleep is one
+                 step, of any length: a sleep step straight after a sleep
+                 step is refused.
     asked_owner  PROPOSED: the id of the question put to the owner.
     """
 
@@ -221,12 +232,12 @@ class StepInput:
         _finite(self.memory_fill, "memory_fill", low=0.0, high=1.0)
         if self.panel_error is not None:
             if type(self.panel_error) is not tuple or not self.panel_error:
-                raise ValueError("panel_error must be a non-empty tuple or None")
+                raise ValueError("panel_error must be a non-empty tuple")
             for error in self.panel_error:
                 _finite(error, "panel_error", low=0.0, high=1.0)
-        if self.asleep and (self.job_open or self.skill is not None or self.panel_error is not None
+        if self.asleep and (self.job_open or self.skill is not None
                             or self.remark != 0 or self.asked_owner is not None):
-            raise ValueError("a sleep step must be quiet: no job, move, panel reading, remark or question")
+            raise ValueError("a sleep step must be quiet: no job, move, remark or question")
 
 
 @dataclass(frozen=True)
@@ -262,7 +273,8 @@ class IntrinsicCostMeter:
     """The fixed meter. Owned by the harness; ``step`` is its only output."""
 
     __slots__ = ("_rates", "_config", "_skill_counts", "_hours_awake", "_seen_jobs", "_paid_jobs",
-                 "_nice_size", "_knowledge", "_record", "_fresh", "_asked", "_fill_limit")
+                 "_nice_size", "_knowledge", "_record", "_fresh", "_asked", "_fill_limit",
+                 "_just_slept")
 
     def __init__(self, rates=None, config=None):
         rates = ExchangeRates() if rates is None else rates
@@ -280,11 +292,12 @@ class IntrinsicCostMeter:
         self._seen_jobs = set()
         self._paid_jobs = set()
         self._nice_size = 1.0
-        self._knowledge = None  # last panel reading, as knowledge
+        self._knowledge = None  # last panel reading, as knowledge (None until the birth reading)
         self._record = None  # best knowledge so far
         self._fresh = config.boredom_floor  # pool of fresh learning
         self._asked = {}
         self._fill_limit = 1.0  # most the next step's fill may be (lower right after sleep)
+        self._just_slept = False  # the last step was a sleep step
 
     @property
     def rates(self):
@@ -298,6 +311,28 @@ class IntrinsicCostMeter:
         raise TypeError("the meter cannot be copied or pickled: a copy could be asked 'what if'")
 
     __copy__ = __deepcopy__ = __reduce__ = __reduce_ex__ = _no_copies
+
+    def _read_panel(self, panel_error):
+        """Check one panel reading and turn it into knowledge (regions minus summed error)."""
+        if type(panel_error) is not tuple or len(panel_error) != self._config.panel_regions:
+            raise ValueError(f"the panel must report {self._config.panel_regions} region(s), as a tuple")
+        for error in panel_error:
+            _finite(error, "panel_error", low=0.0, high=1.0)
+        return self._config.panel_regions - math.fsum(panel_error)
+
+    def birth_reading(self, panel_error):
+        """Take the panel reading at birth, before the model's first move.
+
+        The harness calls this once. It is not a step: nothing is paid and
+        nothing is returned. It fixes where knowledge starts, so that a loss
+        on the very first move is charged like any later loss. A second
+        birth reading is refused: it would be a reset by another name.
+        """
+        if self._knowledge is not None:
+            raise ValueError("the birth reading is taken once per life")
+        knowledge = self._read_panel(panel_error)  # a refused reading changes nothing
+        self._knowledge = knowledge
+        self._record = knowledge
 
     def _variety(self):
         """How evenly the command kinds were used lately, 0..1 (entropy)."""
@@ -316,7 +351,9 @@ class IntrinsicCostMeter:
         cost = max(0.0, end - max(start, full))  # at full pressure: 1 per hour
 
         def level(hour):
-            return min(1.0, max(0.0, (fill + (1.0 - fill) * hour / full - onset) / (1.0 - onset)))
+            # (fill - onset) first: the pressure itself, a number near 1 when
+            # fill and onset are near 1, is never formed and rounded.
+            return min(1.0, max(0.0, ((fill - onset) + (1.0 - fill) * (hour / full)) / (1.0 - onset)))
 
         # Below full pressure the level is a straight line once past the
         # onset, so its square sums to hours x (a*a + a*b + b*b) / 3.
@@ -343,12 +380,17 @@ class IntrinsicCostMeter:
         config = self._config
         if type(observed) is not StepInput:
             raise ValueError("step takes a StepInput")
+        if self._knowledge is None:
+            raise ValueError("no step before the birth reading: read the panel before the model's first move")
+        if observed.panel_error is None:
+            raise ValueError("every step needs a panel reading: one critic step is one panel reading")
+        self._read_panel(observed.panel_error)
+        if observed.asleep and self._just_slept:
+            raise ValueError("one sleep is one step: report the whole sleep as a single step")
         if observed.skill is not None and observed.skill not in config.skill_kinds:
             raise ValueError(f"unknown command kind {observed.skill!r}")
         if observed.asked_owner is not None and observed.asked_owner not in config.question_ids:
             raise ValueError(f"unknown question id {observed.asked_owner!r}")
-        if observed.panel_error is not None and len(observed.panel_error) != config.panel_regions:
-            raise ValueError(f"the panel must report {config.panel_regions} region(s)")
         if observed.hurt > config.hurt_cap:
             raise ValueError(f"hurt must be at most {config.hurt_cap}: rescale it, do not cut it or drop it")
         if observed.job_done and observed.job_id not in self._seen_jobs:
@@ -373,22 +415,17 @@ class IntrinsicCostMeter:
         free_and_awake = not observed.job_open and not observed.asleep
 
         # Curiosity: the change in knowledge on the fixed held-out panel since
-        # the last reading. Knowledge = regions minus the summed error rates.
-        # Differences are never clipped, so what is paid over any stretch is
-        # exactly knowledge-at-the-end minus knowledge-at-the-start. The last
-        # reading is kept across sleep: what sleep did to the panel is paid or
-        # charged on waking.
-        curious = 0.0
-        new_record = 0.0
-        if observed.panel_error is not None:
-            knowledge = config.panel_regions - math.fsum(observed.panel_error)
-            if self._knowledge is None:
-                self._record = knowledge
-            else:
-                curious = config.curiosity_gamma * knowledge - self._knowledge
-                new_record = max(0.0, knowledge - self._record)
-                self._record = max(self._record, knowledge)
-            self._knowledge = knowledge
+        # the reading before (the birth reading, for the first step).
+        # Knowledge = regions minus the summed error rates. Differences are
+        # never clipped, so what is paid over any stretch is exactly
+        # knowledge-at-the-end minus knowledge-at-the-start. A sleep step is
+        # read on waking: what sleep did to the panel is paid or charged on
+        # the sleep step itself.
+        knowledge = self._read_panel(observed.panel_error)
+        curious = config.curiosity_gamma * knowledge - self._knowledge
+        new_record = max(0.0, knowledge - self._record)
+        self._record = max(self._record, knowledge)
+        self._knowledge = knowledge
 
         # Under-used skill: the change in how evenly the kinds were used
         # lately. Signed, so the total over any stretch is bounded by 1.
@@ -418,6 +455,7 @@ class IntrinsicCostMeter:
         # The fill is read at the start of a step and sleep must not raise it,
         # so the step after a sleep step may not start fuller than it did.
         self._fill_limit = observed.memory_fill if observed.asleep else 1.0
+        self._just_slept = observed.asleep
 
         # Pain: never fades. Hurt above the scale was refused, not cut down.
         hurt = observed.hurt
