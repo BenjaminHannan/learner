@@ -1658,6 +1658,17 @@ class RawMeterTests(unittest.TestCase):
             meter.step(smuggled)
         self.assertEqual(self.state_of(meter), before)
         self.assertEqual(meter.step(StepInput(hours=TICK, panel_error=(0.5,))).curiosity, 0.0)
+        # And a rate changed inside a living meter: refused at the next step, nothing moved.
+        before = self.state_of(meter)
+        object.__setattr__(meter.rates, "pain", FlippingRate(3.0))
+        with self.assertRaises(ValueError):
+            meter.step(StepInput(hours=TICK, hurt=1.0, panel_error=(0.2,)))
+        self.assertEqual(self.state_of(meter), before)
+        object.__setattr__(meter.config, "nice_half_life", BadHours(10.0))
+        object.__setattr__(meter.rates, "pain", 3.0)
+        with self.assertRaises(ValueError):
+            meter.step(StepInput(hours=TICK, panel_error=(0.2,)))
+        self.assertEqual(self.state_of(meter), before)
         # Ordinary numbers are untouched: a plain int rate gives the same pain as the float.
         plain = IntrinsicCostMeter(ExchangeRates(pain=3))
         plain.birth_reading((0.5,))

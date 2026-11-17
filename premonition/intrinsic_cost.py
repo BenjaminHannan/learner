@@ -424,7 +424,11 @@ class IntrinsicCostMeter:
         config = self._config
         if type(observed) is not StepInput:
             raise ValueError("step takes a StepInput")
-        observed.__post_init__()  # again: a field changed after it was built is refused too
+        # Checked again on every step: a field of the step, or of the meter's
+        # own tables, changed after it was built is refused too.
+        observed.__post_init__()
+        self._rates.__post_init__()
+        config.__post_init__()
         if self._knowledge is None:
             raise ValueError("no step before the birth reading: read the panel before the model's first move")
         if observed.panel_error is None:
