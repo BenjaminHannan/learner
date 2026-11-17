@@ -1649,7 +1649,7 @@ class RawMeterTests(unittest.TestCase):
             IntrinsicCostMeter(rates)
         # So is a step changed after it was built, before anything moves. The
         # reviewer's meter raised part-way and charged -0.3 on the next step.
-        meter = IntrinsicCostMeter(config=CLOCKED)
+        meter = IntrinsicCostMeter(config=dataclasses.replace(CLOCKED))  # its own copy: it is tampered with below
         meter.birth_reading((0.5,))
         before = self.state_of(meter)
         smuggled = StepInput(hours=TICK, panel_error=(0.2,))
