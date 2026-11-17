@@ -334,7 +334,8 @@ class IntrinsicCostMeter:
         # the last reading. Knowledge = regions minus the summed error rates.
         # Differences are never clipped, so what is paid over any stretch is
         # exactly knowledge-at-the-end minus knowledge-at-the-start. The last
-        # reading is kept across sleep: forgetting in sleep is charged on waking.
+        # reading is kept across sleep: what sleep did to the panel is paid or
+        # charged on waking.
         curious = 0.0
         new_record = 0.0
         if observed.panel_error is not None:

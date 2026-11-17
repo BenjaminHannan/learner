@@ -259,6 +259,20 @@ class CuriosityBoundTests(unittest.TestCase):
         self.assertLessEqual(discounted(paid), 0.0)
         self.assertAlmostEqual(math.fsum(paid), 0.0, places=9)
 
+    def test_learning_then_forgetting_scores_positive_but_never_more_than_keeping(self):
+        # Knowledge 0.1 -> 0.9, then lost again after a while (design doc, hole 3).
+        keep = discounted(curiosity_along([0.9] + [0.1] * 5000))
+        late = discounted(curiosity_along([0.9] + [0.1] * 500 + [0.9] * 4500))
+        soon = discounted(curiosity_along([0.9] + [0.1] * 50 + [0.9] * 4950))
+        in_turns = discounted(curiosity_along([0.9] + ([0.1] * 50 + [0.9] * 50) * 50))
+        self.assertAlmostEqual(keep, 0.800, delta=0.001)
+        self.assertAlmostEqual(late, 0.795, delta=0.001)  # almost as much as keeping
+        self.assertAlmostEqual(soon, 0.316, delta=0.001)
+        self.assertAlmostEqual(in_turns, 0.498, delta=0.001)  # no lasting knowledge, over half of keeping
+        self.assertTrue(keep > late > in_turns > soon > 0.0)
+        # But from the learned state, forgetting then relearning is a loss.
+        self.assertLess(discounted(curiosity_along([0.1] + [0.9] * 50 + [0.1] * 50)), -0.3)
+
     def test_learning_early_and_keeping_it_is_what_pays(self):
         early = curiosity_along([0.9] + [0.1] * 400)
         late = curiosity_along([0.9] * 300 + [0.1] * 101)
@@ -434,6 +448,25 @@ class DoNothingTests(unittest.TestCase):
         self.assertLess(worth(one_kind_job(400)), busywork)  # far job: busywork scores higher
         self.assertLess(busywork, 0.05 + 1e-12)  # and that is all it can ever score
 
+    def test_once_use_is_even_a_far_off_one_kind_job_scores_below_idling(self):
+        # Worse than a delay: with the bonus already collected, a long job of
+        # one kind first gives variety back, and "done" comes too late to
+        # cover it. Idling scores 0. (Hole 11 in the design doc.)
+        def worth_after_varied_use(tail):
+            meter = IntrinsicCostMeter()
+            run(meter, [StepInput(job_open=True, job_id="j", skill=KINDS[i % 4]) for i in range(400)])
+            return discounted([f.total for f in run(meter, tail)])
+
+        def job(moves):
+            return ([StepInput(job_open=True, job_id="j", skill="go")] * (moves - 1)
+                    + [StepInput(job_open=True, job_id="j", skill="go", job_done=True)])
+
+        self.assertEqual(worth_after_varied_use([StepInput(job_open=True, job_id="j")] * 400), 0.0)
+        self.assertAlmostEqual(worth_after_varied_use(job(100)), 0.354, delta=0.001)
+        self.assertAlmostEqual(worth_after_varied_use(job(298)), 0.031, delta=0.001)
+        self.assertLess(worth_after_varied_use(job(400)), 0.0)
+        self.assertGreater(worth_after_varied_use(job(400)), -0.01)
+
     def test_sitting_still_in_free_time_does_not_dodge_tiredness(self):
         still = run(IntrinsicCostMeter(), [StepInput(hours=1.0)] * 30)
         busy = run(IntrinsicCostMeter(ExchangeRates(underused_skill=0.0)),
@@ -469,7 +502,8 @@ class TirednessTests(unittest.TestCase):
             for hours, pieces in ((1.0, 1), (1.0, 100), (20.0, 7)):
                 with self.subTest(fill=fill, hours=hours, pieces=pieces):
                     cost = -self.spend(hours, pieces, fill)
-                    self.assertLessEqual(cost, hours * (1.0 + 1e-12))  # rounding only
+                    # One step: strictly within the bound. Many steps: adding them up may round.
+                    self.assertLessEqual(cost, hours if pieces == 1 else hours * (1.0 + 1e-12))
                     self.assertGreater(cost, hours * (1.0 - 1e-5))
 
     def test_open_job_hides_the_cost_but_pressure_still_builds(self):
