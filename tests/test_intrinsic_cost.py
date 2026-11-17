@@ -9,6 +9,7 @@ import pickle
 import random
 import sys
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -1598,6 +1599,114 @@ class RawMeterTests(unittest.TestCase):
                     slept = False
                 hours += step_hours
                 self.assertLessEqual(praise, bound(hours, half_life, fade) + 1e-9, (trial, half_life, fade))
+
+    @staticmethod
+    def state_of(meter):
+        # Every piece of state the meter holds, as text: equal text means an identical state.
+        def shown(value):
+            return repr(sorted(value)) if isinstance(value, set) else repr(value)
+        return {slot: shown(getattr(meter, slot)) for slot in IntrinsicCostMeter.__slots__
+                if slot not in ("_rates", "_config")}
+
+    def test_a_number_that_is_not_exactly_an_int_or_a_float_is_refused(self):
+        # Two reviewer's cases. A float subclass can carry its own arithmetic.
+        class FlippingRate(float):  # its negation gives back whatever it likes
+            current = -1.0
+
+            def __neg__(self):
+                return -self.current
+
+        class BadHours(float):  # adding it raises, half-way through a step
+            def __radd__(self, other):
+                raise ValueError("bad hours arithmetic")
+
+        class Whole(int):
+            pass
+
+        # 1. A float-subclass rate cannot flip pain positive: the table is refused.
+        with self.assertRaisesRegex(ValueError, "exactly an int or a float"):
+            ExchangeRates(pain=FlippingRate(3.0))
+        # 2. Float-subclass hours never reach a step: the report is refused.
+        with self.assertRaisesRegex(ValueError, "exactly an int or a float"):
+            StepInput(hours=BadHours(TICK), panel_error=(0.2,))
+        # Every other number, in the tables and in a step, the same way.
+        for build in (lambda: ExchangeRates(job_done=True), lambda: ExchangeRates(no=Whole(3)),
+                      lambda: MeterConfig(nice_half_life=FlippingRate(10.0)),
+                      lambda: MeterConfig(curiosity_gamma=BadHours(1.0)),
+                      lambda: MeterConfig(tired_onset=FlippingRate(0.5)),
+                      lambda: MeterConfig(min_awake_step_hours=BadHours(TICK), max_awake_step_hours=0.25),
+                      lambda: StepInput(hurt=FlippingRate(1.0), panel_error=(0.5,)),
+                      lambda: StepInput(memory_fill=BadHours(0.5), panel_error=(0.5,)),
+                      lambda: StepInput(hours=True, panel_error=(0.5,)),
+                      lambda: StepInput(panel_error=(BadHours(0.5),)),
+                      lambda: IntrinsicCostMeter().birth_reading((FlippingRate(0.5),))):
+            with self.assertRaises(ValueError):
+                build()
+        # A table changed behind the frozen dataclass's back is refused when the meter is built.
+        rates = ExchangeRates()
+        object.__setattr__(rates, "pain", FlippingRate(3.0))
+        with self.assertRaises(ValueError):
+            IntrinsicCostMeter(rates)
+        # So is a step changed after it was built, before anything moves. The
+        # reviewer's meter raised part-way and charged -0.3 on the next step.
+        meter = IntrinsicCostMeter(config=CLOCKED)
+        meter.birth_reading((0.5,))
+        before = self.state_of(meter)
+        smuggled = StepInput(hours=TICK, panel_error=(0.2,))
+        object.__setattr__(smuggled, "hours", BadHours(TICK))
+        with self.assertRaises(ValueError):
+            meter.step(smuggled)
+        self.assertEqual(self.state_of(meter), before)
+        self.assertEqual(meter.step(StepInput(hours=TICK, panel_error=(0.5,))).curiosity, 0.0)
+        # Ordinary numbers are untouched: a plain int rate gives the same pain as the float.
+        plain = IntrinsicCostMeter(ExchangeRates(pain=3))
+        plain.birth_reading((0.5,))
+        self.assertEqual(plain.step(StepInput(hurt=1, hours=1, panel_error=(0.5,))).pain, -3.0)
+
+    def test_a_step_that_raises_part_way_leaves_the_state_identical(self):
+        # Everything is checked before anything changes. This goes one further:
+        # an error forced at the very end of a step, after every piece of
+        # state has moved, still leaves the meter exactly as it was.
+        config = dataclasses.replace(CLOCKED, question_ids=("which one",))
+        rates = ExchangeRates(boredom=1.0, bother=1.0)
+        job = dict(job_open=True, job_from_owner=True, job_id="j", hours=TICK)
+        warm_up = [StepInput(hours=0.25, skill="paint", remark=1, panel_error=(0.4,)),
+                   StepInput(panel_error=(0.4,), **job)]
+        busy = [StepInput(hours=0.25, skill="turn", remark=1, asked_owner="which one", hurt=1.0,
+                          memory_fill=0.9, panel_error=(0.1,)),  # free time: every free-time state moves
+                StepInput(job_done=True, panel_error=(0.3,), **job),  # a job is paid
+                StepInput(job_open=True, job_from_owner=True, job_id="new", hours=TICK, panel_error=(0.3,)),
+                StepInput(asleep=True, hours=2.0, panel_error=(0.2,))]
+        for step in busy:
+            with self.subTest(step=step):
+                meter, twin = IntrinsicCostMeter(rates, config), IntrinsicCostMeter(rates, config)
+                for each in (meter, twin):
+                    each.birth_reading((0.5,))
+                    for warm in warm_up:
+                        each.step(warm)
+                before = self.state_of(meter)
+                with mock.patch.object(intrinsic_cost, "Feelings", side_effect=RuntimeError("late")):
+                    with self.assertRaises(RuntimeError):
+                        meter.step(step)
+                self.assertEqual(self.state_of(meter), before)
+                # And the step, taken again, feels exactly what it feels on a meter that never failed.
+                self.assertEqual(meter.step(step), twin.step(step))
+                self.assertEqual(self.state_of(meter), self.state_of(twin))
+                self.assertNotEqual(self.state_of(meter), before)  # the step does move the state
+
+    def test_a_step_names_one_command_kind_only(self):
+        # The lead's ruling: a decision holds moves of one kind. The meter sees
+        # one name per step, so a report naming two kinds is refused. It cannot
+        # see the moves inside a decision: that they were all of the named kind
+        # is the harness's promise.
+        for skill in (("paint", "turn"), ["paint", "turn"], frozenset(("paint",)), "", 1):
+            with self.subTest(skill=skill), self.assertRaises(ValueError):
+                StepInput(skill=skill, hours=2 * TICK, panel_error=(0.5,))
+        meter = IntrinsicCostMeter(config=CLOCKED)
+        meter.birth_reading((0.5,))
+        with self.assertRaises(ValueError):
+            meter.step(StepInput(skill="paint+turn", hours=2 * TICK, panel_error=(0.5,)))  # not on the closed list
+        meter.step(StepInput(skill="paint", hours=2 * TICK, panel_error=(0.5,)))  # two paints: one decision
 
     def test_a_world_that_pays_done_for_a_goal_the_model_broke_farms_job_done(self):
         # A reviewer's toy world. The owner issues twenty jobs ahead of time:

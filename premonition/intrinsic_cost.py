@@ -52,8 +52,12 @@ SMALLEST = 1e-6
 
 
 def _finite(value, name, low=None, high=None):
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError(f"{name} must be a number")
+    # Exactly int or float: a bool is refused, and so is any subclass. A
+    # subclass can carry its own arithmetic (a negation that flips a sign, an
+    # addition that raises half-way through a step), so it never gets in.
+    # The harness converts other number types with float() first.
+    if type(value) not in (int, float):
+        raise ValueError(f"{name} must be exactly an int or a float (not a bool, not a subclass)")
     value = float(value)
     if not math.isfinite(value):
         raise ValueError(f"{name} must be finite")
@@ -216,7 +220,11 @@ class StepInput:
     skill        kind of command used (None = no move was made). With a job
                  open it is checked against the closed list and otherwise
                  ignored: the skill feeling works in free play only. One
-                 decision counts once, however many moves it holds.
+                 decision counts once, however many moves it holds, and it
+                 holds moves of ONE kind only: the world splits a mixed
+                 command into one decision per kind. A step can name one
+                 kind; that the decision held no other is the harness's
+                 promise.
     hours        clock time this step took, from the harness clock (at most
                  LARGEST hours in one step).
     memory_fill  how full the day memory is at the start of the step, 0..1,
@@ -315,6 +323,10 @@ class IntrinsicCostMeter:
             raise ValueError("rates must be an ExchangeRates table")
         if type(config) is not MeterConfig:
             raise ValueError("config must be a MeterConfig")
+        # Checked again here: a table changed behind the frozen dataclass's
+        # back after it was built is refused too.
+        rates.__post_init__()
+        config.__post_init__()
         self._rates = rates
         self._config = config
         # The state at birth: rested, nothing used, nothing paid. There is
@@ -412,6 +424,7 @@ class IntrinsicCostMeter:
         config = self._config
         if type(observed) is not StepInput:
             raise ValueError("step takes a StepInput")
+        observed.__post_init__()  # again: a field changed after it was built is refused too
         if self._knowledge is None:
             raise ValueError("no step before the birth reading: read the panel before the model's first move")
         if observed.panel_error is None:
@@ -442,8 +455,29 @@ class IntrinsicCostMeter:
                                  "decision longer than that (one decision is one step, never cut into several)")
 
     def step(self, observed):
-        """Take what happened on one step; return what it felt like."""
+        """Take what happened on one step; return what it felt like.
+
+        Everything is checked before anything changes, so a refused step
+        changes nothing. Should anything still raise after the checks, the
+        state is put back exactly as it was before the error goes on up.
+        """
         self._check(observed)  # a refused step changes nothing
+        saved = (dict(self._skill_counts), self._hours_awake, self._nice_size, self._knowledge, self._record,
+                 self._fresh, dict(self._asked), self._fill_limit, self._just_slept)
+        new_to_seen = observed.job_id is not None and observed.job_id not in self._seen_jobs
+        new_to_paid = observed.job_id is not None and observed.job_id not in self._paid_jobs
+        try:
+            return self._feel(observed)
+        except BaseException:
+            (self._skill_counts, self._hours_awake, self._nice_size, self._knowledge, self._record,
+             self._fresh, self._asked, self._fill_limit, self._just_slept) = saved
+            if new_to_seen:
+                self._seen_jobs.discard(observed.job_id)
+            if new_to_paid:
+                self._paid_jobs.discard(observed.job_id)
+            raise
+
+    def _feel(self, observed):
         rates, config = self._rates, self._config
         free_and_awake = not observed.job_open and not observed.asleep
 
