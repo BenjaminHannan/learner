@@ -927,6 +927,14 @@ class ContractTests(unittest.TestCase):
                 meter.step(StepInput(hurt=hurt))
         self.assertEqual(Life(config=MeterConfig(hurt_cap=100.0)).step(StepInput(hurt=100.0)).pain,
                          -300.0)
+        # No clipping: ten units of harm are the same RAW pain in one step or in ten.
+        spread = [Life().step(StepInput(hurt=10.0)).pain]
+        meter = Life()
+        apart = [meter.step(StepInput(hurt=1.0)).pain for _ in range(10)]
+        self.assertAlmostEqual(math.fsum(spread), math.fsum(apart), delta=1e-9)  # -30 and -30
+        # Timing is a separate matter: under the critic's discount the spread-out harm weighs less.
+        self.assertEqual(discounted(spread), -30.0)
+        self.assertAlmostEqual(discounted(apart), -28.685377, delta=1e-6)
 
     def test_panel_readings_must_fit_the_contract(self):
         for reading in ((), (1.2,), (10.0,), (-0.1,), (float("nan"),), [0.5], 0.5):
@@ -1243,7 +1251,7 @@ class RawMeterTests(unittest.TestCase):
         meter.step(reading(hours=30.0, asleep=True))  # any length
         self.assertEqual(meter.step(reading(hours=1.0)).tiredness, 0.0)
 
-    def test_the_same_sleep_scores_the_same_however_it_is_reported(self):
+    def test_back_to_back_sleep_pieces_are_refused_but_a_waking_between_them_moves_the_score(self):
         # A reviewer's case: finish a 16-hour job (+1), sleep the 8 hours owed,
         # then one hurt (-3). Reported as 128 sleep steps the hurt was pushed
         # 128 discount steps away and the total changed sign.
@@ -1269,6 +1277,121 @@ class RawMeterTests(unittest.TestCase):
         # still moves the hurt. That step must be a real waking (harness promise).
         self.assertAlmostEqual(life(2, filler=True), 1.0 - 3.0 * GAMMA ** 4, delta=1e-9)
         self.assertNotAlmostEqual(life(2, filler=True), life(1), delta=0.01)
+
+    @staticmethod
+    def after_a_clocked_job(rates=None):
+        """A raw meter on the toy clock, 16 hours into a job, plus the step that finishes it (+1)."""
+        meter = IntrinsicCostMeter(rates, CLOCKED)
+        meter.birth_reading((0.5,))
+        job = dict(job_open=True, job_id="j", hours=TICK, panel_error=(0.5,))
+        for _ in range(320):
+            meter.step(StepInput(**job))
+        return meter, StepInput(job_done=True, **job)
+
+    def test_known_hole_a_sleep_cut_by_wakings_moves_later_feelings_on_the_toy_clock(self):
+        # Not closed. With the registered step limits on, the same 8 hours of
+        # sleep cut by one-tick wakings pushes the hurt further into the discount.
+        def life(pieces):
+            meter, done = self.after_a_clocked_job()
+            steps = [done]
+            for piece in range(pieces):
+                if piece:
+                    steps.append(StepInput(hours=TICK, panel_error=(0.5,)))  # awake for one tick
+                steps.append(StepInput(asleep=True, hours=8.0 / pieces, panel_error=(0.5,)))
+            steps.append(StepInput(hours=TICK, hurt=1.0, panel_error=(0.5,)))
+            return discounted([meter.step(step).total for step in steps])
+
+        self.assertAlmostEqual(life(1), -1.9403, delta=1e-6)
+        self.assertAlmostEqual(life(8), -1.597975, delta=1e-6)
+        self.assertAlmostEqual(life(64), -0.35098, delta=1e-6)
+
+    def test_known_hole_real_naps_can_reverse_a_preference(self):
+        # A reviewer's case, with an honest harness. After the clocked job is
+        # done: 7 hours of sleep, three real moves and one hurt of 0.353. Slept
+        # in one piece, or as four naps of 1.75 hours with the moves between.
+        # The critic discounts per decision, not per hour, so the naps put the
+        # hurt three decisions further off and the sign of the score flips.
+        move = StepInput(hours=TICK, skill="go", panel_error=(0.5,))
+        hurt = StepInput(hours=TICK, hurt=0.353, panel_error=(0.5,))
+
+        def nap(hours):
+            return StepInput(asleep=True, hours=hours, panel_error=(0.5,))
+
+        one_sleep = [nap(7.0), move, move, move, hurt]
+        four_naps = [nap(1.75), move, nap(1.75), move, nap(1.75), move, nap(1.75), hurt]
+        scores, tired = [], []
+        for plan in (one_sleep, four_naps):
+            meter, done = self.after_a_clocked_job()
+            felt = [meter.step(step) for step in [done] + plan]
+            scores.append(discounted([f.total for f in felt]))
+            tired.append(math.fsum(f.tiredness for f in felt))
+        self.assertAlmostEqual(clock_hours(one_sleep), clock_hours(four_naps), delta=1e-9)  # 7.2 hours each
+        self.assertAlmostEqual(scores[0], -0.007098, delta=1e-6)
+        self.assertAlmostEqual(scores[1], +0.006268, delta=1e-6)
+        self.assertEqual(tired[0], 0.0)
+        self.assertLess(tired[1], 0.0)  # the naps are the more tiring plan, and still score higher
+
+    def test_a_long_awake_decision_is_refused_not_cut(self):
+        # A reviewer's case: a one-hour action, then a hurt. Cut into the four
+        # steps a 0.25-hour limit would allow, the hurt is three decisions further off.
+        def life(pieces):
+            meter = IntrinsicCostMeter()
+            meter.birth_reading((0.5,))
+            steps = [StepInput(hours=1.0 / pieces, panel_error=(0.5,))] * pieces + [StepInput(hurt=1.0, panel_error=(0.5,))]
+            return discounted([meter.step(step).total for step in steps])
+
+        self.assertAlmostEqual(life(1), -2.97, delta=1e-9)
+        self.assertAlmostEqual(life(4), -3.0 * GAMMA ** 4, delta=1e-9)  # -2.88
+        # So the limit is a limit on the world, not an order to cut: the refusal says so.
+        meter = IntrinsicCostMeter(config=CLOCKED)
+        meter.birth_reading((0.5,))
+        for hours in (1.0, 6 * TICK):  # six ticks: a coarse decision that does not fit
+            with self.subTest(hours=hours), self.assertRaisesRegex(ValueError, "must not offer an awake decision"):
+                meter.step(StepInput(hours=hours, panel_error=(0.5,)))
+        meter.step(StepInput(hours=5 * TICK, panel_error=(0.5,)))  # five ticks fit
+
+    def test_an_unchanged_panel_pays_zero_only_with_plain_difference_curiosity(self):
+        awake = StepInput(hours=TICK, panel_error=(0.5,))
+        asleep = StepInput(asleep=True, hours=8.0, panel_error=(0.5,))
+        for gamma, paid in ((1.0, 0.0), (GAMMA, -0.005)):
+            meter = IntrinsicCostMeter(config=MeterConfig(curiosity_gamma=gamma))
+            meter.birth_reading((0.5,))
+            for step in (awake, asleep, awake):
+                with self.subTest(curiosity_gamma=gamma, asleep=step.asleep):
+                    felt = meter.step(step)
+                    self.assertAlmostEqual(felt.curiosity, paid, delta=1e-12)
+                    self.assertAlmostEqual(felt.total, paid, delta=1e-12)
+
+    def test_at_most_one_remark_per_decision(self):
+        # A world restriction (a harness promise): the owner speaks at most once
+        # in one decision. Two remarks have no legal report, and are refused loudly.
+        for remark in (-2, 2, 3, -1.0, True):
+            with self.subTest(remark=remark), self.assertRaisesRegex(ValueError, "one remark per decision"):
+                StepInput(remark=remark, panel_error=(0.5,))
+        meter = IntrinsicCostMeter()
+        meter.birth_reading((0.5,))
+        told_off = [meter.step(StepInput(remark=-1, panel_error=(0.5,))).remarks for _ in range(2)]
+        self.assertEqual(told_off, [-3.0, -3.0])  # two "no"s are two decisions: -6 raw
+
+    def test_a_zero_hour_step_never_carries_tiredness_or_boredom(self):
+        meter = IntrinsicCostMeter(ExchangeRates(boredom=1.0))
+        meter.birth_reading((0.5,))
+        meter.step(StepInput(hours=20.0, panel_error=(0.5,)))
+        still = meter.step(StepInput(hours=0.0, panel_error=(0.5,)))
+        self.assertEqual(still.as_dict(), dict.fromkeys(TERMS, 0.0))
+        timed = meter.step(StepInput(hours=TICK, panel_error=(0.5,)))  # no event, but time passed
+        self.assertLess(timed.tiredness, 0.0)
+        self.assertLess(timed.boredom, 0.0)
+
+    def test_a_run_with_the_curiosity_rate_at_zero_still_needs_every_reading(self):
+        meter = IntrinsicCostMeter(ExchangeRates(curiosity=0.0))
+        with self.assertRaises(ValueError):
+            meter.step(StepInput(panel_error=(0.5,)))  # no birth reading
+        meter.birth_reading((0.5,))
+        for bare in (StepInput(), StepInput(asleep=True, hours=1.0)):
+            with self.subTest(asleep=bare.asleep), self.assertRaises(ValueError):
+                meter.step(bare)
+        self.assertEqual(meter.step(StepInput(panel_error=(0.1,))).total, 0.0)  # read, and worth nothing
 
     def test_constant_fill_cost_is_exact_with_fill_and_onset_next_to_one(self):
         # Two reviewers' cases. Fill and onset are both the largest number below 1,

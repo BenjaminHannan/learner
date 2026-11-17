@@ -226,7 +226,7 @@ class StepInput:
         if self.job_done and not self.job_open:
             raise ValueError("job_done needs an open job")
         if type(self.remark) is not int or self.remark not in (-1, 0, 1):
-            raise ValueError("remark must be -1, 0 or 1")
+            raise ValueError("remark must be -1, 0 or 1: at most one remark per decision")
         _finite(self.hurt, "hurt", low=0.0)
         _finite(self.hours, "hours", low=0.0, high=LARGEST)
         _finite(self.memory_fill, "memory_fill", low=0.0, high=1.0)
@@ -406,7 +406,8 @@ class IntrinsicCostMeter:
             if shortest is not None and observed.hours < shortest:
                 raise ValueError(f"an awake step must take at least {shortest} hours: the world must report its clock")
             if longest is not None and observed.hours > longest:
-                raise ValueError(f"an awake step must take at most {longest} hours: cut it into shorter steps")
+                raise ValueError(f"an awake step must take at most {longest} hours: the world must not offer an awake "
+                                 "decision longer than that (one decision is one step, never cut into several)")
 
     def step(self, observed):
         """Take what happened on one step; return what it felt like."""
@@ -420,7 +421,10 @@ class IntrinsicCostMeter:
         # never clipped, so what is paid over any stretch is exactly
         # knowledge-at-the-end minus knowledge-at-the-start. A sleep step is
         # read on waking: what sleep did to the panel is paid or charged on
-        # the sleep step itself.
+        # the sleep step itself. An unchanged reading pays exactly 0 only
+        # with the plain difference (curiosity_gamma = 1, the default). With
+        # a matched discount it pays (curiosity_gamma - 1) * knowledge on
+        # every step, awake or asleep: -0.005 at 0.99 and knowledge 0.5.
         knowledge = self._read_panel(observed.panel_error)
         curious = config.curiosity_gamma * knowledge - self._knowledge
         new_record = max(0.0, knowledge - self._record)
