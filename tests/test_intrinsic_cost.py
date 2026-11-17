@@ -1731,9 +1731,12 @@ class RawMeterTests(unittest.TestCase):
             felt = [meter.step(step) for step in plan]
             return math.fsum(f.tiredness for f in felt), total(felt), discounted([f.total for f in felt])
 
-        finish = ([StepInput(hours=TICK, job_done=True, **job),
-                   StepInput(asleep=True, hours=8.0, memory_fill=1.0, panel_error=(0.5,))]
-                  + [StepInput(hours=TICK, skill="go", memory_fill=0.99, panel_error=(0.5,))] * 39)
+        def finish_and_wake_with_fill(fill):
+            return ([StepInput(hours=TICK, job_done=True, **job),
+                     StepInput(asleep=True, hours=8.0, memory_fill=1.0, panel_error=(0.5,))]
+                    + [StepInput(hours=TICK, skill="go", memory_fill=fill, panel_error=(0.5,))] * 39)
+
+        finish = finish_and_wake_with_fill(0.99)
         stall = [StepInput(hours=TICK, **job)] + [StepInput(hours=hours, **job) for hours in [0.25] * 39 + [0.2]]
         tired, raw, scored = after_the_job(finish)
         # The 8 hours of sleep paid back all 16 hours awake. The tiredness is from the fill alone.
@@ -1741,6 +1744,9 @@ class RawMeterTests(unittest.TestCase):
         self.assertAlmostEqual(raw, -0.877442, delta=1e-6)  # +1 done, and that
         self.assertAlmostEqual(scored, -0.529713, delta=1e-6)
         self.assertEqual(after_the_job(stall), (0.0, 0.0, 0.0))  # stalling wins, raw and discounted
+        # The control: the same plan, with sleep leaving the fill at 0.4 (under the
+        # onset). No tiredness, and finishing wins. So the cause is the fill.
+        self.assertEqual(after_the_job(finish_and_wake_with_fill(0.4)), (0.0, 1.0, 1.0))
 
 
 if __name__ == "__main__":

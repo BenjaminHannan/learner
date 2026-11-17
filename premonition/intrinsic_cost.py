@@ -182,8 +182,9 @@ class StepInput:
                  a job step without it is refused. "Job done" is for the
                  task the owner gave. A job that exists because of what the
                  model did (it broke something, and a repair job appeared)
-                 is not reported as a job at all; the world reports damage
-                 the model caused as hurt. The meter cannot see causes: that
+                 is not reported as a job at all; if the world reports
+                 damage the model caused, it reports it as hurt, never as a
+                 job. The meter cannot see causes: that
                  the statement is true is the harness's promise. The flag
                  catches a harness that forgets the rule, not one that
                  breaks it.
