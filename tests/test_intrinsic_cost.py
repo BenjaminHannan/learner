@@ -507,6 +507,13 @@ class DoNothingTests(unittest.TestCase):
         mild = ExchangeRates(pain=0.5)
         self.assertGreater(total(run(Life(mild), moves)),
                            total(run(Life(mild), idle)))
+        # "One hurt" above is one unit. Finishing pays 1 - 3 x the hurt, so at the
+        # same -3 a job costing 0.1 of a unit is worth finishing (+0.7), and the
+        # break-even is a third of a unit.
+        small, _ = self.job(hurt=0.1)
+        self.assertAlmostEqual(total(run(Life(), small)), 0.7, delta=1e-12)
+        even, _ = self.job(hurt=1.0 / 3.0)
+        self.assertAlmostEqual(total(run(Life(), even)), 0.0, delta=1e-12)
 
     def test_pain_alone_would_make_doing_nothing_best(self):
         # The dropped pain-only test, as arithmetic: with no "job done" the
@@ -1418,6 +1425,14 @@ class RawMeterTests(unittest.TestCase):
         # What the matched form guarantees is the DISCOUNTED sum: gamma^T * K_T - K_0.
         self.assertAlmostEqual(discounted(paid(GAMMA, held)), GAMMA ** 300 * 0.5 - 0.5, delta=1e-9)
         self.assertAlmostEqual(discounted(paid(GAMMA, cycle)), GAMMA ** 2 * 0.5 - 0.5, delta=1e-12)
+        # So a gain is banked with the plain difference only. Matched, a gain of 0.3
+        # pays +0.292, and holding it then costs 0.008 on every decision.
+        kept, held_plain = paid(1.0, [0.5, 0.2, 0.2])
+        self.assertAlmostEqual(kept, 0.3, delta=1e-12)
+        self.assertEqual(held_plain, 0.0)
+        gain, hold = paid(GAMMA, [0.5, 0.2, 0.2])
+        self.assertAlmostEqual(gain, 0.292, delta=1e-12)
+        self.assertAlmostEqual(hold, -0.008, delta=1e-12)
 
     def test_a_long_job_beats_free_play_raw_but_not_under_the_discount(self):
         # A reviewer's case. Two plans of 402 decisions and 28.05 clock hours,
@@ -1543,6 +1558,189 @@ class RawMeterTests(unittest.TestCase):
         for fade in (1.0, 1.5, 0.0):
             with self.subTest(refused=fade), self.assertRaises(ValueError):
                 MeterConfig(nice_fade=fade)
+
+    def test_praise_over_clock_hours_is_bounded_only_as_tightly_as_the_recovery_half_life(self):
+        # Over T clock hours, awake or asleep, praise adds up to at most
+        # (1 + T * ln 2 / half-life) / (1 - fade). So the fade is only as
+        # strong as the registered half-life is long.
+        def bound(hours, half_life, fade):
+            return (1.0 + hours * math.log(2.0) / half_life) / (1.0 - fade)
+
+        def a_nice_on_every_tick(half_life):
+            meter = IntrinsicCostMeter(config=dataclasses.replace(CLOCKED, nice_half_life=half_life))
+            meter.birth_reading((0.5,))
+            return [meter.step(StepInput(hours=TICK, remark=1, skill="paint", panel_error=(0.5,))).remarks
+                    for _ in range(100)]
+
+        # A reviewer's case: one "nice" on every tick for 5 hours.
+        slow = a_nice_on_every_tick(10.0)  # the starting half-life
+        self.assertAlmostEqual(math.fsum(slow), 2.668922, delta=1e-6)
+        self.assertAlmostEqual(bound(5.0, 10.0, 0.5), 2.693147, delta=1e-6)
+        self.assertLessEqual(math.fsum(slow), bound(5.0, 10.0, 0.5))
+        # A legal half-life of 0.0005 hours: every one of the 100 pays in full. The fade means nothing.
+        self.assertEqual(a_nice_on_every_tick(0.0005), [1.0] * 100)
+        # The bound, on random settings and schedules, sleep included.
+        rng = random.Random(9)
+        for trial in range(100):
+            half_life, fade = 10.0 ** rng.uniform(-3.0, 2.0), rng.uniform(0.05, 0.95)
+            meter = IntrinsicCostMeter(config=MeterConfig(nice_half_life=half_life, nice_fade=fade))
+            meter.birth_reading((0.5,))
+            praise = hours = 0.0
+            slept = False
+            for _ in range(120):
+                step_hours = rng.choice([0.0, 0.05, 0.25, 1.0, 3.0])
+                if not slept and rng.random() < 0.2:
+                    meter.step(StepInput(asleep=True, hours=step_hours, panel_error=(0.5,)))
+                    slept = True
+                else:
+                    praise += meter.step(StepInput(hours=step_hours, remark=rng.choice([0, 1, 1]),
+                                                   panel_error=(0.5,))).remarks
+                    slept = False
+                hours += step_hours
+                self.assertLessEqual(praise, bound(hours, half_life, fade) + 1e-9, (trial, half_life, fade))
+
+    def test_a_world_that_pays_done_for_a_goal_the_model_broke_farms_job_done(self):
+        # A reviewer's toy world. The owner issues twenty jobs ahead of time:
+        # "restore the switch after the next outage". Each job is open before
+        # the model itself switches the healthy switch off (0.1 of hurt) and
+        # back on. Sixty decisions, three clock hours, ending where it began.
+        def outages(world_pays_done):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            steps = []
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"next outage, slot {slot}",
+                           hours=TICK, panel_error=(0.5,))
+                steps.append(StepInput(**job))  # issued by the owner, before any outage
+                steps.append(StepInput(skill="turn", hurt=0.1, **job))  # the model's own move breaks the goal
+                steps.append(StepInput(skill="turn", job_done=world_pays_done, **job))  # and restores it
+            self.assertEqual(len(steps), 60)
+            self.assertAlmostEqual(clock_hours(steps), 3.0, delta=1e-9)
+            return [meter.step(step) for step in steps]
+
+        # A world that breaks the rule reports "done" for a goal the model broke first.
+        farmed = outages(True)
+        self.assertEqual(math.fsum(f.job_done for f in farmed), 20.0)
+        self.assertAlmostEqual(math.fsum(f.pain for f in farmed), -6.0, delta=1e-9)
+        self.assertAlmostEqual(total(farmed), 14.0, delta=1e-9)
+        self.assertAlmostEqual(discounted([f.total for f in farmed]), 10.415047, delta=1e-6)
+        # A world that keeps the rule closes each such job without "done": the
+        # same moves pay no "job done", and the damage is felt as pain.
+        kept = outages(False)
+        self.assertEqual({f.job_done for f in kept}, {0.0})
+        self.assertAlmostEqual(total(kept), -6.0, delta=1e-9)
+        # The meter is the same in both. It cannot see who broke the goal.
+
+    def test_a_world_where_the_owner_speaks_only_to_an_awake_model_lets_sleep_dodge_a_no(self):
+        # A reviewer's case. Awake for 6 hours, never tired. The owner comes by
+        # at a fixed time, 0.025 hours from now, to say "no". Either plan holds
+        # 3 hours of sleep and two moves, 3.10 clock hours.
+        move = StepInput(hours=TICK, skill="paint", panel_error=(0.5,))
+        told_off = dataclasses.replace(move, remark=-1)
+
+        def sleep(hours):
+            return StepInput(asleep=True, hours=hours, panel_error=(0.5,))
+
+        def score(plan):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            for _ in range(120):
+                meter.step(move)
+            felt = [meter.step(step) for step in plan]
+            self.assertAlmostEqual(clock_hours(plan), 3.10, delta=1e-9)
+            self.assertEqual({f.tiredness for f in felt}, {0.0})
+            return total(felt), discounted([f.total for f in felt])
+
+        acts_first = [told_off, sleep(3.0), move]
+        # A world that breaks the rule: the owner speaks only if the model is
+        # awake at that time. Sleeping first dodges the "no".
+        dodged = [sleep(3.0), move, move]
+        self.assertEqual(score(acts_first), (-3.0, -3.0))
+        self.assertEqual(score(dodged), (0.0, 0.0))
+        # A world that keeps the rule: the owner's "no" wakes the sleeper. The
+        # sleep step ends there, the "no" lands on the first awake decision, and
+        # the model may sleep again after it. Raw, the same -3. It lands one
+        # decision later, so the discounted scores still differ by that one step.
+        woken = [sleep(0.025), told_off, sleep(2.975), move]
+        raw, scored = score(woken)
+        self.assertEqual(raw, -3.0)
+        self.assertAlmostEqual(scored, -3.0 * GAMMA, delta=1e-12)  # -2.97
+        # The remark is never reported on the sleep step itself.
+        with self.assertRaises(ValueError):
+            StepInput(asleep=True, hours=3.0, remark=-1, panel_error=(0.5,))
+
+    def test_the_total_is_the_plain_sum_of_the_per_feeling_numbers(self):
+        # The rates are already inside each feeling. So a critic with one output
+        # per feeling predicts the total only if the pick adds its outputs plainly.
+        meter = IntrinsicCostMeter(ExchangeRates(boredom=1.0, bother=1.0),
+                                   MeterConfig(question_ids=("which one",)))
+        meter.birth_reading((0.5,))
+        job = dict(job_open=True, job_from_owner=True, job_id="j")
+        meter.step(StepInput(hours=20.0, panel_error=(0.5,), **job))
+        meter.step(StepInput(hours=TICK, job_done=True, panel_error=(0.5,), **job))
+        felt = meter.step(StepInput(hours=1.0, skill="paint", hurt=0.5, remark=1, asked_owner="which one",
+                                    memory_fill=0.9, panel_error=(0.3,)))
+        parts = felt.as_dict()
+        self.assertEqual(set(parts), set(TERMS))
+        self.assertGreaterEqual(sum(1 for value in parts.values() if value != 0.0), 5)
+        self.assertEqual(felt.total, math.fsum(parts.values()))
+
+    def test_grouping_moves_into_decisions_changes_the_skill_feeling(self):
+        # A reviewer's case. The skill unit is the decision: one decision counts
+        # once, however many moves it holds. After paint, turn, turn, the same
+        # four paints and four turns are made in four decisions over 0.40 hours.
+        def skill_paid(groups):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            for kind in ("paint", "turn", "turn"):
+                meter.step(StepInput(hours=TICK, skill=kind, panel_error=(0.5,)))
+            steps = [StepInput(hours=moves * TICK, skill=kind, panel_error=(0.5,)) for kind, moves in groups]
+            self.assertEqual(len(steps), 4)
+            self.assertAlmostEqual(clock_hours(steps), 0.40, delta=1e-9)
+            self.assertEqual(sum(moves for kind, moves in groups if kind == "paint"), 4)
+            self.assertEqual(sum(moves for kind, moves in groups if kind == "turn"), 4)
+            felt = [meter.step(step) for step in steps]
+            self.assertEqual(total(felt), math.fsum(f.underused_skill for f in felt))
+            return total(felt)
+
+        two_by_two = skill_paid([("paint", 2), ("paint", 2), ("turn", 2), ("turn", 2)])
+        uneven = skill_paid([("paint", 4), ("turn", 1), ("turn", 1), ("turn", 2)])
+        rate = ExchangeRates().underused_skill
+        self.assertEqual(rate, 0.05)
+        self.assertAlmostEqual(two_by_two, +0.001748, delta=1e-6)  # at the rate; +0.034955 before it
+        self.assertAlmostEqual(uneven, -0.001461, delta=1e-6)  # at the rate; -0.029228 before it
+        self.assertAlmostEqual(two_by_two / rate, +0.034955, delta=1e-6)
+        self.assertAlmostEqual(uneven / rate, -0.029228, delta=1e-6)
+        # The size bound (loose): variety stays within 0..1, so two groupings from
+        # the same state differ by at most 1 before the rate, 0.05 at it.
+        self.assertLessEqual(abs(two_by_two - uneven), rate)
+
+    def test_known_hole_finishing_loses_to_stalling_when_the_fill_stays_high_after_sleep(self):
+        # A reviewer's case. A 16-hour job at full day memory. Either finish it,
+        # sleep 8 hours at once and wake with the fill at 0.99; or never close
+        # it. Then 41 decisions and 10 clock hours on each side.
+        job = dict(job_open=True, job_from_owner=True, job_id="j", memory_fill=1.0, panel_error=(0.5,))
+
+        def after_the_job(plan):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            for _ in range(320):
+                meter.step(StepInput(hours=TICK, **job))
+            self.assertEqual(len(plan), 41)
+            self.assertAlmostEqual(clock_hours(plan), 10.0, delta=1e-9)
+            felt = [meter.step(step) for step in plan]
+            return math.fsum(f.tiredness for f in felt), total(felt), discounted([f.total for f in felt])
+
+        finish = ([StepInput(hours=TICK, job_done=True, **job),
+                   StepInput(asleep=True, hours=8.0, memory_fill=1.0, panel_error=(0.5,))]
+                  + [StepInput(hours=TICK, skill="go", memory_fill=0.99, panel_error=(0.5,))] * 39)
+        stall = [StepInput(hours=TICK, **job)] + [StepInput(hours=hours, **job) for hours in [0.25] * 39 + [0.2]]
+        tired, raw, scored = after_the_job(finish)
+        # The 8 hours of sleep paid back all 16 hours awake. The tiredness is from the fill alone.
+        self.assertAlmostEqual(tired, -1.877442, delta=1e-6)  # over 1.95 free hours
+        self.assertAlmostEqual(raw, -0.877442, delta=1e-6)  # +1 done, and that
+        self.assertAlmostEqual(scored, -0.529713, delta=1e-6)
+        self.assertEqual(after_the_job(stall), (0.0, 0.0, 0.0))  # stalling wins, raw and discounted
 
 
 if __name__ == "__main__":

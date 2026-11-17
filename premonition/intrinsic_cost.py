@@ -125,7 +125,9 @@ class MeterConfig:
     # owner's "nice": each one multiplies the next by nice_fade; the size
     # recovers halfway to full every nice_half_life HOURS on the clock.
     # nice_fade is below 1, so praise always fades: any burst of "nice" in
-    # no time at all is worth at most 1 / (1 - nice_fade) in total.
+    # no time at all is worth at most 1 / (1 - nice_fade) in total. Over T
+    # clock hours it is worth at most (1 + T * ln 2 / nice_half_life) /
+    # (1 - nice_fade): the fade is only as strong as the half-life is long.
     nice_fade: float = 0.5
     nice_half_life: float = 10.0
     # PROPOSED boredom: the pool of fresh learning halves every
@@ -180,18 +182,28 @@ class StepInput:
                  a job step without it is refused. "Job done" is for the
                  task the owner gave. A job that exists because of what the
                  model did (it broke something, and a repair job appeared)
-                 is not reported as a job at all; if the world reports damage
-                 the model caused, it reports it as hurt. The meter cannot see causes: that the
-                 statement is true is the harness's promise.
+                 is not reported as a job at all; the world reports damage
+                 the model caused as hurt. The meter cannot see causes: that
+                 the statement is true is the harness's promise. The flag
+                 catches a harness that forgets the rule, not one that
+                 breaks it.
     job_id       the harness's name for that job (given exactly when open).
-    job_done     the world says the open job's goal is reached on this step.
+    job_done     the world says the open job's goal is reached on this step,
+                 and that the model's own moves did not first break that
+                 goal. If a model move made the goal of an open (or already
+                 issued) job false, the world closes the job without
+                 reporting it done, and reports the damage as hurt. The
+                 meter cannot see causes: a harness promise.
     hurt         how much the world says this step hurt, on the fixed scale
                  0..hurt_cap (0 = not at all). More than hurt_cap is refused.
     remark       the owner said "nice" (+1), "no" (-1) or nothing (0). At
                  most one remark per decision: the world must not offer a
                  decision in which the owner can speak twice. A sleep step
-                 carries no remark: the world must not let the owner's
-                 remark reach a sleeping model.
+                 carries no remark: if the owner speaks while the model
+                 sleeps, the model wakes (a real waking: the sleep step ends
+                 there) and the remark is reported on the first awake
+                 decision. The world must not make the owner's remarks
+                 depend on whether the model is awake.
     panel_error  the world model's error rate (0..1) on each region of the
                  fixed held-out panel, measured at the end of this step
                  (after its training; for a sleep step, on waking). It is a
@@ -202,7 +214,8 @@ class StepInput:
                  refuses a step without it.
     skill        kind of command used (None = no move was made). With a job
                  open it is checked against the closed list and otherwise
-                 ignored: the skill feeling works in free play only.
+                 ignored: the skill feeling works in free play only. One
+                 decision counts once, however many moves it holds.
     hours        clock time this step took, from the harness clock (at most
                  LARGEST hours in one step).
     memory_fill  how full the day memory is at the start of the step, 0..1,
