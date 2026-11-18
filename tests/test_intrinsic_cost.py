@@ -74,6 +74,33 @@ def curiosity_along(errors, config=None):
     return [meter.step(StepInput(panel_error=(error,))).curiosity for error in errors[1:]]
 
 
+def decisions_at_job_boundaries(commands, spoken, latch, shortest=Fraction("0.05")):
+    """A toy world's rule for job boundaries, in exact clock times (round 14).
+
+    ``commands`` are the lengths of the commands the model chose, from time 0.
+    The owner speaks the job at ``spoken``; its goal latches at ``latch``. The
+    job is announced at the first decision boundary at or after ``spoken``,
+    never inside a command. A command that is running when the goal latches
+    is ended there, and what is left of it becomes a new decision. Returns
+    (length, job open, done) for each decision. A cut that would leave a
+    decision shorter than the shortest step cannot be recorded.
+    """
+    decisions, now, announced = [], Fraction(0), None
+    for length in commands:
+        if announced is None and now >= spoken:
+            announced = now
+        pieces = [length]
+        if announced is not None and now < latch < now + length:
+            pieces = [latch - now, now + length - latch]
+        for piece in pieces:
+            if piece < shortest:
+                raise ValueError("a command cut at the job's latch would leave a decision shorter than the shortest step")
+            in_job = announced is not None and now < latch
+            decisions.append((piece, in_job, in_job and now + piece == latch))
+            now += piece
+    return decisions
+
+
 def offered_actions(now, lengths, remarks, world_end=None, shortest=Fraction("0.05")):
     """A toy world's rule for the owner's queued remarks, in exact clock times.
 
@@ -2596,17 +2623,16 @@ class RawMeterTests(unittest.TestCase):
         # with the job still open are exempt.
         full = dict(panel_error=(0.5,), memory_fill=1.0)
 
-        def life(ticks_before_done, nap=False):
+        def life(ticks_before_done, nap_ticks=0):
             steps = []
             for slot in range(20):
                 job = dict(job_open=True, job_from_owner=True, job_id=f"latch {slot}", hours=TICK, **full)
                 steps += [StepInput(**job)] * ticks_before_done
                 steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=False, **job))
                 free = 4 - ticks_before_done
-                if free and nap:
-                    steps.append(StepInput(asleep=True, hours=free * TICK, **full))
-                else:
-                    steps += [StepInput(hours=TICK, **full)] * free
+                steps += [StepInput(hours=TICK, **full)] * (free - nap_ticks)
+                if nap_ticks:
+                    steps.append(StepInput(asleep=True, hours=nap_ticks * TICK, **full))
             meter = IntrinsicCostMeter(config=CLOCKED)
             meter.birth_reading((0.5,))
             felt = [meter.step(step) for step in steps]
@@ -2622,7 +2648,12 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(life(3), ((100, 5.0), (20.0, -1.0, 19.0, 11.930003)))
         # The control: where the free ticks can be slept through, finishing at
         # once ties in the raw total and is ahead under the discount.
-        self.assertEqual(life(1, nap=True), ((60, 5.0), (20.0, 0.0, 20.0, 15.09427)))
+        # Part of that discounted lead is the decision count (60 against 100:
+        # later feelings sit fewer decisions away), not the sleep alone.
+        self.assertEqual(life(1, nap_ticks=3), ((60, 5.0), (20.0, 0.0, 20.0, 15.09427)))
+        # A partial window is not enough: with only the last free tick quiet
+        # enough to nap, finishing at once is still behind waiting.
+        self.assertEqual(life(1, nap_ticks=1), ((100, 5.0), (20.0, -2.0, 18.0, 11.544666)))
 
     def test_the_offered_action_menu_can_reveal_a_hidden_answer(self):
         # A reviewer's world (round 13). The round-12 ruling takes an action off
@@ -2647,19 +2678,26 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(offered_actions(lengths[0], lengths, times[1], end), [lengths[1]])
         drawers = (0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1)
 
-        def life(policy):
+        def life(same_menu_at, guess_at):
+            """``same_menu_at``: the decisions (0, 1, 2) at which the world shows the
+            menu common to both drawers; ``guess_at``: the decision whose menu the
+            model reads to guess (None = it ignores the menu and guesses 0)."""
             steps = []
             for slot, drawer in enumerate(drawers):
-                menu = safe_menu if policy == "same safe menu" else menus[drawer]
-                guess = int(lengths[2] not in menu) if policy != "blind" else 0
                 job = dict(job_open=True, job_from_owner=True, job_id=f"which drawer {slot}", panel_error=(0.5,))
                 steps.append(StepInput(hours=TICK, **job))
-                now, queue = F(0), list(times[drawer])
-                for length in (lengths[0], lengths[1], lengths[1]):  # the same three actions in every arm
-                    self.assertIn(length, offered_actions(now, lengths, queue, end))
+                now, guess = F(0), 0
+                for decision, length in enumerate((lengths[0], lengths[1], lengths[1])):  # the same path in every arm
+                    # Each drawer's menu here, on this same path:
+                    by_drawer = {hidden: offered_actions(now, lengths, [s for s in queue if s >= now], end)
+                                 for hidden, queue in times.items()}
+                    common = [option for option in lengths if all(option in menu for menu in by_drawer.values())]
+                    shown = common if decision in same_menu_at else by_drawer[drawer]
+                    self.assertIn(length, shown)
+                    if decision == guess_at:
+                        guess = int(lengths[2] not in shown)
+                    heard = [spoken for spoken in times[drawer] if now <= spoken < now + length]
                     now += length
-                    heard = [spoken for spoken in queue if spoken < now]
-                    queue = queue[len(heard):]
                     done = now == end and guess == drawer
                     steps.append(StepInput(hours=float(length), remark=-len(heard), job_done=done,
                                            job_fault_avoidable=False if done else None, **job))
@@ -2670,11 +2708,17 @@ class RawMeterTests(unittest.TestCase):
                     round(math.fsum(f.job_done for f in felt), 6), round(total(felt), 6))
 
         # Same decisions, same hours, the same 40 corrections heard in every arm.
-        self.assertEqual(life("read the menu"), (80, 5.0, 40, 20.0, -100.0))
-        self.assertEqual(life("blind"), (80, 5.0, 40, 10.0, -110.0))
+        self.assertEqual(life(same_menu_at=(), guess_at=0), (80, 5.0, 40, 20.0, -100.0))  # reads the first menu
+        self.assertEqual(life(same_menu_at=(), guess_at=None), (80, 5.0, 40, 10.0, -110.0))  # blind
+        # A control on the first menu alone is not enough (two reviewers, round
+        # 14): a model that guesses from the second menu reads the answer there.
+        self.assertEqual(life(same_menu_at=(0,), guess_at=0), (80, 5.0, 40, 10.0, -110.0))
+        self.assertEqual(life(same_menu_at=(0,), guess_at=1), (80, 5.0, 40, 20.0, -100.0))
         # The control, a harness promise for worlds whose answer should stay
-        # hidden: offer the same safe menu in both states.
-        self.assertEqual(life("same safe menu"), (80, 5.0, 40, 10.0, -110.0))
+        # hidden: the menu common to both states at every decision on the path.
+        for guess_at in (0, 1, 2):
+            with self.subTest(guess_at=guess_at):
+                self.assertEqual(life(same_menu_at=(0, 1, 2), guess_at=guess_at), (80, 5.0, 40, 10.0, -110.0))
 
     def test_grouping_around_a_fault_inside_a_long_step_shifts_more_than_a_fifth_of_an_hour(self):
         # Two reviewers' witnesses (round 13) against the round-12 text, which
@@ -2796,6 +2840,33 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(slots(), (-7.748238, -1.061698))  # neglect
         self.assertEqual(slots(2), (-9.148238, -1.689469))  # prevention, the whole quiet window: still behind
         self.assertEqual(slots(15), (3.851762, 3.293749))  # prevention that can sleep through its free time
+        # Between the two: a quiet window of four of the fifteen free moves puts
+        # prevention ahead in the raw total and still behind under the discount.
+        self.assertEqual(slots(4), (-7.148238, -1.387915))
+        self.assertEqual(slots(0), (-11.148238, -2.076914))  # no quiet window at all
+
+        # (c) "Other feelings equal" (a reviewer's case, round 14). Matched
+        # thanks and full sleep do not decide the total when the repair also
+        # teaches the model something: one panel region learnt (1.0 to 0.0)
+        # during the repair pays +1 of curiosity.
+        def one_job(repair, learns):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((1.0,))
+            job = dict(job_open=True, job_from_owner=True, job_id="conditional check", hours=TICK)
+            after = (0.0,) if repair and learns else (1.0,)
+            felt = [meter.step(step) for step in (
+                StepInput(panel_error=(1.0,), **job),
+                StepInput(panel_error=(1.0,), hurt=0.1 if repair else 0.0, job_fault_avoidable=True if repair else None,
+                          skill=None if repair else "turn", **job),
+                StepInput(panel_error=after, remark=1, job_done=repair, job_fault_avoidable=False if repair else None,
+                          skill="turn" if repair else None, **job),
+                StepInput(panel_error=after, hours=8.0, asleep=True))]
+            return tuple(round(x, 6) for x in (math.fsum(f.remarks for f in felt), math.fsum(f.curiosity for f in felt),
+                                               math.fsum(f.pain for f in felt), total(felt)))
+
+        self.assertEqual(one_job(repair=False, learns=False), (1.0, 0.0, 0.0, 1.0))  # prevention, thanked
+        self.assertEqual(one_job(repair=True, learns=True), (1.0, 1.0, -0.3, 1.7))  # repair that teaches: ahead
+        self.assertEqual(one_job(repair=True, learns=False), (1.0, 0.0, -0.3, 0.7))  # repair, panel unchanged: behind
 
     def test_the_tiredness_shelter_holds_at_any_rate_but_the_winner_depends_on_the_rates(self):
         # Round 13, on hole 18's "no rate changes it". The shelter is the
@@ -2920,28 +2991,167 @@ class RawMeterTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "no action can be offered"):
             offered_actions(F(0), [F("0.05"), F("0.25")], [F(24), F("24.02")], F("24.1"))
 
-    def test_a_fault_tied_to_a_later_job_while_another_job_is_open_as_the_meter_behaves_today(self):
-        # Open, no rule stated, untested (a reviewer's note, round 13). The
-        # method does not say where the statement goes when the model breaks
-        # something during job A and the owner's later job B is the repair.
-        # Pinned as the meter behaves today, not as a decision: the statement
-        # forfeits whichever job is open on the step that carries it.
-        reading = dict(hours=TICK, panel_error=(0.5,))
-        job_a = dict(job_open=True, job_from_owner=True, job_id="A", **reading)
-        job_b = dict(job_a, job_id="B")
+    def test_a_job_announcement_and_completion_are_decision_boundaries(self):
+        # The lead's ruling (round 14), on two reviewers' cases. The meter
+        # exempts a whole decision with an eligible job open, and it has no
+        # clock time for the moment a job latches or is spoken: only step
+        # lengths and flags. So a command that kept running after the latch, or
+        # that was running when the owner gave the job, would shelter free time.
+        # The rule is the world's (a harness promise); the toy world's version is
+        # `decisions_at_job_boundaries` at the top of this file.
+        F = Fraction
+        full = dict(panel_error=(0.5,), memory_fill=1.0)
 
-        def paid(stated_while_a_is_open):
+        def life(decisions, kind):
+            steps = []
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"order {slot}")
+                for length, in_job, done in decisions:
+                    steps.append(StepInput(hours=float(length), skill=kind, job_done=done,
+                                           job_fault_avoidable=False if done else None, **(job if in_job else {}), **full))
             meter = IntrinsicCostMeter(config=CLOCKED)
             meter.birth_reading((0.5,))
-            meter.step(StepInput(**job_a))
-            meter.step(StepInput(hurt=0.1, job_fault_avoidable=True if stated_while_a_is_open else None, **job_a))
-            done_a = meter.step(StepInput(job_done=True, job_fault_avoidable=False, **job_a))
-            meter.step(StepInput(job_fault_avoidable=None if stated_while_a_is_open else True, **job_b))
-            done_b = meter.step(StepInput(job_done=True, job_fault_avoidable=False, **job_b))
-            return done_a.job_done, done_b.job_done
+            felt = [meter.step(step) for step in steps]
+            return (len(steps), round(clock_hours(steps), 6)), tuple(round(x, 6) for x in (
+                math.fsum(f.job_done for f in felt), math.fsum(f.tiredness for f in felt), total(felt)))
 
-        self.assertEqual(paid(True), (0.0, 1.0))  # stated on the fault's step: innocent A is forfeited, the repair pays
-        self.assertEqual(paid(False), (1.0, 0.0))  # held until B is announced: A pays, the repair does not
+        def lengths(*hours):
+            return [F(h) for h in hours]
+
+        # (a) Completion, a reviewer's case: the goal latches at 0.10 hours in
+        # either plan; the commands are 0.05 / 0.05 / 0.20 or 0.05 / 0.20 / 0.05.
+        short_finish = decisions_at_job_boundaries(lengths("0.05", "0.05", "0.20"), F(0), F("0.10"))
+        long_finish = decisions_at_job_boundaries(lengths("0.05", "0.20", "0.05"), F(0), F("0.10"))
+        self.assertEqual(long_finish, [(F("0.05"), True, False), (F("0.05"), True, True),  # ended at the latch
+                                       (F("0.15"), False, False), (F("0.05"), False, False)])
+        self.assertEqual(life(short_finish, "turn"), ((60, 6.0), (20.0, -4.0, 16.0)))
+        self.assertEqual(life(long_finish, "turn"), ((80, 6.0), (20.0, -4.0, 16.0)))  # equal, raw
+        # What a world that breaks the promise reports: the long command kept
+        # whole and exempt, 0.15 free hours per job hidden.
+        broken = [(F("0.05"), True, False), (F("0.20"), True, True), (F("0.05"), False, False)]
+        self.assertEqual(life(broken, "turn"), ((60, 6.0), (20.0, -1.0, 19.0)))
+
+        # (b) Completion, a second reviewer's case: after the announcing tick,
+        # the first of six identical paint strokes finishes the job; the
+        # commands are 1 + 5 strokes or 5 + 1.
+        one_then_five = decisions_at_job_boundaries(lengths("0.05", "0.05", "0.25"), F(0), F("0.10"))
+        five_then_one = decisions_at_job_boundaries(lengths("0.05", "0.25", "0.05"), F(0), F("0.10"))
+        self.assertEqual(life(one_then_five, "paint"), ((60, 7.0), (20.0, -5.0, 15.0)))
+        self.assertEqual(life(five_then_one, "paint"), ((80, 7.0), (20.0, -5.0, 15.0)))  # equal, raw
+        broken = [(F("0.05"), True, False), (F("0.25"), True, True), (F("0.05"), False, False)]
+        self.assertEqual(life(broken, "paint"), ((60, 7.0), (20.0, -1.0, 19.0)))
+
+        # (c) Announcement, the first reviewer's second case: the owner speaks
+        # at 0.225 hours, inside a command in both plans (0.20 / 0.05 / ... or
+        # 0.05 / 0.20 / ...). The job is announced at the next boundary, 0.25,
+        # so the time before it is free time in both plans: 0.25 hours.
+        late_split = decisions_at_job_boundaries(lengths("0.20", "0.05", "0.05", "0.05"), F("0.225"), F("0.35"))
+        late_grouped = decisions_at_job_boundaries(lengths("0.05", "0.20", "0.05", "0.05"), F("0.225"), F("0.35"))
+        self.assertEqual([in_job for _, in_job, _ in late_split], [False, False, True, True])
+        self.assertEqual([in_job for _, in_job, _ in late_grouped], [False, False, True, True])
+        self.assertEqual(life(late_split, "turn"), ((80, 7.0), (20.0, -5.0, 15.0)))
+        self.assertEqual(life(late_grouped, "turn"), ((80, 7.0), (20.0, -5.0, 15.0)))  # equal
+        # The broken promise (the job counted open from inside the command, done
+        # reported at 0.30): +16 against +19, as the reviewer found.
+        self.assertEqual(life([(F("0.20"), False, False), (F("0.05"), True, False), (F("0.05"), True, True)], "turn"),
+                         ((60, 6.0), (20.0, -4.0, 16.0)))
+        self.assertEqual(life([(F("0.05"), False, False), (F("0.20"), True, False), (F("0.05"), True, True)], "turn"),
+                         ((60, 6.0), (20.0, -1.0, 19.0)))
+        # In the reviewer's own timing the job would be done at 0.30, on the
+        # step that announces it. The meter refuses that record.
+        meter = IntrinsicCostMeter(config=CLOCKED)
+        meter.birth_reading((0.5,))
+        with self.assertRaisesRegex(ValueError, "announced open in an earlier step"):
+            meter.step(StepInput(hours=TICK, job_open=True, job_from_owner=True, job_id="late order",
+                                 job_done=True, job_fault_avoidable=False, **full))
+        # A cut that would leave less than the shortest step cannot be recorded
+        # either: the world must not offer that command there.
+        with self.assertRaisesRegex(ValueError, "shorter than the shortest step"):
+            decisions_at_job_boundaries(lengths("0.05", "0.20"), F(0), F("0.225"))
+
+        # Not covered by the ruling, pinned as the meter behaves today: a job
+        # that closes without "done" (it expires when the switch is serviced)
+        # inside a command. The rest of that decision is sheltered the same way.
+        def expiring(steps):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            return round(math.fsum(meter.step(step).tiredness for step in steps), 6)
+
+        job = dict(job_open=True, job_from_owner=True, job_id="expires when serviced", skill="turn", **full)
+        self.assertEqual(expiring([StepInput(hours=TICK, **job), StepInput(hours=0.20, skill="turn", **full)]), -0.2)
+        self.assertEqual(expiring([StepInput(hours=0.25, **job)]), 0.0)
+
+    def test_a_fault_is_charged_to_the_job_it_affects_on_that_jobs_announcing_step(self):
+        # The lead's ruling (round 14; it reverses the round-13 "no rule"). The
+        # model breaks something during job A, and the owner's later job B is
+        # the repair. The statement goes on B's announcing step, never on
+        # whichever job is open when the fault happens. The meter cannot see
+        # which job a fault affects, so this is a harness promise; the
+        # statement forfeits the job that is open on the step that carries it.
+        reading = dict(hours=TICK, panel_error=(0.5,))
+
+        def job(name, **facts):
+            return StepInput(job_open=True, job_from_owner=True, job_id=name, **facts, **reading)
+
+        def life(faults, by_the_rule):
+            steps = [job("A")]
+            steps += [job("A", hurt=0.1, job_fault_avoidable=None if by_the_rule else True) for _ in range(faults)]
+            steps.append(job("A", job_done=True, job_fault_avoidable=False))
+            for number in range(faults):
+                steps.append(job(f"repair {number}", job_fault_avoidable=True if by_the_rule else None))
+                steps.append(job(f"repair {number}", job_done=True, job_fault_avoidable=False))
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            felt = [meter.step(step) for step in steps]
+            return (felt[faults + 1].job_done, round(math.fsum(f.job_done for f in felt), 6),
+                    round(math.fsum(f.pain for f in felt), 6), round(total(felt), 6))
+
+        # By the rule: honest job A pays, no repair pays, whatever the number of
+        # faults. (A's "done", all "done", pain, raw total.)
+        self.assertEqual(life(1, True), (1.0, 1.0, -0.3, 0.7))
+        self.assertEqual(life(2, True), (1.0, 1.0, -0.6, 0.4))
+        self.assertEqual(life(3, True), (1.0, 1.0, -0.9, 0.1))
+        self.assertEqual(life(5, True), (1.0, 1.0, -1.5, -0.5))
+        self.assertEqual(life(20, True), (1.0, 1.0, -6.0, -5.0))
+        # The broken promise (the statement on the fault's step, with A open):
+        # innocent A is forfeited and every repair pays. Two reviewers' figures:
+        # one "done" per fault, ahead of the honest +1 from two faults on.
+        self.assertEqual(life(1, False), (0.0, 1.0, -0.3, 0.7))
+        self.assertEqual(life(2, False), (0.0, 2.0, -0.6, 1.4))
+        self.assertEqual(life(3, False), (0.0, 3.0, -0.9, 2.1))
+        self.assertEqual(life(5, False), (0.0, 5.0, -1.5, 3.5))
+        self.assertEqual(life(20, False), (0.0, 20.0, -6.0, 14.0))
+
+    def test_reported_hurt_adds_up_within_a_decision(self):
+        # Round 14, a reviewer's case. "The same harm costs the same in one step
+        # or ten" needs the harness to report the hurt of a decision as the sum
+        # of its incidents' hurts (a harness promise). Twenty rounds, two
+        # incidents a round, bundled into one decision or kept apart.
+        def life(lengths, hurt_of):
+            steps = []
+            for _ in range(20):
+                now = 0.0
+                for ticks in lengths:
+                    incidents = sum(1 for hit in (0.5, 1.5) if now <= hit < now + ticks)
+                    steps.append(StepInput(hours=ticks * TICK, skill="go", hurt=hurt_of(incidents), panel_error=(0.5,)))
+                    now += ticks
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            return (len(steps), round(clock_hours(steps), 6)), round(math.fsum(meter.step(step).pain for step in steps), 6)
+
+        bundled, apart = (2, 1, 1), (1, 1, 2)
+        self.assertEqual(life(bundled, float), ((60, 4.0), -120.0))  # additive: the same either way
+        self.assertEqual(life(apart, float), ((60, 4.0), -120.0))
+        # A harness whose scale is not additive (here the square root of the
+        # incident count) makes bundling cheaper:
+        self.assertEqual(life(bundled, math.sqrt), ((60, 4.0), -84.852814))
+        self.assertEqual(life(apart, math.sqrt), ((60, 4.0), -120.0))
+        # A sum above the scale is refused, state unchanged: the world must end
+        # the decision before that much harm is in it.
+        meter = IntrinsicCostMeter(config=CLOCKED)
+        meter.birth_reading((0.5,))
+        with self.assertRaises(ValueError):
+            meter.step(StepInput(hours=TICK, hurt=meter.config.hurt_cap + 1.0, panel_error=(0.5,)))
 
     def test_a_fault_that_came_before_its_job_is_stated_when_the_job_is_announced(self):
         # The statement needs an open job. A fault the model could have avoided,

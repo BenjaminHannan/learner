@@ -115,7 +115,8 @@ class MeterConfig:
     curiosity_gamma: float = 1.0
     # under-used skill: the closed list of command kinds; recent-use counts
     # halve every skill_half_life free-play MOVES (steps without a move, and
-    # every step with a job open, do not count).
+    # every step with an eligible job open, do not count; a forfeited job's
+    # moves are free play and do count).
     skill_kinds: Tuple[str, ...] = ("paint", "reshape", "turn", "go")
     skill_half_life: float = 50.0
     # tiredness: hours awake that fill the pressure, where it starts to cost,
@@ -201,9 +202,12 @@ class StepInput:
                  Avoidable means: the model's own move caused it, or some
                  feasible sequence of offered moves would have prevented it.
                  It is stated on the fault's own step. The one exception: a
-                 fault that came before its job (no job is open on the
-                 fault's step, where the statement would be refused) is
-                 stated on the step that announces the job.
+                 fault that affects a job not yet announced is stated on the
+                 step that announces that job, whether another job is open
+                 on the fault's step or not; never on whichever job happens
+                 to be open (the meter cannot see which job a fault affects:
+                 the world's promise). With no job open the statement is
+                 refused.
                  REQUIRED on every step that reports the job done (True or
                  False: a "done" step without it is refused), and allowed on
                  any other step with the job open, where None = no fault to
