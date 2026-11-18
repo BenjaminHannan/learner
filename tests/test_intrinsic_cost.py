@@ -142,7 +142,7 @@ def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stro
     return decisions
 
 
-def score_decisions(decisions, cycles=20, fill=1.0, kinds=("turn",), *, config=CLOCKED):
+def score_decisions(decisions, cycles=20, fill=1.0, kinds=("turn",), *, config=CLOCKED, rates=None):
     """Run (length, job open, done) decisions through a clocked meter, one owner job per cycle."""
     steps = []
     for cycle in range(cycles):
@@ -151,7 +151,7 @@ def score_decisions(decisions, cycles=20, fill=1.0, kinds=("turn",), *, config=C
                             job_fault_avoidable=False if done else None,
                             panel_error=(0.5,), memory_fill=fill, **(job if in_job else {}))
                   for index, (length, in_job, done) in enumerate(decisions)]
-    meter = IntrinsicCostMeter(config=config)
+    meter = IntrinsicCostMeter(config=config, rates=rates)
     meter.birth_reading((0.5,))
     felt = [meter.step(step) for step in steps]
     return (len(steps), round(clock_hours(steps), 6)), tuple(round(x, 6) for x in (
@@ -3485,6 +3485,13 @@ class RawMeterTests(unittest.TestCase):
         kinds = ("turn", "paint")
         self.assertEqual(score_decisions(vanished, 1, 1.0, kinds, config=config), ((2, 0.025), (0.0, -0.025, -0.000001)))
         self.assertEqual(score_decisions(kept, 1, 1.0, kinds, config=config), ((2, 0.025), (0.0, -0.015, -0.015)))
+        # Round 21, a reviewer's finding: the original 0.05-hour pair also reverses
+        # at full memory when the tiredness rate is set to 0.1 before the run.
+        original_gone = [(Fraction("0.05"), False, False), (Fraction("0.075"), False, False)]
+        original_kept = [(Fraction("0.075"), False, False), (Fraction("0.05"), True, False)]
+        cheap = ExchangeRates(tiredness=0.1)
+        self.assertEqual((score_decisions(original_gone, 1, 1.0, kinds, rates=cheap)[1][2],
+                          score_decisions(original_kept, 1, 1.0, kinds, rates=cheap)[1][2]), (0.012499, -0.0075))
 
     def _praise_around_an_expiring_job(self, cycles, *, vanished, with_job=True, aligned=False):
         tick, command = Fraction("0.05"), Fraction("0.25")
