@@ -3442,7 +3442,7 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(kept, [(F("0.075"), False, False), (F("0.05"), True, False)])
         for kinds in (two, two[::-1]):  # the kept plan is 0 in either order of the kinds
             self.assertEqual((score_decisions(gone, 1, 0.0, kinds)[1][2], score_decisions(kept, 1, 0.0, kinds)[1][2]), (0.024999, 0.0))
-        # The lead is one skill bonus. It is still there at half-full memory
+        # The lead is one skill bonus for two kinds. It is still there at half-full memory
         # and gone at 0.9 and at full memory, where the free time costs more.
         self.assertEqual((score_decisions(gone, 1, 0.5, two)[1][2], score_decisions(kept, 1, 0.5, two)[1][2]), (0.024997, -0.000001))
         self.assertEqual((score_decisions(gone, 1, 0.9, two)[1][2], score_decisions(kept, 1, 0.9, two)[1][2]), (-0.055157, -0.048056))
@@ -3453,6 +3453,26 @@ class RawMeterTests(unittest.TestCase):
         # the lead is the same one bonus (the feeling is bounded over a life:
         # test_any_stretch_is_bounded_whatever_the_moves).
         self.assertEqual((score_decisions(gone, 20, 0.0, two)[1][2], score_decisions(kept, 20, 0.0, two)[1][2]), (0.024999, 0.0))
+        # Round 19, a reviewer's finding: the lead is larger with more kinds
+        # of move, and the meter has four. Three 0.05-hour strokes, the job
+        # spoken at 0.075 and expiring at 0.10, both inside the second stroke:
+        # the job vanishes and three kinds of free play earn +0.039622. The
+        # one plan of the same length that keeps the job is two 0.075-hour
+        # strokes: one free step, then one job step, 0 in any order of kinds.
+        three = ("turn", "paint", "reshape")
+        with self.assertRaisesRegex(ValueError, "never announced"):
+            decisions_at_job_boundaries([(F("0.05"),)] * 3, F("0.075"), expires=F("0.10"))
+        gone = [(F("0.05"), False, False)] * 3
+        kept = decisions_at_job_boundaries([(F("0.075"),), (F("0.075"),)], F("0.075"), expires=F("0.10"))
+        self.assertEqual(kept, [(F("0.075"), False, False), (F("0.075"), True, False)])
+        self.assertEqual(score_decisions(gone, 1, 0.0, three)[1][2], 0.039622)
+        self.assertEqual({score_decisions(kept, 1, 0.0, order)[1][2] for order in itertools.product(three, repeat=2)}, {0.0})
+        self.assertEqual((score_decisions(gone, 1, 0.0)[1][2], score_decisions(kept, 1, 0.0)[1][2]), (0.0, 0.0))  # one kind
+        self.assertEqual((score_decisions(gone, 1, 1.0, three)[1][2], score_decisions(kept, 1, 1.0, three)[1][2]), (-0.110378, -0.075))
+        self.assertEqual((score_decisions(gone, 20, 0.0, three)[1][2], score_decisions(kept, 20, 0.0, three)[1][2]), (0.039622, 0.0))
+        # Deeper plans are not enumerated. Four free strokes with four kinds
+        # earn +0.049996: under the rate of 0.05, which is the ceiling.
+        self.assertEqual(score_decisions([(F("0.05"), False, False)] * 4, 1, 0.0, ("turn", "paint", "reshape", "go"))[1][2], 0.049996)
 
     def test_a_goal_reached_after_a_moot_closure_earns_nothing(self):
         # Choice 16 (a), accepted by the lead in round 17: ruling RD covers a
@@ -3545,7 +3565,20 @@ class RawMeterTests(unittest.TestCase):
                                     behind_latch.append((whole, spoken, latch))
                             continue
                         earns = expires is None or latch < expires
-                        opened = next(start for start, (_, in_job, _) in zip([F(0)] + ends, record) if in_job)
+                        clock, starts, stops, done_at = F(0), [], [], []
+                        for length, in_job, done in record:
+                            if in_job:
+                                starts.append(clock)
+                                stops.append(clock + length)
+                            clock += length
+                            if done:
+                                done_at.append(clock)
+                        self.assertEqual(clock, whole)
+                        self.assertEqual(starts[1:], stops[:-1])  # one unbroken run of job decisions
+                        opened = starts[0]
+                        self.assertTrue(spoken <= opened and opened - spoken < longest)
+                        if earns:  # "done" is on the last job decision, which ends at the latch
+                            self.assertEqual((done_at, stops[-1]), ([latch], latch))
                         self.assertEqual(sum(done for _, _, done in record), int(earns))  # RD
                         if earns:
                             paid += 1
@@ -3653,56 +3686,93 @@ class RawMeterTests(unittest.TestCase):
         split = [(F("0.10"), False, False), (F("0.15"), True, False)] + long[1:]
         self.assertEqual(score_decisions(split, 1)[1][2], -3.35)
 
-    def test_a_vanished_job_can_lead_by_one_skill_bonus_with_two_kinds_of_move(self):
-        # Round 18, a reviewer's finding on the round-17 menu. With two kinds
-        # of move (alternating by decision; the kept plans are not given their
-        # best order) a vanished job's steps are free play and can earn the
-        # under-used-skill feeling, where a kept job's steps cannot. Every
-        # plan of two or three strokes from 0.05, 0.075, 0.10 and 0.25 hours,
-        # speech and expiry on a 0.025-hour grid, one job, scored by the meter.
+    def test_a_vanished_job_can_lead_by_a_skill_bonus_with_several_kinds_of_move(self):
+        # Rounds 18 and 19, a reviewer's findings on the round-17 menu. A
+        # vanished job's steps are free play and can earn the under-used-skill
+        # feeling, where a kept job's steps cannot. Every plan of two or three
+        # strokes from 0.05, 0.075, 0.10 and 0.25 hours, speech and expiry on
+        # a 0.025-hour grid, one job that would expire, scored by the meter.
         F = Fraction
-        menu, grid, two = [F("0.05"), F("0.075"), F("0.10"), F("0.25")], F("0.025"), ("turn", "paint")
-        plans = [strokes for count in (2, 3) for strokes in itertools.product(menu, repeat=count)]
-        found = {}
-        for fill in (0.0, 1.0):
-            scores = {}
+        menu, grid, kinds = [F("0.05"), F("0.075"), F("0.10"), F("0.25")], F("0.025"), ("turn", "paint", "reshape", "go")
+        kept, gone = {}, []
+        for strokes in (strokes for count in (2, 3) for strokes in itertools.product(menu, repeat=count)):
+            whole = sum(strokes, F(0))
+            times = [grid * tick for tick in range(int(whole / grid) + 1)]
+            for spoken in times[:-1]:
+                for expires in (time for time in times if time > spoken):
+                    try:
+                        record = decisions_at_job_boundaries([(stroke,) for stroke in strokes], spoken, expires=expires)
+                    except ValueError:
+                        gone.append((strokes, whole, spoken, expires))
+                        continue
+                    kept.setdefault((spoken, expires, whole), []).append(tuple(record))
+        scores = {}
 
-            def raw(record):
-                key = tuple(record)
-                if key not in scores:
-                    scores[key] = score_decisions(record, 1, fill, two)[1][2]
-                return scores[key]
+        def raw(record, count, fill, best_order):
+            key = (record, count, fill, best_order)
+            if key not in scores:
+                orders = itertools.product(kinds[:count], repeat=len(record)) if best_order else [kinds[:count]]
+                scores[key] = max(score_decisions(record, 1, fill, order)[1][2] for order in orders)
+            return scores[key]
 
-            kept, gone = {}, []
-            for strokes in plans:
-                whole = sum(strokes, F(0))
-                times = [grid * tick for tick in range(int(whole / grid) + 1)]
-                for spoken in times[:-1]:
-                    for expires in (time for time in times if time > spoken):
-                        try:
-                            record = decisions_at_job_boundaries([(stroke,) for stroke in strokes], spoken, expires=expires)
-                        except ValueError:
-                            gone.append((strokes, whole, spoken, expires))
-                            continue
-                        kept.setdefault((spoken, expires, whole), []).append(raw(record))
+        def leads(count, fill=0.0, best_order=False):
             cases = ahead_of_all = ahead_of_some = 0
-            leads = []
+            largest = None
             for strokes, whole, spoken, expires in gone:
-                matches = kept.get((spoken, expires, whole))
+                matches = [raw(record, count, fill, best_order) for record in kept.get((spoken, expires, whole), [])]
                 if not matches:
                     continue
                 cases += 1
-                vanished = raw([(stroke, False, False) for stroke in strokes])
+                vanished = raw(tuple((stroke, False, False) for stroke in strokes), count, fill, best_order)
                 ahead_of_some += vanished > min(matches)
                 if vanished > max(matches):
                     ahead_of_all += 1
-                    leads.append(round(vanished - max(matches), 6))
-            found[fill] = (cases, ahead_of_all, ahead_of_some, max(leads, default=None))
-            self.assertTrue(all(lead <= 0.05 for lead in leads))  # the feeling's bound over a life, at a rate of 0.05
-        # Rested: ahead of every same-length kept plan in 815 of 1,766 cases, by at most one bonus.
-        self.assertEqual(found[0.0], (1766, 815, 1181, 0.024999))
-        # At full memory: never ahead, of any kept plan.
-        self.assertEqual(found[1.0], (1766, 0, 0, None))
+                    lead = round(vanished - max(matches), 6)
+                    self.assertLessEqual(lead, 0.05)  # the rate: the feeling's bound over a life
+                    largest = lead if largest is None else max(largest, lead)
+            return cases, ahead_of_all, ahead_of_some, largest
+
+        # Rested, the kinds alternating in a fixed order by decision. Two
+        # kinds: ahead of every same-length kept plan in 815 of 1,766 cases.
+        # Three or four kinds: in 1,618, by up to +0.039622.
+        self.assertEqual(leads(2), (1766, 815, 1181, 0.024999))
+        self.assertEqual(leads(3), (1766, 1618, 1700, 0.039622))
+        self.assertEqual(leads(4), (1766, 1618, 1700, 0.039622))
+        # The order matters with two kinds: with every plan given its best
+        # order of kinds, 81 cases. With three kinds it does not: 1,618.
+        self.assertEqual(leads(2, best_order=True), (1766, 81, 539, 0.024999))
+        self.assertEqual(leads(3, best_order=True), (1766, 1618, 1700, 0.039622))
+        # By memory fill, four kinds: the same at half-full, 4 cases at 0.9,
+        # and at full memory never ahead of any kept plan (two kinds too).
+        self.assertEqual(leads(4, 0.5)[:2], (1766, 1618))
+        self.assertEqual(leads(4, 0.9)[:2], (1766, 4))
+        self.assertEqual(leads(4, 1.0), (1766, 0, 0, None))
+        self.assertEqual(leads(2, 1.0), (1766, 0, 0, None))
+
+    def test_the_two_readings_of_when_eligibility_ends_give_the_same_credit(self):
+        # Round 19, a reviewer's arithmetic on choice 17 (a). A job with an
+        # expiry time and a moot time closes at the earlier. Does "done"
+        # stop being earnable at that clock time, or at the end of the stroke
+        # it falls in? With a tie counted as an expiry (RD) and goals latching
+        # only at stroke ends, the two give the same answer: a latch strictly
+        # before the stroke end is at an earlier stroke end, which is at or
+        # before the stroke's start, so strictly before any time inside it.
+        # Every plan, latch, expiry and moot time of the round-17 menu; no
+        # meter and no toy world (the toy world does not build such a job).
+        F = Fraction
+        menu, grid = [F("0.05"), F("0.075"), F("0.10"), F("0.25")], F("0.025")
+        tried = differ = 0
+        for strokes in (strokes for count in (2, 3) for strokes in itertools.product(menu, repeat=count)):
+            ends = [sum(strokes[:count], F(0)) for count in range(1, len(strokes) + 1)]
+            times = [grid * tick for tick in range(int(ends[-1] / grid) + 1)]
+            for latch in ends:
+                for expires in times:
+                    for moot in times:
+                        closes = min(expires, moot)
+                        reported = min(end for end in ends if end >= closes)
+                        tried += 1
+                        differ += (latch < closes) != (latch < reported)
+        self.assertEqual((tried, differ), (54380, 0))
 
     def test_a_job_spoken_to_a_sleeping_model_wakes_it(self):
         # The lead's ruling before round 15, the same as for a remark (round
