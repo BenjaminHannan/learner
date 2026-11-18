@@ -75,7 +75,7 @@ def curiosity_along(errors, config=None):
 
 
 def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stroke=Fraction("0.05")):
-    """A toy world's rule for job boundaries, in exact clock times (rounds 14 to 16).
+    """A toy world's rule for job boundaries, in exact clock times (rounds 14 and 15).
 
     ``commands`` are the commands the model chose, from time 0. A command is a
     tuple of strokes, each at least ``stroke`` hours (the shortest awake step;
@@ -128,7 +128,7 @@ def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stro
 
 
 def hurt_scale_covers(config, worst_sums_of_the_offered_decisions):
-    """Whether the worst summed hurt of every offered decision fits the registered scale (rounds 15 and 16)."""
+    """Whether the worst summed hurt of every offered decision fits the registered scale (round 15)."""
     return max(worst_sums_of_the_offered_decisions) <= config.hurt_cap
 
 
@@ -3172,7 +3172,8 @@ class RawMeterTests(unittest.TestCase):
         # An expiry inside a stroke (0.06 hours) is held to that stroke's end
         # (0.10). Both plans are still equal, and what is sheltered is the
         # held part only: 0.04 hours here. That is for 0.05-hour strokes; a long
-        # stroke shelters more (the round-16 test below this one's neighbour).
+        # stroke shelters more: see
+        # test_a_closure_inside_a_stroke_is_held_to_its_end_and_a_long_stroke_shelters_more.
         split = decisions_at_job_boundaries(lengths("0.05", "0.20"), F(0), expires=F("0.06"))
         whole = decisions_at_job_boundaries(lengths("0.25"), F(0), expires=F("0.06"))
         self.assertEqual(split, [(F("0.05"), True, False), (F("0.05"), True, False), (F("0.15"), False, False)])
@@ -3324,8 +3325,8 @@ class RawMeterTests(unittest.TestCase):
     def test_a_job_spoken_to_a_sleeping_model_wakes_it(self):
         # The lead's ruling before round 15, the same as for a remark (round
         # 9). A sleep ends when the owner speaks, and the job is announced on
-        # the first awake decision. (An awake stroke is finished first: round
-        # 16.) A harness promise: the meter sees only that no sleep step
+        # the first awake decision. (An awake stroke is finished first: ruling RA,
+        # round 15.) A harness promise: the meter sees only that no sleep step
         # carries a job.
         full = dict(panel_error=(0.5,))
         job = dict(job_open=True, job_from_owner=True, job_id="spoken to a sleeper", hours=TICK, **full)
