@@ -142,7 +142,7 @@ def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stro
     return decisions
 
 
-def score_decisions(decisions, cycles=20, fill=1.0, kinds=("turn",)):
+def score_decisions(decisions, cycles=20, fill=1.0, kinds=("turn",), *, config=CLOCKED):
     """Run (length, job open, done) decisions through a clocked meter, one owner job per cycle."""
     steps = []
     for cycle in range(cycles):
@@ -151,7 +151,7 @@ def score_decisions(decisions, cycles=20, fill=1.0, kinds=("turn",)):
                             job_fault_avoidable=False if done else None,
                             panel_error=(0.5,), memory_fill=fill, **(job if in_job else {}))
                   for index, (length, in_job, done) in enumerate(decisions)]
-    meter = IntrinsicCostMeter(config=CLOCKED)
+    meter = IntrinsicCostMeter(config=config)
     meter.birth_reading((0.5,))
     felt = [meter.step(step) for step in steps]
     return (len(steps), round(clock_hours(steps), 6)), tuple(round(x, 6) for x in (
@@ -3423,7 +3423,7 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(score_decisions(round_15, cycles=1, fill=0.0)[1], (0.0, 0.0, 0.0))
         self.assertEqual(score_decisions(expiring, cycles=1, fill=0.0)[1], (0.0, 0.0, 0.0))
         # With two kinds of move the skill feeling pays on free steps (hole
-        # 16), so "vanishing gains nothing" is pinned for one kind only. In
+        # 16), so the one-kind result is about these remark-free records. In
         # this pair the vanished plan is behind; in the next it is ahead.
         two = ("turn", "paint")
         self.assertEqual(score_decisions(round_15, 1, 0.0, two)[1][2], 0.022957)
@@ -3473,6 +3473,77 @@ class RawMeterTests(unittest.TestCase):
         # Deeper plans are not enumerated. Four free strokes with four kinds
         # earn +0.049996: under the rate of 0.05, which is the ceiling.
         self.assertEqual(score_decisions([(F("0.05"), False, False)] * 4, 1, 0.0, ("turn", "paint", "reshape", "go"))[1][2], 0.049996)
+
+    def test_a_vanished_job_can_lead_at_full_memory_on_shorter_strokes(self):
+        short, long, expiry = (Fraction(value) for value in ("0.010", "0.015", "0.020"))
+        config = MeterConfig(min_awake_step_hours=float(short), max_awake_step_hours=0.25)
+        with self.assertRaisesRegex(ValueError, "never announced"):
+            decisions_at_job_boundaries([(short,), (long,)], long, expires=expiry, stroke=short)
+        vanished = [(short, False, False), (long, False, False)]
+        kept = decisions_at_job_boundaries([(long,), (short,)], long, expires=expiry, stroke=short)
+        self.assertEqual(kept, [(long, False, False), (short, True, False)])
+        kinds = ("turn", "paint")
+        self.assertEqual(score_decisions(vanished, 1, 1.0, kinds, config=config), ((2, 0.025), (0.0, -0.025, -0.000001)))
+        self.assertEqual(score_decisions(kept, 1, 1.0, kinds, config=config), ((2, 0.025), (0.0, -0.015, -0.015)))
+
+    def _praise_around_an_expiring_job(self, cycles, *, vanished, with_job=True, aligned=False):
+        tick, command = Fraction("0.05"), Fraction("0.25")
+        strokes = (command,) if vanished else (tick,) * 5
+        decisions = [(command, False, False)]
+        if with_job:
+            spoken, expiry = Fraction("0.11") - tick, Fraction("0.21") - tick
+            if vanished:
+                with self.assertRaisesRegex(ValueError, "never announced"):
+                    decisions_at_job_boundaries([strokes], spoken, expires=expiry)
+            else:
+                decisions = decisions_at_job_boundaries([strokes], spoken, expires=expiry)
+                self.assertEqual(decisions, [(2 * tick, False, False), (2 * tick, True, False), (tick, False, False)])
+        padding = [(tick, False, False)] * 3 if vanished else [(3 * tick, False, False)]
+        awake = [(tick, False, False), *decisions, *padding]
+        remarks = (Fraction("0.02"), Fraction("0.28" if aligned else "0.07"))
+        reports = []
+        now = Fraction(0)
+        for length, in_job, done in awake:
+            end = now + length
+            remark = sum(now <= spoken < end for spoken in remarks)
+            reports.append((now, length, in_job, done, remark))
+            now = end
+        second_report = Fraction("0.15" if with_job and not vanished and not aligned else "0.30")
+        self.assertEqual([start + length for start, length, _, _, remark in reports if remark], [tick, second_report])
+        self.assertEqual(now + 8, Fraction("8.45"))
+        if with_job:
+            self.assertEqual(len(reports) + 1, 6)
+
+        meter = IntrinsicCostMeter(config=CLOCKED)
+        meter.birth_reading((0.5,))
+        feelings = []
+        for cycle in range(cycles):
+            job = dict(job_open=True, job_from_owner=True, job_id=f"cycle {cycle}")
+            for start, length, in_job, done, remark in reports:
+                feelings.append(meter.step(StepInput(
+                    hours=float(length), skill="turn", job_done=done, remark=remark,
+                    memory_fill=0.1 if start == 0 else 0.2, panel_error=(0.5,), **(job if in_job else {}),
+                )))
+            feelings.append(meter.step(StepInput(hours=8, asleep=True, memory_fill=0.2, panel_error=(0.5,))))
+        for feeling in feelings:
+            self.assertEqual(dataclasses.replace(feeling, remarks=0), Feelings(0, 0, 0, 0, 0, 0, 0, 0))
+        return [feeling.total for feeling in feelings]
+
+    def test_a_vanished_job_can_change_when_the_same_praise_is_reported(self):
+        vanished = self._praise_around_an_expiring_job(200, vanished=True)
+        kept = self._praise_around_an_expiring_job(200, vanished=False)
+        first_twenty = (vanished[:120], kept[:120])
+        self.assertEqual(tuple(round(math.fsum(scores), 9) for scores in first_twenty), (16.385474270, 16.331220751))
+        self.assertEqual(tuple(round(discounted(scores), 9) for scores in first_twenty), (10.107093534, 10.074149621))
+        self.assertEqual((round(math.fsum(vanished), 9), round(math.fsum(kept), 9)), (156.203443635, 155.687806398))
+
+    def test_a_vanished_job_has_no_raw_praise_lead_at_equal_report_times(self):
+        for with_job, aligned in ((False, False), (True, True)):
+            with self.subTest(with_job=with_job, aligned=aligned):
+                vanished, kept = (math.fsum(self._praise_around_an_expiring_job(
+                    200, vanished=vanished, with_job=with_job, aligned=aligned,
+                )) for vanished in (True, False))
+                self.assertEqual(vanished - kept, 0.0)
 
     def test_a_goal_reached_after_a_moot_closure_earns_nothing(self):
         # Choice 16 (a), accepted by the lead in round 17: ruling RD covers a
@@ -3702,7 +3773,8 @@ class RawMeterTests(unittest.TestCase):
                 for expires in (time for time in times if time > spoken):
                     try:
                         record = decisions_at_job_boundaries([(stroke,) for stroke in strokes], spoken, expires=expires)
-                    except ValueError:
+                    except ValueError as refusal:
+                        self.assertIn("never announced", str(refusal))
                         gone.append((strokes, whole, spoken, expires))
                         continue
                     kept.setdefault((spoken, expires, whole), []).append(tuple(record))
