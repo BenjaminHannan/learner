@@ -74,8 +74,8 @@ def curiosity_along(errors, config=None):
     return [meter.step(StepInput(panel_error=(error,))).curiosity for error in errors[1:]]
 
 
-def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stroke=Fraction("0.05")):
-    """A toy world's rule for job boundaries, in exact clock times (rounds 14 to 16).
+def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stroke=Fraction("0.05"), moot=None):
+    """A toy world's rule for job boundaries, in exact clock times (rounds 14 to 17).
 
     ``commands`` are the commands the model chose, from time 0. A command is a
     tuple of strokes, each at least ``stroke`` hours (the shortest awake step;
@@ -92,9 +92,14 @@ def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stro
     strictly before the job expires by the clock (a tie is an expiry): the
     hold delays a report, it never buys time to earn credit. A job whose
     opening and closure are reported at the same stroke end cannot be
-    recorded: it is never announced. Returns (length, job open, done) for
-    each decision.
+    recorded: it is never announced. ``moot`` is the time an owner closes the
+    job as moot; it takes the same path as ``expires``, and a job has one or
+    the other. Returns (length, job open, done) for each decision.
     """
+    if moot is not None:
+        if expires is not None:
+            raise ValueError("a job expires or is closed as moot, not both")
+        expires = moot
     built = []
     for command in commands:
         if not isinstance(command, tuple):
@@ -135,14 +140,15 @@ def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stro
     return decisions
 
 
-def score_decisions(decisions, cycles=20, fill=1.0):
+def score_decisions(decisions, cycles=20, fill=1.0, kinds=("turn",)):
     """Run (length, job open, done) decisions through a clocked meter, one owner job per cycle."""
     steps = []
     for cycle in range(cycles):
         job = dict(job_open=True, job_from_owner=True, job_id=f"cycle {cycle}")
-        steps += [StepInput(hours=float(length), skill="turn", job_done=done, job_fault_avoidable=False if done else None,
+        steps += [StepInput(hours=float(length), skill=kinds[index % len(kinds)], job_done=done,
+                            job_fault_avoidable=False if done else None,
                             panel_error=(0.5,), memory_fill=fill, **(job if in_job else {}))
-                  for length, in_job, done in decisions]
+                  for index, (length, in_job, done) in enumerate(decisions)]
     meter = IntrinsicCostMeter(config=CLOCKED)
     meter.birth_reading((0.5,))
     felt = [meter.step(step) for step in steps]
@@ -3405,6 +3411,116 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(score_decisions(ticks, cycles=1, fill=0.0), ((7, 0.35), (1.0, 0.0, 1.0)))
         expiring = decisions_at_job_boundaries([F("0.05")] * 7, F("0.06"), expires=F("0.20"))
         self.assertEqual([in_job for _, in_job, _ in expiring], [False, False, True, True, False, False, False])
+        # Round 17, a reviewer's pair for the expiry form (spoken at 0.06,
+        # expiring at 0.20). The job-free record above is also the legal
+        # record under the rule: the job is never announced, and all 0.35
+        # hours are free time. Vanishing costs: -0.35 against -0.25 on short
+        # strokes at full memory, and 0 against 0 rested. One kind of move.
+        self.assertEqual(score_decisions(round_15, cycles=1), ((3, 0.35), (0.0, -0.35, -0.35)))
+        self.assertEqual(score_decisions(expiring, cycles=1), ((7, 0.35), (0.0, -0.25, -0.25)))
+        self.assertEqual(score_decisions(round_15, cycles=1, fill=0.0)[1], (0.0, 0.0, 0.0))
+        self.assertEqual(score_decisions(expiring, cycles=1, fill=0.0)[1], (0.0, 0.0, 0.0))
+        # With two kinds of move the skill feeling pays on free steps (hole
+        # 16), so "vanishing gains nothing" is pinned for one kind only. In
+        # this pair the vanished plan is still behind.
+        two = ("turn", "paint")
+        self.assertEqual(score_decisions(round_15, 1, 0.0, two)[1][2], 0.022957)
+        self.assertEqual(score_decisions(expiring, 1, 0.0, two)[1][2], 0.024273)
+        self.assertEqual(score_decisions(round_15, 1, 1.0, two)[1][2], -0.327043)
+        self.assertEqual(score_decisions(expiring, 1, 1.0, two)[1][2], -0.225727)
+
+    def test_a_goal_reached_after_a_moot_closure_earns_nothing(self):
+        # Choice 16 (a), accepted by the lead in round 17: ruling RD covers a
+        # moot closure too. The job is open from the start, the owner closes
+        # it as moot at 0.06 hours, and the goal is reached at 0.30.
+        F = Fraction
+        short = [F("0.05"), F("0.05"), F("0.25")]
+        long = [(F("0.05"),), (F("0.25"),), (F("0.05"),)]
+        by_short = decisions_at_job_boundaries(short, F(0), latch=F("0.30"), moot=F("0.06"))
+        by_long = decisions_at_job_boundaries(long, F(0), latch=F("0.30"), moot=F("0.06"))
+        self.assertEqual([done for plan in (by_short, by_long) for _, _, done in plan], [False] * 6)
+        self.assertEqual(score_decisions(by_short), ((60, 7.0), (0.0, -5.0, -5.0)))
+        self.assertEqual(score_decisions(by_long), ((60, 7.0), (0.0, -1.0, -1.0)))
+        # "At or after": a goal reached at the moment of the closure (0.10) earns nothing.
+        tie = decisions_at_job_boundaries(short, F(0), latch=F("0.10"), moot=F("0.10"))
+        self.assertEqual([done for _, _, done in tie], [False] * 3)
+        # A goal reached before the closure is paid, as before an expiry.
+        before = decisions_at_job_boundaries(short, F(0), latch=F("0.10"), moot=F("0.12"))
+        self.assertEqual(score_decisions(before), ((60, 7.0), (20.0, -5.0, 15.0)))
+        # A job has one or the other; no ruling covers both.
+        with self.assertRaisesRegex(ValueError, "not both"):
+            decisions_at_job_boundaries(short, F(0), expires=F("0.06"), moot=F("0.06"))
+
+    def test_the_stroke_bounds_hold_for_every_short_plan_on_a_small_menu(self):
+        # Round 17. The bounds of rulings RC, RE and RF were argued from the
+        # rule and pinned in a few cases. Here they are checked on every plan
+        # of two or three indivisible strokes from a menu of 0.05, 0.075,
+        # 0.10 and 0.25 hours, with the speech and the closure at every
+        # multiple of 0.025 hours, each legal record scored by the meter at
+        # full memory. One kind of move. Beyond this menu and depth the
+        # bounds stay argued.
+        F = Fraction
+        menu, longest, grid = [F("0.05"), F("0.075"), F("0.10"), F("0.25")], F("0.25"), F("0.025")
+        plans = [strokes for count in (2, 3) for strokes in itertools.product(menu, repeat=count)]
+        legal = vanished = unoffered = paid = 0
+        job_time, widest_shelter = {}, F(0)
+        behind = []
+        for strokes in plans:
+            commands = [(stroke,) for stroke in strokes]
+            ends = [sum(strokes[:count], F(0)) for count in range(1, len(strokes) + 1)]
+            whole = ends[-1]
+            times = [grid * tick for tick in range(int(whole / grid) + 1)]
+            for spoken in times[:-1]:
+                opened = min(end for end in [F(0)] + ends if end >= spoken)  # a job spoken at the start opens there
+                # A job that closes without "done", by expiry or as moot.
+                for expires in (time for time in times if time > spoken):
+                    try:
+                        record = decisions_at_job_boundaries(commands, spoken, expires=expires)
+                    except ValueError as refusal:
+                        self.assertIn("never announced", str(refusal))
+                        vanished += 1
+                        behind.append((whole, spoken, expires))
+                        continue
+                    legal += 1
+                    closed = min(end for end in ends if end >= expires)
+                    held = closed - opened
+                    self.assertLess(opened - spoken, longest)  # RE: each event is late by less than one longest stroke
+                    self.assertLess(closed - expires, longest)  # RC: the shelter at a closure, the same bound
+                    self.assertLess(abs(held - (expires - spoken)), longest)  # RE: one plan's job time
+                    widest_shelter = max(widest_shelter, closed - expires)
+                    count_hours, (credit, tiredness, raw) = score_decisions(record, cycles=1)
+                    self.assertEqual((credit, tiredness, raw), (0.0, round(-float(whole - held), 6), round(-float(whole - held), 6)))
+                    job_time.setdefault((spoken, expires), []).append((held, whole, raw))
+                # A job that closes with "done" at a stroke end, alone or with an expiry before or after it.
+                for latch in (end for end in ends if end > spoken):
+                    for expires in [None] + [time for time in times if time > spoken]:
+                        try:
+                            record = decisions_at_job_boundaries(commands, spoken, latch=latch, expires=expires)
+                        except ValueError as refusal:
+                            if "announcing decision" in str(refusal):
+                                unoffered += 1
+                            else:
+                                self.assertIn("never announced", str(refusal))
+                            continue
+                        earns = expires is None or latch < expires
+                        self.assertEqual(sum(done for _, _, done in record), int(earns))  # RD
+                        if earns:
+                            paid += 1
+                            free = whole - (latch - opened)
+                            self.assertEqual(score_decisions(record, cycles=1)[1], (1.0, round(-float(free), 6), round(1 - float(free), 6)))
+        # RE: two plans for the same job differ by less than two longest strokes.
+        widest_gap = max(max(held for held, _, _ in found) - min(held for held, _, _ in found) for found in job_time.values())
+        self.assertLess(widest_gap, 2 * longest)
+        # RF: a vanished job is all free time, and never ahead of a plan of
+        # the same length that held the same job.
+        compared = 0
+        for whole, spoken, expires in behind:
+            for held, length, raw in job_time.get((spoken, expires), []):
+                if length == whole:
+                    compared += 1
+                    self.assertLess(-float(whole), raw)
+        self.assertEqual((len(plans), legal, vanished, unoffered, paid, compared), (80, 5757, 3080, 2892, 752, 4490))
+        self.assertEqual((widest_shelter, widest_gap), (F("0.225"), F("0.45")))  # the widest found here
 
     def test_two_plans_for_one_job_can_differ_by_almost_two_longest_strokes(self):
         # The lead's ruling RE (round 16), three reviewers' cases: the bounds
