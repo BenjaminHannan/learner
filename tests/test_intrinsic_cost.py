@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import dataclasses
+import itertools
 import math
 from fractions import Fraction
 from pathlib import Path
@@ -2369,6 +2370,17 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(score(stay_awake), ((4, 0.5), (0.0, -0.25, -3.0, -3.25, -3.185325)))
         self.assertEqual(score(sleep_first), ((5, 0.5), (0.0, -0.240177, -3.0, -3.240177, -3.14394)))
         self.assertEqual(score(neglect), ((6, 0.5), (-0.03, -0.1, -3.0, -3.13, -3.035294)))
+        # The reversal in this world rests on that long action. Were a one-tick
+        # free action offered too, prevention that sleeps, hears the "no" on a
+        # short step and sleeps again would win; staying awake on short steps
+        # would still lose in the raw total.
+        short_and_sleep = serviced + [StepInput(hours=0.10, asleep=True, **full),
+                                      StepInput(hours=TICK, remark=-1, panel_error=(0.5,), memory_fill=0.99),
+                                      StepInput(hours=0.25, asleep=True, **full)]
+        short_awake = serviced + [StepInput(hours=TICK, **full)] * 2 + [
+            StepInput(hours=TICK, remark=-1, **full), StepInput(hours=0.25, asleep=True, **full)]
+        self.assertEqual(score(short_and_sleep), ((5, 0.5), (0.0, -0.048023, -3.0, -3.048023, -2.957494)))
+        self.assertEqual(score(short_awake), ((6, 0.5), (0.0, -0.15, -3.0, -3.15, -3.027338)))
 
         # World 2: twenty conditional repair jobs, the serviced job closes at the
         # service move, the trip is five moves out (17 hours). Only the last
@@ -2523,6 +2535,27 @@ class RawMeterTests(unittest.TestCase):
         earned = score(many)[1]
         self.assertGreater(earned, 0.04)
         self.assertLessEqual(earned, 0.05)
+        # A prevention arm can earn the same bonus in its free play. A reviewer's
+        # rested world: 20 repair jobs issued ahead, 12 moves a slot, 8 hours of
+        # sleep after each. Prevention services, the job expires, and it plays
+        # ten varied moves; neglect trips, repairs with ten varied moves.
+        def rested_world(plan):
+            steps, kinds = [], itertools.cycle(("paint", "reshape", "turn", "go"))
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"slot {slot}", **reading)
+                steps.append(StepInput(**job))
+                if plan == "prevent":
+                    steps.append(StepInput(skill="turn", **job))
+                    steps += [StepInput(skill=next(kinds), **reading) for _ in range(10)]
+                else:
+                    steps.append(StepInput(job_fault_avoidable=True, **job))
+                    steps += [StepInput(skill=next(kinds), **job) for _ in range(9)]
+                    steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=True, **job))
+                steps.append(StepInput(asleep=True, hours=8.0, panel_error=(0.5,)))
+            return score(steps)
+
+        self.assertEqual(rested_world("prevent"), (0.0, 0.049996, 0.049996, 0.048059))
+        self.assertEqual(rested_world("neglect"), (0.0, 0.049396, 0.049396, 0.047661))
 
     def test_a_fault_that_came_before_its_job_is_stated_when_the_job_is_announced(self):
         # The statement needs an open job. A fault the model could have avoided,
