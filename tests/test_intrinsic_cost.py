@@ -3464,9 +3464,12 @@ class RawMeterTests(unittest.TestCase):
         plans = [strokes for count in (2, 3) for strokes in itertools.product(menu, repeat=count)]
         legal = vanished = unoffered = paid = 0
         job_time, widest_shelter = {}, F(0)
-        behind = []
+        behind, behind_latch, paid_time = [], [], {}
         for strokes in plans:
             commands = [(stroke,) for stroke in strokes]
+            # The record of a vanished job: every stroke is free time. By the meter, minus the plan's length.
+            all_free = score_decisions([(stroke, False, False) for stroke in strokes], cycles=1)[1]
+            self.assertEqual(all_free, (0.0, round(-float(sum(strokes)), 6), round(-float(sum(strokes)), 6)))
             ends = [sum(strokes[:count], F(0)) for count in range(1, len(strokes) + 1)]
             whole = ends[-1]
             times = [grid * tick for tick in range(int(whole / grid) + 1)]
@@ -3501,6 +3504,8 @@ class RawMeterTests(unittest.TestCase):
                                 unoffered += 1
                             else:
                                 self.assertIn("never announced", str(refusal))
+                                if expires is None:
+                                    behind_latch.append((whole, spoken, latch))
                             continue
                         earns = expires is None or latch < expires
                         self.assertEqual(sum(done for _, _, done in record), int(earns))  # RD
@@ -3508,18 +3513,31 @@ class RawMeterTests(unittest.TestCase):
                             paid += 1
                             free = whole - (latch - opened)
                             self.assertEqual(score_decisions(record, cycles=1)[1], (1.0, round(-float(free), 6), round(1 - float(free), 6)))
+                            if expires is None:
+                                paid_time.setdefault((spoken, latch), []).append((whole, round(1 - float(free), 6)))
         # RE: two plans for the same job differ by less than two longest strokes.
         widest_gap = max(max(held for held, _, _ in found) - min(held for held, _, _ in found) for found in job_time.values())
         self.assertLess(widest_gap, 2 * longest)
         # RF: a vanished job is all free time, and never ahead of a plan of
         # the same length that held the same job.
-        compared = 0
+        compared = with_a_match = 0
         for whole, spoken, expires in behind:
-            for held, length, raw in job_time.get((spoken, expires), []):
-                if length == whole:
-                    compared += 1
-                    self.assertLess(-float(whole), raw)
+            matches = [raw for held, length, raw in job_time.get((spoken, expires), []) if length == whole]
+            with_a_match += bool(matches)
+            for raw in matches:
+                compared += 1
+                self.assertLess(round(-float(whole), 6), raw)
         self.assertEqual((len(plans), legal, vanished, unoffered, paid, compared), (80, 5757, 3080, 2892, 752, 4490))
+        # The same for the latch form: the vanished job against a same-length plan that was paid for it.
+        compared_latch = latch_with_a_match = 0
+        for whole, spoken, latch in behind_latch:
+            matches = [raw for length, raw in paid_time.get((spoken, latch), []) if length == whole]
+            latch_with_a_match += bool(matches)
+            for raw in matches:
+                compared_latch += 1
+                self.assertLess(round(-float(whole), 6), raw)
+        # Not every vanished case has a same-length plan on this menu that held the job.
+        self.assertEqual((with_a_match, len(behind_latch), latch_with_a_match, compared_latch), (1766, 840, 44, 84))
         self.assertEqual((widest_shelter, widest_gap), (F("0.225"), F("0.45")))  # the widest found here
 
     def test_two_plans_for_one_job_can_differ_by_almost_two_longest_strokes(self):
