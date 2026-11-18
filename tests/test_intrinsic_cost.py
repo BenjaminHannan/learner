@@ -2136,6 +2136,30 @@ class RawMeterTests(unittest.TestCase):
             repair = life("neglect", hurt)
             self.assertGreaterEqual(prevention[3], repair[3])
             self.assertGreaterEqual(prevention[4], repair[4])
+        # The same world with exact times, on a meter with no step limits: the
+        # trip comes 0.02 hours into its move, and that move is split there in
+        # both arms. Hurt-free, the two arms are level: the lead above is the grouping.
+        def exact(plan):
+            meter = IntrinsicCostMeter()
+            meter.birth_reading((0.5,))
+            reading = dict(panel_error=(0.5,), memory_fill=1.0)
+            steps = []
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"scheduled outage {slot}", **reading)
+                if plan == "prevent":
+                    steps += [StepInput(hours=TICK, **job), StepInput(hours=TICK, skill="turn", **job),
+                              StepInput(hours=0.02, **job), StepInput(hours=0.03, **reading)]
+                    steps += [StepInput(hours=TICK, **reading)] * 10
+                else:
+                    steps += [StepInput(hours=TICK, **job)] * 2 + [
+                        StepInput(hours=0.02, **job), StepInput(hours=0.03, job_fault_avoidable=True, **job)]
+                    steps += [StepInput(hours=TICK, skill="turn", **job)] * 9
+                    steps.append(StepInput(hours=TICK, skill="turn", job_done=True, job_fault_avoidable=True, **job))
+            felt = [meter.step(step) for step in steps]
+            return (len(steps), round(clock_hours(steps), 6)), round(total(felt), 6)
+
+        self.assertEqual(exact("prevent"), ((280, 13.0), -10.6))
+        self.assertEqual(exact("neglect"), ((280, 13.0), -10.6))
         # The ruling works from the stating step on, so the statement has to come
         # on the fault's own step (a harness promise). A harness that tells the
         # truth only with "done" keeps the whole repair exempt, and neglect wins again.
@@ -3097,6 +3121,8 @@ class RawMeterTests(unittest.TestCase):
             decisions_at_job_boundaries(lengths("0.05", "0.20"), F(0), F("0.225"))
         with self.assertRaisesRegex(ValueError, "latches only at a stroke end"):
             decisions_at_job_boundaries(lengths("0.05", "0.20"), F(0), F("0.025"))  # inside the first shortest step
+        with self.assertRaisesRegex(ValueError, "whole number of strokes"):
+            decisions_at_job_boundaries(lengths("0.05", "0.24"), F(0), F("0.10"))
         for decisions in (short_finish, long_finish, one_then_five, five_then_one, late_split, late_grouped):
             self.assertTrue(all(length >= F("0.05") for length, _, _ in decisions))
 
@@ -3227,6 +3253,8 @@ class RawMeterTests(unittest.TestCase):
         # of 1. A world that can exceed its scale is not a legal test world;
         # nothing is clipped, capped or split, which would bring the bundling
         # discount back. The meter's refusal, state unchanged, is the backstop.
+        self.assertEqual(max(sum(1 for hit in (0.5, 1.5) if start <= hit < start + ticks)
+                             for start, ticks in ((0, 2), (2, 1), (3, 1), (0, 1), (1, 1), (2, 2))), 2)
         self.assertTrue(hurt_scale_covers(CLOCKED, 1.0, 2))
         self.assertFalse(hurt_scale_covers(CLOCKED, 1.0, 11))
         meter = IntrinsicCostMeter(config=CLOCKED)
