@@ -232,7 +232,11 @@ class StepInput:
                  depend on whether the model is awake. After a remark that
                  wakes the sleeper, the owner's next remark comes at least
                  one shortest awake step later (it would otherwise fall
-                 inside the decision that reports the waking remark).
+                 inside the decision that reports the waking remark), and
+                 the world offers as the first awake action only actions
+                 that end by the owner's next remark and by the world's end.
+                 The meter has no clock times for remarks: both are the
+                 world's promises.
     panel_error  the world model's error rate (0..1) on each region of the
                  fixed held-out panel, measured at the end of this step
                  (after its training; for a sleep step, on waking). It is a
@@ -526,9 +530,10 @@ class IntrinsicCostMeter:
         # A job tied to a fault the model could have avoided (the harness's
         # statement, on this step or any earlier one) is forfeited for good.
         # A forfeited job is not an owner job: it earns no "job done", and
-        # its time is ordinary awake time from the stating step on (tiredness
-        # is charged, and so is the PROPOSED boredom). Nothing is charged
-        # back for the steps before the statement.
+        # its time is ordinary awake time from the stating step on, for every
+        # feeling (tiredness is charged, the skill counts run as in free
+        # play, and the PROPOSED boredom is charged). Nothing is charged back
+        # for the steps before the statement.
         if observed.job_fault_avoidable:
             self._forfeit_jobs.add(observed.job_id)
         job_time = observed.job_open and observed.job_id not in self._forfeit_jobs
@@ -560,11 +565,10 @@ class IntrinsicCostMeter:
         # lately. Signed, so the total over any stretch is bounded by 1.
         # Free play only: while a job is open the counts are frozen (no use
         # counted, no decay, nothing paid), so a job can neither earn the
-        # bonus nor be charged for using one kind of command. That holds for
-        # a forfeited job too: forfeiting must not start paying the repair
-        # moves a bonus that an honest job's moves do not get.
+        # bonus nor be charged for using one kind of command. A forfeited
+        # job is not a job: its moves count as free play.
         variety = 0.0
-        if observed.skill is not None and not observed.job_open:
+        if observed.skill is not None and not job_time:
             before = self._variety()
             keep = _keep(config.skill_half_life)
             for kind in self._skill_counts:

@@ -1781,7 +1781,7 @@ class RawMeterTests(unittest.TestCase):
                     life("neglect", hurt, statement=None)
         # The rule: the harness states that an offered move would have prevented
         # each outage. Repairing then pays no "job done".
-        self.assertEqual(life("neglect", 0.0, statement=True), (0.0, 0.0, 0.0))  # a tie with maintaining: no farm
+        self.assertEqual(life("neglect", 0.0, statement=True), (0.0, 0.0, 0.0))  # a tie with maintaining: no job-credit farm
         self.assertEqual(life("neglect", 0.1, statement=True), (0.0, -6.0, -4.528281))  # prevention wins
 
     def test_the_fault_statement_forfeits_a_job_for_good_and_needs_an_open_job(self):
@@ -1964,13 +1964,19 @@ class RawMeterTests(unittest.TestCase):
             StepInput(skill="turn", **job), StepInput(job_done=True, job_fault_avoidable=False, **job))]
         self.assertEqual({f.tiredness for f in kept}, {0.0})
         self.assertEqual(kept[-1].job_done, 1.0)
-        # Another job, open later, is job time again: the forfeit is per job.
-        self.assertEqual(forfeited.step(StepInput(**dict(job, job_id="k"))).tiredness, 0.0)
-        # My choice (design, choices list): the skill counts stay frozen while any
-        # job is open, forfeited or not. Forfeiting must not start paying the
-        # repair moves a bonus that an honest job's moves do not get.
-        self.assertEqual({f.underused_skill for f in felt}, {0.0})
-        self.assertEqual(self.state_of(forfeited)["_skill_counts"], self.state_of(born())["_skill_counts"])
+        # "For any feeling": a move with a forfeited job open counts as free play
+        # for the skill feeling, exactly as the same move in free time does. An
+        # honest job's moves stay frozen.
+        played = born()
+        for _ in range(3):
+            played.step(StepInput(**reading))
+        played.step(StepInput(skill="turn", **reading))
+        self.assertEqual(felt[3].underused_skill, 0.0)  # the first use of one kind changes no evenness
+        varied, varied_free = forfeited.step(StepInput(skill="paint", **job)), played.step(StepInput(skill="paint", **reading))
+        self.assertGreater(varied.underused_skill, 0.0)
+        self.assertEqual(varied.underused_skill, varied_free.underused_skill)
+        self.assertEqual(self.state_of(forfeited)["_skill_counts"], self.state_of(played)["_skill_counts"])
+        self.assertEqual(self.state_of(honest)["_skill_counts"], self.state_of(born())["_skill_counts"])
         # PROPOSED boredom (off by default) follows tiredness: forfeited time is free time.
         bored, bored_free = born(ExchangeRates(boredom=1.0)), born(ExchangeRates(boredom=1.0))
         for _ in range(40):
@@ -1978,6 +1984,8 @@ class RawMeterTests(unittest.TestCase):
             last_free = bored_free.step(StepInput(**reading))
         self.assertLess(last.boredom, 0.0)
         self.assertEqual(last.boredom, last_free.boredom)
+        # Another job, open later, is job time again: the forfeit is per job.
+        self.assertEqual(forfeited.step(StepInput(**dict(job, job_id="k"))).tiredness, 0.0)
 
     def test_an_expired_repair_job_no_longer_makes_neglect_beat_prevention(self):
         # A reviewer's world, at full day memory. The owner issues twenty
@@ -1986,24 +1994,29 @@ class RawMeterTests(unittest.TestCase):
         # switch trips, the next ten moves are prompt repair. Before ruling A
         # the repair was job time and hid tiredness: prevention -10, neglect
         # then repair 0 (or -6 with hurt). 260 decisions and 13 hours each arm.
-        def life(plan, hurt=0.0, stated_on_the_fault_step=True):
+        # The trip comes `wait` moves after the service move would have been made.
+        # The job of a serviced switch expires when the trip would have come
+        # (the reviewer's world), or already at the service move.
+        def life(plan, hurt=0.0, stated_on_the_fault_step=True, wait=1, expires_at_service=False):
             meter = IntrinsicCostMeter(config=CLOCKED)
             meter.birth_reading((0.5,))
             reading = dict(hours=TICK, panel_error=(0.5,), memory_fill=1.0)
             steps = []
             for slot in range(20):
                 job = dict(job_open=True, job_from_owner=True, job_id=f"scheduled outage {slot}", **reading)
-                steps.append(StepInput(**job))
+                slot_steps = [StepInput(**job)]
                 if plan == "prevent":
-                    steps += [StepInput(skill="turn", **job), StepInput(**job)]  # serviced: no trip, the job expires
-                    steps += [StepInput(**reading)] * 10
+                    slot_steps.append(StepInput(skill="turn", **job))  # serviced: no trip
+                    slot_steps += [StepInput(**job)] * (0 if expires_at_service else wait)
                 else:
-                    steps.append(StepInput(**job))
-                    steps.append(StepInput(hurt=hurt, job_fault_avoidable=True if stated_on_the_fault_step else None, **job))
-                    steps += [StepInput(skill="turn", **job)] * 9
-                    steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=True, **job))
-            self.assertEqual(len(steps), 260)
-            self.assertAlmostEqual(clock_hours(steps), 13.0, delta=1e-9)
+                    slot_steps += [StepInput(**job)] * wait
+                    slot_steps.append(StepInput(hurt=hurt, job_fault_avoidable=True if stated_on_the_fault_step else None, **job))
+                    slot_steps += [StepInput(skill="turn", **job)] * 9
+                    slot_steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=True, **job))
+                slot_steps += [StepInput(**reading)] * (12 + wait - len(slot_steps))  # free time to the slot's end
+                steps += slot_steps
+            self.assertEqual(len(steps), 20 * (12 + wait))
+            self.assertAlmostEqual(clock_hours(steps), 12 + wait, delta=1e-9)
             felt = [meter.step(step) for step in steps]
             return tuple(round(x, 6) for x in (
                 math.fsum(f.job_done for f in felt), math.fsum(f.tiredness for f in felt),
@@ -2022,6 +2035,17 @@ class RawMeterTests(unittest.TestCase):
         # truth only with "done" keeps the whole repair exempt, and neglect wins again.
         self.assertEqual(life("neglect", stated_on_the_fault_step=False), (0.0, -1.0, 0.0, -1.0, -0.335325))
         self.assertEqual(life("neglect", 0.1, stated_on_the_fault_step=False), (0.0, -1.0, -6.0, -7.0, -2.559995))
+        # Not closed: the wait BEFORE the trip is honest job time on the neglect
+        # arm. Prevention wins above only because the serviced job stays open
+        # just as long. With the trip five moves out (340 decisions, 17 hours):
+        self.assertEqual(life("prevent", wait=5), (0.0, -10.0, 0.0, -10.0, -2.744177))
+        self.assertEqual(life("neglect", wait=5), (0.0, -11.0, 0.0, -11.0, -3.03407))
+        # and in a world that closes the serviced job at the service move,
+        # prevention is followed by five more moves of free time, and loses
+        # unless the outage hurts enough. This is hole 1 (an open honest job
+        # hides tiredness), and when a mooted job closes is not ruled.
+        self.assertEqual(life("prevent", wait=5, expires_at_service=True), (0.0, -15.0, 0.0, -15.0, -4.223221))
+        self.assertEqual(life("neglect", 0.1, wait=5), (0.0, -11.0, -6.0, -17.0, -4.773427))
 
     def test_a_forfeited_job_kept_open_no_longer_hides_tiredness(self):
         # A reviewer's table. One job, announced with the harness's statement,
