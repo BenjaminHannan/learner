@@ -1,0 +1,75 @@
+{
+ "metrics": {
+  "n_pools": 192,
+  "n_transcripts": 2304,
+  "n_solvable": 130,
+  "pick_rate": {
+   "RAND": {
+    "all": 19.70486111111111,
+    "solvable": 29.102564102564102
+   },
+   "VOTE": {
+    "all": 22.395833333333332,
+    "solvable": 33.07692307692308
+   },
+   "SELF": {
+    "all": 34.375,
+    "solvable": 50.76923076923077
+   },
+   "PROBE-S": {
+    "all": 29.6875,
+    "solvable": 43.84615384615385
+   },
+   "PROBE-R": {
+    "all": 21.875,
+    "solvable": 32.30769230769231
+   },
+   "PROBE-R (expected over ties)": {
+    "all": 21.416565205627705,
+    "solvable": 31.63061938061938
+   }
+  },
+  "auroc": {
+   "SELF": 0.6920752470532207,
+   "PROBE-S": 0.5784242171687105
+  }
+ },
+ "diagnostics": {
+  "k2": {
+   "n_tasks": 48,
+   "n_samples": 192,
+   "unparsable_samples": 5,
+   "raw_checks": 287,
+   "valid_checks": 247,
+   "validity_rate": 0.8606271777003485,
+   "raw_checks_per_sample": 1.4947916666666667,
+   "valid_checks_per_sample": 1.2864583333333333,
+   "samples_over_6_checks": 0,
+   "samples_with_no_valid": 87,
+   "tasks_with_no_valid": 4,
+   "reference_agreement": 0.38461538461538464,
+   "reference_probes": 247,
+   "tasks_all_probes_pass_reference": 2,
+   "tasks_with_probes": 44,
+   "all_tie_rate": 0.3385416666666667,
+   "all_tie_pools": 65,
+   "n_pools": 192
+  },
+  "haiku": null
+ },
+ "gate_rate": 1.0,
+ "baselines_in_prereg": {
+  "RAND": 19.7,
+  "VOTE": 22.4,
+  "SELF": 34.4,
+  "SELF_AUROC": 0.692
+ },
+ "verdict": "PROVED WRONG",
+ "checks": {
+  "P1": false,
+  "P2": false
+ },
+ "self_rate": 34.375,
+ "p1_needs": 39.375,
+ "wrong_at": 35.375
+}
