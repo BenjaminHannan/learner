@@ -158,7 +158,7 @@ This is not a model of a human mind. It borrows a few ideas about human motivati
 - Nothing is added to the list without the owner's OK.
 - Exchange rates are hand numbers, set once per test by the lead. The owner may change them. Testers never tune them.
 
-This note builds on two earlier designs (the built-in feelings table and the free-play curiosity design, both of 2026-11-17, kept outside this repo). It is not `premonition/motivation.py`, which is a learned torch module that picks intentions; this is the fixed meter and imports no tensor library.
+This note builds on two earlier designs (the built-in feelings table and the free-play curiosity design, both of 2026-11-17, kept outside this repo). It is not `premonition/motivation.py` (a learned torch module that picks intentions; not on the main branch yet); this is the fixed meter and imports no tensor library.
 
 ## 2. The feelings table
 
