@@ -3439,7 +3439,8 @@ class RawMeterTests(unittest.TestCase):
                            F("0.01"), F("0.39"), 20)
         self.assertEqual(scores, [((100, 13.0), (0.0, -2.0, -2.0)), ((100, 13.0), (0.0, -10.0, -10.0))])
         self.assertEqual(gap, F("0.40"))
-        # Close to two longest strokes: 0.498 hours for one job.
+        # Close to two longest strokes: 0.498 hours for one job. These strokes
+        # are this file's, built to match a reviewer's figures (-0.2, -0.698).
         scores, gap = pair([F("0.100"), F("0.250"), F("0.099"), F("0.099"), F("0.250"), F("0.100")],
                            [F("0.099"), F("0.250"), F("0.100"), F("0.100"), F("0.250"), F("0.099")], F("0.0995"), F("0.5485"), 1)
         self.assertEqual(scores, [((6, 0.898), (0.0, -0.2, -0.2)), ((6, 0.898), (0.0, -0.698, -0.698))])
