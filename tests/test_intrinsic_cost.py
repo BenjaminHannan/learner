@@ -2395,10 +2395,13 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(score(stay_awake), ((4, 0.5), (0.0, -0.25, -3.0, -3.25, -3.185325)))
         self.assertEqual(score(sleep_first), ((5, 0.5), (0.0, -0.240177, -3.0, -3.240177, -3.14394)))
         self.assertEqual(score(neglect), ((6, 0.5), (-0.03, -0.1, -3.0, -3.13, -3.035294)))
-        # The reversal in this world rests on that long action. Were a one-tick
-        # free action offered too, prevention that sleeps, hears the "no" on a
-        # short step and sleeps again would win; staying awake on short steps
-        # would still lose in the raw total.
+        # With this one waking, the reversal rests on that long action. Were a
+        # one-tick free action offered too, prevention that sleeps, hears the
+        # "no" on a short step and sleeps again would win; staying awake on
+        # short steps would still lose in the raw total (under the discount it
+        # is ahead of neglect as grouped here, and behind neglect given as
+        # one-tick decisions). With more wakings neglect wins again even with
+        # short actions: test_enough_wakings_let_neglect_win_even_with_short_actions.
         short_and_sleep = serviced + [StepInput(hours=0.10, asleep=True, **full),
                                       StepInput(hours=TICK, remark=-1, panel_error=(0.5,), memory_fill=0.99),
                                       StepInput(hours=0.25, asleep=True, **full)]
@@ -2637,6 +2640,11 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(menus[1], lengths[:2])  # close pair: it would strand the second "no"
         safe_menu = [length for length in lengths if all(length in menu for menu in menus.values())]
         self.assertEqual(safe_menu, lengths[:2])
+        # The menus differ again at the second decision (from 0.05 hours: all
+        # three actions, or the 0.075-hour one alone), so the control has to
+        # hold at every decision before the guess.
+        self.assertEqual(offered_actions(lengths[0], lengths, times[0], end), lengths)
+        self.assertEqual(offered_actions(lengths[0], lengths, times[1], end), [lengths[1]])
         drawers = (0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1)
 
         def life(policy):
@@ -2715,7 +2723,7 @@ class RawMeterTests(unittest.TestCase):
         # Both are above 0.20 and below one longest step (0.25) per fault.
         # "Below one longest step" is a claim, argued in the design note
         # (hole 19), and tested only on these cases.
-        for shift in (0.24, 0.225):
+        for shift in ((cut_before[1][3] - long_first[1][3]) / 20, (last[1][3] - first[1][3]) / 20):
             self.assertGreater(shift, CLOCKED.max_awake_step_hours - CLOCKED.min_awake_step_hours)
             self.assertLess(shift, CLOCKED.max_awake_step_hours)
 
