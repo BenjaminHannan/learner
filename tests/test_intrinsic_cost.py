@@ -75,20 +75,25 @@ def curiosity_along(errors, config=None):
 
 
 def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stroke=Fraction("0.05")):
-    """A toy world's rule for job boundaries, in exact clock times (rounds 14 and 15).
+    """A toy world's rule for job boundaries, in exact clock times (rounds 14 to 16).
 
     ``commands`` are the commands the model chose, from time 0. A command is a
     tuple of strokes, each at least ``stroke`` hours (the shortest awake step;
     strokes need not be equal), or one length, meaning that many
-    ``stroke``-hour strokes. A stroke cannot be divided. Every job event is
-    reported at the end of the stroke it falls in, and the world ends the
-    running command there; what is left of it, whole strokes, is a new
+    ``stroke``-hour strokes. A stroke cannot be divided. A job's announcement
+    and its closure are reported at the end of the stroke they fall in, and
+    the world ends the running command there; what is left of it, whole strokes, is a new
     decision. So: the owner speaks the job at ``spoken`` and it opens at the
     end of that stroke, whatever command the stroke is in. A goal latches
     (``latch``: "done") only at a stroke end. A job that closes without
     "done" at ``expires`` (it expires, or is closed as moot) is held to the
     end of its stroke. Completion is not offered inside the announcing
-    decision. Returns (length, job open, done) for each decision.
+    decision. Given both times, the goal earns "done" only if it latches
+    strictly before the job expires by the clock (a tie is an expiry): the
+    hold delays a report, it never buys time to earn credit. A job whose
+    opening and closure are reported at the same stroke end cannot be
+    recorded: it is never announced. Returns (length, job open, done) for
+    each decision.
     """
     built = []
     for command in commands:
@@ -111,7 +116,10 @@ def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stro
     if latch is not None and (latch not in ends or latch == 0):
         raise ValueError("a goal latches only at a stroke end")
     opens = stroke_end(spoken)
-    close = latch if latch is not None else stroke_end(expires)
+    credit = latch is not None and (expires is None or latch < expires)
+    close = latch if credit else stroke_end(expires)
+    if opens >= close:
+        raise ValueError("a job cannot open and close inside one stroke: it is never announced")
     decisions, now = [], Fraction(0)
     for command in built:
         start = now
@@ -119,12 +127,27 @@ def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stro
             now += piece
             if index == len(command) - 1 or now in (opens, close):
                 in_job = opens <= start < close
-                done = latch is not None and in_job and now == close
+                done = credit and in_job and now == close
                 if done and start == opens:
                     raise ValueError("completion is not offered inside the announcing decision")
                 decisions.append((now - start, in_job, done))
                 start = now
     return decisions
+
+
+def score_decisions(decisions, cycles=20, fill=1.0):
+    """Run (length, job open, done) decisions through a clocked meter, one owner job per cycle."""
+    steps = []
+    for cycle in range(cycles):
+        job = dict(job_open=True, job_from_owner=True, job_id=f"cycle {cycle}")
+        steps += [StepInput(hours=float(length), skill="turn", job_done=done, job_fault_avoidable=False if done else None,
+                            panel_error=(0.5,), memory_fill=fill, **(job if in_job else {}))
+                  for length, in_job, done in decisions]
+    meter = IntrinsicCostMeter(config=CLOCKED)
+    meter.birth_reading((0.5,))
+    felt = [meter.step(step) for step in steps]
+    return (len(steps), round(clock_hours(steps), 6)), tuple(round(x, 6) for x in (
+        math.fsum(f.job_done for f in felt), math.fsum(f.tiredness for f in felt), total(felt)))
 
 
 def hurt_scale_covers(config, worst_sums_of_the_offered_decisions):
@@ -3321,6 +3344,141 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual([in_job for _, in_job, _ in long_first], [True, True, False])
         self.assertEqual(tiredness(short_first, 20), ((60, 7.5), -5.0))
         self.assertEqual(tiredness(long_first, 20), ((60, 7.5), -1.5))
+
+    def test_rounding_an_expiry_never_buys_time_to_earn_done(self):
+        # The lead's ruling RD (round 16), on a reviewer's case. Holding an
+        # expiry to its stroke's end delays a report; it does not extend the
+        # time in which "done" can be earned. A goal earns credit only if it
+        # latches strictly before the job expires by the clock.
+        F = Fraction
+        short = [F("0.05"), F("0.05"), F("0.25")]  # 0.05-hour strokes
+        long = [(F("0.05"),), (F("0.25"),), (F("0.05"),)]  # one indivisible 0.25-hour stroke
+        # The job is open from the start, expires at 0.06 hours, and the goal
+        # would latch at 0.30. What the round-15 helper built (it ignored the
+        # expiry), and what "completion first" gives the long stroke: 20
+        # credits, +19, for a job that had expired.
+        round_15_short = [(F("0.05"), True, False), (F("0.05"), True, False), (F("0.20"), True, True), (F("0.05"), False, False)]
+        completion_first = [(F("0.05"), True, False), (F("0.25"), True, True), (F("0.05"), False, False)]
+        self.assertEqual(score_decisions(round_15_short), ((80, 7.0), (20.0, -1.0, 19.0)))
+        self.assertEqual(score_decisions(completion_first), ((60, 7.0), (20.0, -1.0, 19.0)))
+        # By the rule: expired first, no credit in either plan. The expiry is
+        # reported at 0.10 or at 0.30; that remaining gap is the tiredness
+        # shelter of the long stroke (ruling RC), not credit.
+        by_short = decisions_at_job_boundaries(short, F(0), latch=F("0.30"), expires=F("0.06"))
+        by_long = decisions_at_job_boundaries(long, F(0), latch=F("0.30"), expires=F("0.06"))
+        self.assertEqual(by_short, [(F("0.05"), True, False), (F("0.05"), True, False), (F("0.25"), False, False)])
+        self.assertEqual(by_long, [(F("0.05"), True, False), (F("0.25"), True, False), (F("0.05"), False, False)])
+        self.assertEqual(score_decisions(by_short), ((60, 7.0), (0.0, -5.0, -5.0)))
+        self.assertEqual(score_decisions(by_long), ((60, 7.0), (0.0, -1.0, -1.0)))  # the same credit count: none
+        # In by_long the expiry (0.06) and the latch (0.30) fall in the same
+        # stroke, expiry first: no credit. Latch first: a goal latches only at
+        # a stroke end, so the one form is a latch at the stroke's opening
+        # edge with the expiry inside the stroke. Credit, in either plan.
+        latch_first = decisions_at_job_boundaries(short, F(0), latch=F("0.10"), expires=F("0.12"))
+        self.assertEqual(latch_first, [(F("0.05"), True, False), (F("0.05"), True, True), (F("0.25"), False, False)])
+        self.assertEqual(score_decisions(latch_first), ((60, 7.0), (20.0, -5.0, 15.0)))
+        # The exact tie (latch and expiry both at 0.10): expired, no credit.
+        tie = decisions_at_job_boundaries(short, F(0), latch=F("0.10"), expires=F("0.10"))
+        self.assertEqual(tie, [(F("0.05"), True, False), (F("0.05"), True, False), (F("0.25"), False, False)])
+        self.assertEqual(score_decisions(tie), ((60, 7.0), (0.0, -5.0, -5.0)))
+
+    def test_a_job_cannot_open_and_close_inside_one_stroke(self):
+        # The lead's ruling RF (round 16), three reviewers' cases. Spoken at
+        # 0.06 hours inside an indivisible 0.25-hour stroke, a job whose goal
+        # latches at that stroke's end (0.25), or which expires inside it
+        # (0.16, 0.20), would open and close at the same reported instant.
+        # Such a job is never announced and earns nothing. The round-15
+        # helper returned a record with no job and no refusal:
+        F = Fraction
+        one_stroke = [(F("0.25"),), F("0.05"), F("0.05")]
+        round_15 = [(F("0.25"), False, False), (F("0.05"), False, False), (F("0.05"), False, False)]
+        self.assertEqual(score_decisions(round_15, cycles=1, fill=0.0), ((3, 0.35), (0.0, 0.0, 0.0)))
+        # The toy world now refuses to build it, so a job is never dropped silently.
+        with self.assertRaisesRegex(ValueError, "never announced"):
+            decisions_at_job_boundaries(one_stroke, F("0.06"), latch=F("0.25"))  # latch at the edge
+        for expires in (F("0.16"), F("0.20")):
+            with self.assertRaisesRegex(ValueError, "never announced"):
+                decisions_at_job_boundaries(one_stroke, F("0.06"), expires=expires)  # expiry at the edge
+        # On 0.05-hour strokes the same job opens at 0.10 and pays: +1, rested.
+        ticks = decisions_at_job_boundaries([F("0.05")] * 7, F("0.06"), latch=F("0.25"))
+        self.assertEqual([in_job for _, in_job, _ in ticks], [False, False, True, True, True, False, False])
+        self.assertEqual(score_decisions(ticks, cycles=1, fill=0.0), ((7, 0.35), (1.0, 0.0, 1.0)))
+        expiring = decisions_at_job_boundaries([F("0.05")] * 7, F("0.06"), expires=F("0.20"))
+        self.assertEqual([in_job for _, in_job, _ in expiring], [False, False, True, True, False, False, False])
+
+    def test_two_plans_for_one_job_can_differ_by_almost_two_longest_strokes(self):
+        # The lead's ruling RE (round 16), three reviewers' cases: the bounds
+        # on what choosing strokes can buy when a job is spoken and expires.
+        F = Fraction
+        longest = F("0.25")
+
+        def edges(strokes, spoken, expires):
+            ends = [sum(strokes[:count], F(0)) for count in range(len(strokes) + 1)]
+            return min(end for end in ends if end >= spoken), min(end for end in ends if end >= expires)
+
+        def pair(first, second, spoken, expires, cycles):
+            scores, lengths = [], []
+            for strokes in (first, second):
+                opened, closed = edges(strokes, spoken, expires)
+                self.assertLess(opened - spoken, longest)  # each event: delayed by less than one longest stroke
+                self.assertLess(closed - expires, longest)
+                error = (closed - opened) - (expires - spoken)
+                self.assertLess(abs(error), longest)  # one plan's job duration: wrong by less than one
+                lengths.append(closed - opened)
+                scores.append(score_decisions(decisions_at_job_boundaries([(stroke,) for stroke in strokes], spoken, expires=expires), cycles))
+            return scores, abs(lengths[0] - lengths[1])
+
+        # A reviewer's table: the same four indivisible strokes in two orders,
+        # spoken at 0.01 hours, expiring at 0.31. One plan errs long, one short.
+        scores, gap = pair([F("0.05"), F("0.25"), F("0.25"), F("0.05")], [F("0.25"), F("0.05"), F("0.05"), F("0.25")],
+                           F("0.01"), F("0.31"), 20)
+        self.assertEqual(scores, [((80, 12.0), (0.0, -2.0, -2.0)), ((80, 12.0), (0.0, -10.0, -10.0))])
+        self.assertEqual(gap, F("0.40"))  # per job: more than one longest stroke
+        # A second reviewer's case: spoken at 0.01, expiring at 0.39.
+        scores, gap = pair([F("0.05"), F("0.10"), F("0.20"), F("0.25"), F("0.05")], [F("0.25"), F("0.10"), F("0.05"), F("0.20"), F("0.05")],
+                           F("0.01"), F("0.39"), 20)
+        self.assertEqual(scores, [((100, 13.0), (0.0, -2.0, -2.0)), ((100, 13.0), (0.0, -10.0, -10.0))])
+        self.assertEqual(gap, F("0.40"))
+        # Close to two longest strokes: 0.498 hours for one job.
+        scores, gap = pair([F("0.100"), F("0.250"), F("0.099"), F("0.099"), F("0.250"), F("0.100")],
+                           [F("0.099"), F("0.250"), F("0.100"), F("0.100"), F("0.250"), F("0.099")], F("0.0995"), F("0.5485"), 1)
+        self.assertEqual(scores, [((6, 0.898), (0.0, -0.2, -0.2)), ((6, 0.898), (0.0, -0.698, -0.698))])
+        self.assertEqual(gap, F("0.498"))
+        self.assertLess(gap, 2 * longest)
+
+        # Which way the opening pulls. With the finish fixed on the clock
+        # (spoken at 0.06, done at 0.35), short strokes are ahead at full
+        # memory, +18 against +15 (pinned in the grouping test); rested, a tie.
+        short = decisions_at_job_boundaries([F("0.05"), F("0.05"), F("0.15"), F("0.05"), F("0.05")], F("0.06"), F("0.35"))
+        long = decisions_at_job_boundaries([(F("0.25"),), F("0.05"), F("0.05")], F("0.06"), F("0.35"))
+        self.assertEqual((score_decisions(short)[1][2], score_decisions(long)[1][2]), (18.0, 15.0))
+        self.assertEqual((score_decisions(short, fill=0.0)[1][2], score_decisions(long, fill=0.0)[1][2]), (20.0, 20.0))
+        # With the finish a fixed time after the opening (a reviewer's
+        # counter-case: 4 hours of work, an 8.5-hour horizon), the long stroke
+        # ties at full memory and is a little ahead below it.
+        work, quarter = F(4), F("0.25")
+        short = decisions_at_job_boundaries([F("0.05"), F("0.05")] + [quarter] * 16 + [quarter] * 17 + [F("0.15")], F("0.06"), F("0.10") + work)
+        long = decisions_at_job_boundaries([(quarter,)] + [quarter] * 16 + [quarter] * 17, F("0.06"), quarter + work)
+        self.assertEqual((sum(length for length, _, _ in short), sum(length for length, _, _ in long)), (F("8.5"), F("8.5")))
+        for fill, totals in ((1.0, (-3.5, -3.5)), (0.95, (-2.964005, -2.957153)), (0.8, (-1.565334, -1.545703))):
+            self.assertEqual((score_decisions(short, 1, fill)[1][2], score_decisions(long, 1, fill)[1][2]), totals)
+
+        # The lead's default (job time from the 0.05 grid point after the
+        # speech, whatever stroke contains it), as a comparison only.
+        # HYPOTHETICAL accounting: the meter's job flag covers a whole decision
+        # and cannot express part of one. For the first pair above it would
+        # open both plans at 0.05 and leave the expiry gap: 0.10 and 0.30 free
+        # hours per job, a gap of 0.20 where the stroke-end rule has 0.40.
+        free = []
+        for strokes in ([F("0.05"), F("0.25"), F("0.25"), F("0.05")], [F("0.25"), F("0.05"), F("0.05"), F("0.25")]):
+            closed = edges(strokes, F("0.01"), F("0.31"))[1]
+            free.append(sum(strokes) - (closed - F("0.05")))
+        self.assertEqual(free, [F("0.10"), F("0.30")])
+        # And in the counter-case it would exempt 0.15 hours inside the long
+        # stroke, before the model can work: -3.35 against -3.5. Recording
+        # that splits one indivisible stroke into two meter steps.
+        split = [(F("0.10"), False, False), (F("0.15"), True, False)] + long[1:]
+        self.assertEqual(score_decisions(split, 1)[1][2], -3.35)
 
     def test_a_job_spoken_to_a_sleeping_model_wakes_it(self):
         # The lead's ruling before round 15, the same as for a remark (round
