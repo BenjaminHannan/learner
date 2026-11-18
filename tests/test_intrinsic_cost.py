@@ -1997,7 +1997,10 @@ class RawMeterTests(unittest.TestCase):
         # The trip comes `wait` moves after the service move would have been made.
         # The job of a serviced switch expires when the trip would have come
         # (the reviewer's world), or already at the service move.
-        def life(plan, hurt=0.0, stated_on_the_fault_step=True, wait=1, expires_at_service=False):
+        # sleeps_when_free: the free time at the end of a slot is one sleep step
+        # (the best continuation offered: no job is open, so sleep is allowed).
+        def life(plan, hurt=0.0, stated_on_the_fault_step=True, wait=1, expires_at_service=False,
+                 sleeps_when_free=False):
             meter = IntrinsicCostMeter(config=CLOCKED)
             meter.birth_reading((0.5,))
             reading = dict(hours=TICK, panel_error=(0.5,), memory_fill=1.0)
@@ -2013,9 +2016,14 @@ class RawMeterTests(unittest.TestCase):
                     slot_steps.append(StepInput(hurt=hurt, job_fault_avoidable=True if stated_on_the_fault_step else None, **job))
                     slot_steps += [StepInput(skill="turn", **job)] * 9
                     slot_steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=True, **job))
-                slot_steps += [StepInput(**reading)] * (12 + wait - len(slot_steps))  # free time to the slot's end
+                free_moves = 12 + wait - len(slot_steps)  # free time to the slot's end
+                if sleeps_when_free and free_moves:
+                    slot_steps.append(StepInput(asleep=True, **dict(reading, hours=free_moves * TICK)))
+                else:
+                    slot_steps += [StepInput(**reading)] * free_moves
                 steps += slot_steps
-            self.assertEqual(len(steps), 20 * (12 + wait))
+            if not sleeps_when_free:
+                self.assertEqual(len(steps), 20 * (12 + wait))
             self.assertAlmostEqual(clock_hours(steps), 12 + wait, delta=1e-9)
             felt = [meter.step(step) for step in steps]
             return tuple(round(x, 6) for x in (
@@ -2035,17 +2043,31 @@ class RawMeterTests(unittest.TestCase):
         # truth only with "done" keeps the whole repair exempt, and neglect wins again.
         self.assertEqual(life("neglect", stated_on_the_fault_step=False), (0.0, -1.0, 0.0, -1.0, -0.335325))
         self.assertEqual(life("neglect", 0.1, stated_on_the_fault_step=False), (0.0, -1.0, -6.0, -7.0, -2.559995))
-        # Not closed: the wait BEFORE the trip is honest job time on the neglect
-        # arm. Prevention wins above only because the serviced job stays open
-        # just as long. With the trip five moves out (340 decisions, 17 hours):
+        # When a serviced job closes is a fact about the world, reported by the
+        # harness (the lead's ruling after round 11). With the trip five moves
+        # out (17 hours), in a world that keeps the serviced job open until the
+        # trip would have come:
         self.assertEqual(life("prevent", wait=5), (0.0, -10.0, 0.0, -10.0, -2.744177))
         self.assertEqual(life("neglect", wait=5), (0.0, -11.0, 0.0, -11.0, -3.03407))
-        # and in a world that closes the serviced job at the service move,
-        # prevention is followed by five more moves of free time, and loses
-        # unless the outage hurts enough. This is hole 1 (an open honest job
-        # hides tiredness), and when a mooted job closes is not ruled.
-        self.assertEqual(life("prevent", wait=5, expires_at_service=True), (0.0, -15.0, 0.0, -15.0, -4.223221))
         self.assertEqual(life("neglect", 0.1, wait=5), (0.0, -11.0, -6.0, -17.0, -4.773427))
+        # In a world that closes the serviced job at the service move, a
+        # prevention arm HELD AWAKE through its fifteen free moves scores below
+        # hurt-free neglect:
+        self.assertEqual(life("prevent", wait=5, expires_at_service=True), (0.0, -15.0, 0.0, -15.0, -4.223221))
+        # That is an artefact of holding it awake. Free time is where sleep is
+        # offered. Give each arm its best offered continuation over the same 17
+        # hours: the prevention arm sleeps through its free time (one sleep step
+        # a slot); the neglect arm has a job open on every move, honest and then
+        # forfeited, so sleep is never offered to it and nothing changes for it.
+        for closes_early in (True, False):
+            self.assertEqual(life("prevent", wait=5, expires_at_service=closes_early, sleeps_when_free=True),
+                             (0.0, 0.0, 0.0, 0.0, 0.0))
+        self.assertEqual(life("neglect", wait=5, sleeps_when_free=True), (0.0, -11.0, 0.0, -11.0, -3.03407))
+        # The reviewer's own world (trip one move out) the same way: 0 against -11.
+        self.assertEqual(life("prevent", sleeps_when_free=True), (0.0, 0.0, 0.0, 0.0, 0.0))
+        self.assertEqual(life("neglect", sleeps_when_free=True), (0.0, -11.0, 0.0, -11.0, -3.880631))
+        # The discounted figures count different numbers of decisions (60 or 140
+        # against 340 and 260); prevention scores exactly 0, so that changes nothing.
 
     def test_a_forfeited_job_kept_open_no_longer_hides_tiredness(self):
         # A reviewer's table. One job, announced with the harness's statement,
@@ -2166,12 +2188,13 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(life("repair", False, False), (size, (0.0, -6.0, -7.970703, 0.0, -13.970703, -4.255772)))
         praised = life("repair", True, False)
         self.assertEqual(praised, (size, (0.0, -6.0, -7.970703, 7.474335, -6.496369, -1.031064)))
-        # Praise and pain alone come to +1.474335: the reviewer's total before
-        # ruling A. Under ruling A the forfeited decisions are ordinary awake
-        # time, and a model that never sleeps is charged tiredness for them, so
-        # on this schedule prevention wins.
+        # Praise and pain alone come to +1.474335. Under ruling A the forfeited
+        # decisions are ordinary awake time, and a model that never sleeps is
+        # charged tiredness for them, so on this schedule prevention wins: this
+        # life is not evidence for the praise hole.
         self.assertAlmostEqual(praised[1][1] + praised[1][3], 1.474335, delta=1e-6)
-        # (2) The same world with 8 hours of sleep after every slot, on both
+        # (2) The evidence for the hole (my construction, not the reviewer's):
+        # the same world with 8 hours of sleep after every slot, on both
         # arms. A rested model is charged no tiredness, and repairing for the
         # praise beats quiet prevention, raw and discounted. No job credit is
         # paid: the whole gain is the owner's genuine praise.
