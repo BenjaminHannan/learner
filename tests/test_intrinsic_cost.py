@@ -2771,8 +2771,9 @@ class RawMeterTests(unittest.TestCase):
             self.assertGreater(shift, CLOCKED.max_awake_step_hours - CLOCKED.min_awake_step_hours)
             self.assertLess(shift, CLOCKED.max_awake_step_hours)
 
-    def test_equal_thanks_help_prevention_only_under_two_conditions(self):
-        # Round 13. "Thank prevention too and it comes out ahead" needs two
+    def test_equal_thanks_help_prevention_only_under_three_conditions(self):
+        # Rounds 13 and 14. "Thank prevention too and it comes out ahead" needs
+        # three things (the third, other feelings equal, is part (c) below). First two
         # things: the thanks are reported at matching times, and prevention can
         # sleep through its free time.
         def score(steps):
@@ -3025,7 +3026,9 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(long_finish, [(F("0.05"), True, False), (F("0.05"), True, True),  # ended at the latch
                                        (F("0.15"), False, False), (F("0.05"), False, False)])
         self.assertEqual(life(short_finish, "turn"), ((60, 6.0), (20.0, -4.0, 16.0)))
-        self.assertEqual(life(long_finish, "turn"), ((80, 6.0), (20.0, -4.0, 16.0)))  # equal, raw
+        # Equal in the raw total, for one kind of move: the cut adds a free-play
+        # decision, which would count for the skill feeling with varied moves.
+        self.assertEqual(life(long_finish, "turn"), ((80, 6.0), (20.0, -4.0, 16.0)))
         # What a world that breaks the promise reports: the long command kept
         # whole and exempt, 0.15 free hours per job hidden.
         broken = [(F("0.05"), True, False), (F("0.20"), True, True), (F("0.05"), False, False)]
@@ -3064,8 +3067,8 @@ class RawMeterTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "announced open in an earlier step"):
             meter.step(StepInput(hours=TICK, job_open=True, job_from_owner=True, job_id="late order",
                                  job_done=True, job_fault_avoidable=False, **full))
-        # A cut that would leave less than the shortest step cannot be recorded
-        # either: the world must not offer that command there.
+        # A cut that would leave less than the shortest step has no legal record
+        # either. What the world does then is open: not ruled.
         with self.assertRaisesRegex(ValueError, "shorter than the shortest step"):
             decisions_at_job_boundaries(lengths("0.05", "0.20"), F(0), F("0.225"))
 
@@ -3146,12 +3149,14 @@ class RawMeterTests(unittest.TestCase):
         # incident count) makes bundling cheaper:
         self.assertEqual(life(bundled, math.sqrt), ((60, 4.0), -84.852814))
         self.assertEqual(life(apart, math.sqrt), ((60, 4.0), -120.0))
-        # A sum above the scale is refused, state unchanged: the world must end
-        # the decision before that much harm is in it.
+        # A sum above the scale has no legal record: the step is refused and the
+        # state is unchanged. What the world does then is open: not ruled.
         meter = IntrinsicCostMeter(config=CLOCKED)
         meter.birth_reading((0.5,))
+        before = self.state_of(meter)
         with self.assertRaises(ValueError):
             meter.step(StepInput(hours=TICK, hurt=meter.config.hurt_cap + 1.0, panel_error=(0.5,)))
+        self.assertEqual(self.state_of(meter), before)
 
     def test_a_fault_that_came_before_its_job_is_stated_when_the_job_is_announced(self):
         # The statement needs an open job. A fault the model could have avoided,
