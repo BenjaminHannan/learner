@@ -2132,7 +2132,9 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(prevention, (0.0, -10.0, 0.0, -10.0, -3.509852))
         self.assertEqual(life("neglect"), (0.0, -11.0, 0.0, -11.0, -3.880631))
         self.assertEqual(life("neglect", hurt=0.1), (0.0, -11.0, -6.0, -17.0, -6.1053))
-        for hurt in (0.0, 0.1):  # prevention is at least as good, raw and discounted
+        # Prevention is at least as good, raw and discounted. With hurt it wins;
+        # hurt-free its lead is a tie within recording granularity (see below).
+        for hurt in (0.0, 0.1):
             repair = life("neglect", hurt)
             self.assertGreaterEqual(prevention[3], repair[3])
             self.assertGreaterEqual(prevention[4], repair[4])
