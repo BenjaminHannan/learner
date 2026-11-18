@@ -93,8 +93,10 @@ def decisions_at_job_boundaries(commands, spoken, latch=None, expires=None, stro
     hold delays a report, it never buys time to earn credit. A job whose
     opening and closure are reported at the same stroke end cannot be
     recorded: it is never announced. ``moot`` is the time an owner closes the
-    job as moot; it takes the same path as ``expires``, and a job has one or
-    the other. Returns (length, job open, done) for each decision.
+    job as moot; it takes the same path as ``expires``. This toy world takes
+    one or the other. That is a limit of the toy, not a rule of the meter: by
+    the lead's ruling (round 18) a real job with both closes at whichever
+    comes first. Returns (length, job open, done) for each decision.
     """
     if moot is not None:
         if expires is not None:
@@ -3414,20 +3416,43 @@ class RawMeterTests(unittest.TestCase):
         # Round 17, a reviewer's pair for the expiry form (spoken at 0.06,
         # expiring at 0.20). The job-free record above is also the legal
         # record under the rule: the job is never announced, and all 0.35
-        # hours are free time. Vanishing costs: -0.35 against -0.25 on short
-        # strokes at full memory, and 0 against 0 rested. One kind of move.
+        # hours are free time. Here vanishing costs: -0.35 against -0.25 on
+        # short strokes at full memory, and 0 against 0 rested. One kind of move.
         self.assertEqual(score_decisions(round_15, cycles=1), ((3, 0.35), (0.0, -0.35, -0.35)))
         self.assertEqual(score_decisions(expiring, cycles=1), ((7, 0.35), (0.0, -0.25, -0.25)))
         self.assertEqual(score_decisions(round_15, cycles=1, fill=0.0)[1], (0.0, 0.0, 0.0))
         self.assertEqual(score_decisions(expiring, cycles=1, fill=0.0)[1], (0.0, 0.0, 0.0))
         # With two kinds of move the skill feeling pays on free steps (hole
         # 16), so "vanishing gains nothing" is pinned for one kind only. In
-        # this pair the vanished plan is still behind.
+        # this pair the vanished plan is behind; in the next it is ahead.
         two = ("turn", "paint")
         self.assertEqual(score_decisions(round_15, 1, 0.0, two)[1][2], 0.022957)
         self.assertEqual(score_decisions(expiring, 1, 0.0, two)[1][2], 0.024273)
         self.assertEqual(score_decisions(round_15, 1, 1.0, two)[1][2], -0.327043)
         self.assertEqual(score_decisions(expiring, 1, 1.0, two)[1][2], -0.225727)
+        # Round 18, a reviewer's smallest case where vanishing PAYS. Strokes
+        # of 0.05 then 0.075 hours, the job spoken at 0.075 and expiring at
+        # 0.10: both fall in the second stroke, so the job vanishes and both
+        # steps are free play. The plan 0.075 then 0.05 holds the job on its
+        # second step, which earns no skill feeling.
+        with self.assertRaisesRegex(ValueError, "never announced"):
+            decisions_at_job_boundaries([(F("0.05"),), (F("0.075"),)], F("0.075"), expires=F("0.10"))
+        gone = [(F("0.05"), False, False), (F("0.075"), False, False)]
+        kept = decisions_at_job_boundaries([(F("0.075"),), (F("0.05"),)], F("0.075"), expires=F("0.10"))
+        self.assertEqual(kept, [(F("0.075"), False, False), (F("0.05"), True, False)])
+        for kinds in (two, two[::-1]):  # the kept plan is 0 in either order of the kinds
+            self.assertEqual((score_decisions(gone, 1, 0.0, kinds)[1][2], score_decisions(kept, 1, 0.0, kinds)[1][2]), (0.024999, 0.0))
+        # The lead is one skill bonus. It is still there at half-full memory
+        # and gone at 0.9 and at full memory, where the free time costs more.
+        self.assertEqual((score_decisions(gone, 1, 0.5, two)[1][2], score_decisions(kept, 1, 0.5, two)[1][2]), (0.024997, -0.000001))
+        self.assertEqual((score_decisions(gone, 1, 0.9, two)[1][2], score_decisions(kept, 1, 0.9, two)[1][2]), (-0.055157, -0.048056))
+        self.assertEqual((score_decisions(gone, 1, 1.0, two)[1][2], score_decisions(kept, 1, 1.0, two)[1][2]), (-0.100001, -0.075))
+        # With one kind of move there is no lead: 0 against 0 rested.
+        self.assertEqual((score_decisions(gone, 1, 0.0)[1][2], score_decisions(kept, 1, 0.0)[1][2]), (0.0, 0.0))
+        # Repeating the trick does not add up: over 20 vanished jobs, rested,
+        # the lead is the same one bonus (the feeling is bounded over a life:
+        # test_any_stretch_is_bounded_whatever_the_moves).
+        self.assertEqual((score_decisions(gone, 20, 0.0, two)[1][2], score_decisions(kept, 20, 0.0, two)[1][2]), (0.024999, 0.0))
 
     def test_a_goal_reached_after_a_moot_closure_earns_nothing(self):
         # Choice 16 (a), accepted by the lead in round 17: ruling RD covers a
@@ -3447,7 +3472,9 @@ class RawMeterTests(unittest.TestCase):
         # A goal reached before the closure is paid, as before an expiry.
         before = decisions_at_job_boundaries(short, F(0), latch=F("0.10"), moot=F("0.12"))
         self.assertEqual(score_decisions(before), ((60, 7.0), (20.0, -5.0, 15.0)))
-        # A job has one or the other; no ruling covers both.
+        # This toy world takes one or the other: a toy limit, not a meter
+        # rule. By the lead's ruling (round 18) a real job given both closes
+        # at whichever comes first; no toy world here builds one.
         with self.assertRaisesRegex(ValueError, "not both"):
             decisions_at_job_boundaries(short, F(0), expires=F("0.06"), moot=F("0.06"))
 
@@ -3474,7 +3501,6 @@ class RawMeterTests(unittest.TestCase):
             whole = ends[-1]
             times = [grid * tick for tick in range(int(whole / grid) + 1)]
             for spoken in times[:-1]:
-                opened = min(end for end in [F(0)] + ends if end >= spoken)  # a job spoken at the start opens there
                 # A job that closes without "done", by expiry or as moot.
                 for expires in (time for time in times if time > spoken):
                     try:
@@ -3485,7 +3511,18 @@ class RawMeterTests(unittest.TestCase):
                         behind.append((whole, spoken, expires))
                         continue
                     legal += 1
-                    closed = min(end for end in ends if end >= expires)
+                    # Read the job's reported opening and closing from the record itself.
+                    clock, starts, stops = F(0), [], []
+                    for length, in_job, _ in record:
+                        if in_job:
+                            starts.append(clock)
+                            stops.append(clock + length)
+                        clock += length
+                    self.assertEqual(clock, whole)
+                    self.assertEqual(starts[1:], stops[:-1])  # one unbroken run of job decisions
+                    opened, closed = starts[0], stops[-1]
+                    self.assertLessEqual(spoken, opened)  # never early
+                    self.assertLessEqual(expires, closed)
                     held = closed - opened
                     self.assertLess(opened - spoken, longest)  # RE: each event is late by less than one longest stroke
                     self.assertLess(closed - expires, longest)  # RC: the shelter at a closure, the same bound
@@ -3508,6 +3545,7 @@ class RawMeterTests(unittest.TestCase):
                                     behind_latch.append((whole, spoken, latch))
                             continue
                         earns = expires is None or latch < expires
+                        opened = next(start for start, (_, in_job, _) in zip([F(0)] + ends, record) if in_job)
                         self.assertEqual(sum(done for _, _, done in record), int(earns))  # RD
                         if earns:
                             paid += 1
@@ -3614,6 +3652,57 @@ class RawMeterTests(unittest.TestCase):
         # that splits one indivisible stroke into two meter steps.
         split = [(F("0.10"), False, False), (F("0.15"), True, False)] + long[1:]
         self.assertEqual(score_decisions(split, 1)[1][2], -3.35)
+
+    def test_a_vanished_job_can_lead_by_one_skill_bonus_with_two_kinds_of_move(self):
+        # Round 18, a reviewer's finding on the round-17 menu. With two kinds
+        # of move (alternating by decision; the kept plans are not given their
+        # best order) a vanished job's steps are free play and can earn the
+        # under-used-skill feeling, where a kept job's steps cannot. Every
+        # plan of two or three strokes from 0.05, 0.075, 0.10 and 0.25 hours,
+        # speech and expiry on a 0.025-hour grid, one job, scored by the meter.
+        F = Fraction
+        menu, grid, two = [F("0.05"), F("0.075"), F("0.10"), F("0.25")], F("0.025"), ("turn", "paint")
+        plans = [strokes for count in (2, 3) for strokes in itertools.product(menu, repeat=count)]
+        found = {}
+        for fill in (0.0, 1.0):
+            scores = {}
+
+            def raw(record):
+                key = tuple(record)
+                if key not in scores:
+                    scores[key] = score_decisions(record, 1, fill, two)[1][2]
+                return scores[key]
+
+            kept, gone = {}, []
+            for strokes in plans:
+                whole = sum(strokes, F(0))
+                times = [grid * tick for tick in range(int(whole / grid) + 1)]
+                for spoken in times[:-1]:
+                    for expires in (time for time in times if time > spoken):
+                        try:
+                            record = decisions_at_job_boundaries([(stroke,) for stroke in strokes], spoken, expires=expires)
+                        except ValueError:
+                            gone.append((strokes, whole, spoken, expires))
+                            continue
+                        kept.setdefault((spoken, expires, whole), []).append(raw(record))
+            cases = ahead_of_all = ahead_of_some = 0
+            leads = []
+            for strokes, whole, spoken, expires in gone:
+                matches = kept.get((spoken, expires, whole))
+                if not matches:
+                    continue
+                cases += 1
+                vanished = raw([(stroke, False, False) for stroke in strokes])
+                ahead_of_some += vanished > min(matches)
+                if vanished > max(matches):
+                    ahead_of_all += 1
+                    leads.append(round(vanished - max(matches), 6))
+            found[fill] = (cases, ahead_of_all, ahead_of_some, max(leads, default=None))
+            self.assertTrue(all(lead <= 0.05 for lead in leads))  # the feeling's bound over a life, at a rate of 0.05
+        # Rested: ahead of every same-length kept plan in 815 of 1,766 cases, by at most one bonus.
+        self.assertEqual(found[0.0], (1766, 815, 1181, 0.024999))
+        # At full memory: never ahead, of any kept plan.
+        self.assertEqual(found[1.0], (1766, 0, 0, None))
 
     def test_a_job_spoken_to_a_sleeping_model_wakes_it(self):
         # The lead's ruling before round 15, the same as for a remark (round
