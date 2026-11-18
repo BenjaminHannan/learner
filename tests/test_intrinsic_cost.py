@@ -84,17 +84,42 @@ def offered_actions(now, lengths, remarks, world_end=None, shortest=Fraction("0.
     queued remark still has a legal reporting decision before the world's
     end. A schedule that leaves no such action cannot be registered.
     """
-    def fits(start, length, queue):
+    remarks = list(remarks)
+
+    def after(start, reported, length):
+        """The state after an action, or None if the action is not legal there."""
         end = start + length
         if length < shortest or (world_end is not None and end > world_end):
-            return False
-        inside = [spoken for spoken in queue if spoken < end]
-        return len(inside) <= 1 and reportable(end, queue[len(inside):])
+            return None
+        inside = sum(1 for spoken in remarks[reported:] if spoken < end)
+        return (end, reported + inside) if inside <= 1 else None
 
-    def reportable(start, queue):
-        return not queue or any(fits(start, length, queue) for length in lengths)
+    known = {}  # state (clock time, remarks reported) -> every queued remark can still be reported
 
-    offered = [length for length in lengths if fits(now, length, list(remarks))]
+    def reportable(state):
+        stack = [state]  # a loop, not recursion: a quiet day is hundreds of decisions deep
+        while stack:
+            here = stack[-1]
+            if here not in known and here[1] == len(remarks):
+                known[here] = True
+            if here in known:
+                stack.pop()
+                continue
+            nexts = [following for length in lengths if (following := after(*here, length)) is not None]
+            unknown = [following for following in nexts if following not in known]
+            if any(known.get(following) for following in nexts):
+                known[here] = True
+            elif unknown:
+                stack.append(unknown[0])
+            else:
+                known[here] = False
+        return known[state]
+
+    def fits(start, length, reported=0):
+        following = after(start, reported, length)
+        return following is not None and reportable(following)
+
+    offered = [length for length in lengths if fits(now, length)]
     if not offered:
         raise ValueError("no action can be offered: a queued remark would have no legal reporting decision")
     return offered
@@ -2404,7 +2429,8 @@ class RawMeterTests(unittest.TestCase):
                     steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=False, **job, **full))
             return score(steps)
 
-        # Every continuation offered to prevention, from no nap to the whole quiet window:
+        # Prevention with the same nap in every slot, from no nap to the whole quiet
+        # window (schedules that mix nap lengths across slots are not pinned):
         self.assertEqual(slots("prevent", 0), ((340, 17.0), (0.0, -15.0, 0.0, -15.0, -4.223221)))
         self.assertEqual(slots("prevent", 1), ((340, 17.0), (0.0, -14.0, 0.0, -14.0, -3.961047)))
         self.assertEqual(slots("prevent", 2), ((320, 17.0), (0.0, -13.0, 0.0, -13.0, -3.878583)))
@@ -2492,9 +2518,10 @@ class RawMeterTests(unittest.TestCase):
         self.assertEqual(late, (-6.0, -2.0, -8.0, -5.489857))
         # The statement ends the exemption for its whole decision, so the four
         # moves before the fault are charged in one grouping and not the other.
-        # Per fault the saving is at most the longest awake step minus the
-        # shortest, at 1 per hour of full pressure: 0.20. It repeats with every
-        # fault, so it is not bounded over a life.
+        # Here, with the fault at the end of a step, the two groupings differ by
+        # the longest awake step minus the shortest, at 1 per hour of full
+        # pressure: 0.20 per fault. That is not a bound (a fault inside a long
+        # step shifts more: the next test). It repeats with every fault.
         per_fault = (CLOCKED.max_awake_step_hours - CLOCKED.min_awake_step_hours) * 1.0
         self.assertAlmostEqual(late[1] - early[1], 20 * per_fault, delta=1e-9)
         self.assertAlmostEqual(late[2] - early[2], 4.0, delta=1e-9)
@@ -2556,6 +2583,334 @@ class RawMeterTests(unittest.TestCase):
 
         self.assertEqual(rested_world("prevent"), (0.0, 0.049996, 0.049996, 0.048059))
         self.assertEqual(rested_world("neglect"), (0.0, 0.049396, 0.049396, 0.047661))
+
+    def test_waiting_to_finish_an_honest_job_shelters_tiredness(self):
+        # A reviewer's world (round 13), a variant of hole 1 that gives up no
+        # "done". Twenty genuine owner jobs in five-tick slots at full day
+        # memory; each can be finished on the slot's second tick or its fifth.
+        # Both plans report "done" truthfully when it happens and earn all 20.
+        # The ticks after an early finish are free time; the same ticks spent
+        # with the job still open are exempt.
+        full = dict(panel_error=(0.5,), memory_fill=1.0)
+
+        def life(ticks_before_done, nap=False):
+            steps = []
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"latch {slot}", hours=TICK, **full)
+                steps += [StepInput(**job)] * ticks_before_done
+                steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=False, **job))
+                free = 4 - ticks_before_done
+                if free and nap:
+                    steps.append(StepInput(asleep=True, hours=free * TICK, **full))
+                else:
+                    steps += [StepInput(hours=TICK, **full)] * free
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            felt = [meter.step(step) for step in steps]
+            return (len(steps), round(clock_hours(steps), 6)), tuple(round(x, 6) for x in (
+                math.fsum(f.job_done for f in felt), math.fsum(f.tiredness for f in felt),
+                total(felt), discounted([f.total for f in felt])))
+
+        # No nap window: waiting wins, in the raw totals, by the tiredness alone.
+        self.assertEqual(life(1), ((100, 5.0), (20.0, -3.0, 17.0, 10.923377)))  # finish at once
+        self.assertEqual(life(4), ((100, 5.0), (20.0, 0.0, 20.0, 12.425779)))  # wait, then finish
+        # Each tick of waiting is worth one tick of tiredness: 0.05 per job at full memory.
+        self.assertEqual(life(2), ((100, 5.0), (20.0, -2.0, 18.0, 11.429219)))
+        self.assertEqual(life(3), ((100, 5.0), (20.0, -1.0, 19.0, 11.930003)))
+        # The control: where the free ticks can be slept through, finishing at
+        # once ties in the raw total and is ahead under the discount.
+        self.assertEqual(life(1, nap=True), ((60, 5.0), (20.0, 0.0, 20.0, 15.09427)))
+
+    def test_the_offered_action_menu_can_reveal_a_hidden_answer(self):
+        # A reviewer's world (round 13). The round-12 ruling takes an action off
+        # the menu when it would strand a queued remark, so the menu depends on
+        # the times of remarks not yet spoken. If those times depend on a hidden
+        # answer, reading the menu reads the answer. Twenty "which drawer" jobs;
+        # two unconditional "no"s per job, at 0.110 and 0.130 hours for one
+        # drawer and at 0.110 and 0.170 for the other; the job's clock ends at 0.200.
+        F = Fraction
+        lengths = [F("0.05"), F("0.075"), F("0.10")]
+        times = {0: [F("0.110"), F("0.170")], 1: [F("0.110"), F("0.130")]}
+        end = F("0.200")
+        menus = {drawer: offered_actions(F(0), lengths, queue, end) for drawer, queue in times.items()}
+        self.assertEqual(menus[0], lengths)  # far pair: the 0.10-hour action is offered
+        self.assertEqual(menus[1], lengths[:2])  # close pair: it would strand the second "no"
+        safe_menu = [length for length in lengths if all(length in menu for menu in menus.values())]
+        self.assertEqual(safe_menu, lengths[:2])
+        drawers = (0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1)
+
+        def life(policy):
+            steps = []
+            for slot, drawer in enumerate(drawers):
+                menu = safe_menu if policy == "same safe menu" else menus[drawer]
+                guess = int(lengths[2] not in menu) if policy != "blind" else 0
+                job = dict(job_open=True, job_from_owner=True, job_id=f"which drawer {slot}", panel_error=(0.5,))
+                steps.append(StepInput(hours=TICK, **job))
+                now, queue = F(0), list(times[drawer])
+                for length in (lengths[0], lengths[1], lengths[1]):  # the same three actions in every arm
+                    self.assertIn(length, offered_actions(now, lengths, queue, end))
+                    now += length
+                    heard = [spoken for spoken in queue if spoken < now]
+                    queue = queue[len(heard):]
+                    done = now == end and guess == drawer
+                    steps.append(StepInput(hours=float(length), remark=-len(heard), job_done=done,
+                                           job_fault_avoidable=False if done else None, **job))
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            felt = [meter.step(step) for step in steps]
+            return (len(steps), round(clock_hours(steps), 6), sum(1 for step in steps if step.remark),
+                    round(math.fsum(f.job_done for f in felt), 6), round(total(felt), 6))
+
+        # Same decisions, same hours, the same 40 corrections heard in every arm.
+        self.assertEqual(life("read the menu"), (80, 5.0, 40, 20.0, -100.0))
+        self.assertEqual(life("blind"), (80, 5.0, 40, 10.0, -110.0))
+        # The control, a harness promise for worlds whose answer should stay
+        # hidden: offer the same safe menu in both states.
+        self.assertEqual(life("same safe menu"), (80, 5.0, 40, 10.0, -110.0))
+
+    def test_grouping_around_a_fault_inside_a_long_step_shifts_more_than_a_fifth_of_an_hour(self):
+        # Two reviewers' witnesses (round 13) against the round-12 text, which
+        # gave "longest step minus shortest" (0.20) as the most a grouping could
+        # shift per fault. That holds only when the fault falls at the end of a
+        # step. Full day memory, 20 jobs, the same clock, the same pain, no
+        # "done" credit in any arm.
+        full = dict(panel_error=(0.5,), memory_fill=1.0)
+
+        def life(lengths, fault_at, closing_step):
+            steps = []
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"inspection {slot}", skill="turn", **full)
+                steps.append(StepInput(hours=TICK, **job))  # announced
+                start = Fraction(0)
+                for index, length in enumerate(lengths):
+                    fault = start < fault_at <= start + length
+                    done = not closing_step and index == len(lengths) - 1
+                    steps.append(StepInput(hours=float(length), hurt=0.1 if fault else 0.0, job_done=done,
+                                           job_fault_avoidable=True if fault else False if done else None, **job))
+                    start += length
+                if closing_step:
+                    steps.append(StepInput(hours=TICK, job_done=True, job_fault_avoidable=False, **job))
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            felt = [meter.step(step) for step in steps]
+            return (len(steps), round(clock_hours(steps), 6)), tuple(round(x, 6) for x in (
+                math.fsum(f.job_done for f in felt), math.fsum(f.pain for f in felt),
+                math.fsum(f.tiredness for f in felt), total(felt)))
+
+        F = Fraction
+        # (a) The fault 0.245 hours into the work: a 0.25-hour command carries
+        # it, or a 0.24-hour command ends just before it.
+        long_first = life([F("0.25"), F("0.05"), F("0.05")], F("0.245"), closing_step=False)
+        cut_before = life([F("0.24"), F("0.05"), F("0.06")], F("0.245"), closing_step=False)
+        self.assertEqual(long_first, ((80, 8.0), (0.0, -6.0, -7.0, -13.0)))
+        self.assertEqual(cut_before, ((80, 8.0), (0.0, -6.0, -2.2, -8.2)))
+        self.assertAlmostEqual((cut_before[1][3] - long_first[1][3]) / 20, 0.24, delta=1e-9)
+        # (b) The fault 0.230 hours in: one 0.25-hour inspection and three of
+        # 0.075 hours, the long one first or last.
+        first = life([F("0.25"), F("0.075"), F("0.075"), F("0.075")], F("0.230"), closing_step=True)
+        last = life([F("0.075"), F("0.075"), F("0.075"), F("0.25")], F("0.230"), closing_step=True)
+        self.assertEqual(first, ((120, 11.5), (0.0, -6.0, -10.5, -16.5)))
+        self.assertEqual(last, ((120, 11.5), (0.0, -6.0, -6.0, -12.0)))
+        self.assertAlmostEqual((last[1][3] - first[1][3]) / 20, 0.225, delta=1e-9)
+        # Both are above 0.20 and below one longest step (0.25) per fault.
+        # "Below one longest step" is a claim, argued in the design note
+        # (hole 19), and tested only on these cases.
+        for shift in (0.24, 0.225):
+            self.assertGreater(shift, CLOCKED.max_awake_step_hours - CLOCKED.min_awake_step_hours)
+            self.assertLess(shift, CLOCKED.max_awake_step_hours)
+
+    def test_equal_thanks_help_prevention_only_under_two_conditions(self):
+        # Round 13. "Thank prevention too and it comes out ahead" needs two
+        # things: the thanks are reported at matching times, and prevention can
+        # sleep through its free time.
+        def score(steps):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            felt = [meter.step(step) for step in steps]
+            return tuple(round(x, 6) for x in (math.fsum(f.pain for f in felt), math.fsum(f.remarks for f in felt),
+                                               total(felt), discounted([f.total for f in felt])))
+
+        # (a) A reviewer's world: 20 pairs of jobs, rested (fill 0.10, 8 hours of
+        # sleep after each pair). The owner says "nice" at the same clock time
+        # in every job. On a repaired second job the decision that carries the
+        # "nice" is a 0.20-hour check, not a 0.05-hour one, so the praise is
+        # counted later and has recovered more.
+        def pairs(neglect_second, long_report_on_second):
+            steps = []
+            for pair in range(20):
+                for member in (0, 1):
+                    repair = neglect_second and member == 1
+                    job = dict(job_open=True, job_from_owner=True, job_id=f"pair {pair} job {member}", panel_error=(0.5,))
+                    steps.append(StepInput(hours=TICK, memory_fill=0.09 if pair and member == 0 else 0.10, **job))
+                    steps.append(StepInput(hours=TICK, memory_fill=0.10, skill=None if repair else "turn",
+                                           hurt=0.0001 if repair else 0.0,
+                                           job_fault_avoidable=True if repair else None, **job))
+                    steps.append(StepInput(hours=TICK, memory_fill=0.10, skill="turn" if repair else None, **job))
+                    waits = (0.2, TICK) if (repair or long_report_on_second) and member == 1 else (TICK, 0.2)
+                    steps.append(StepInput(hours=waits[0], memory_fill=0.10, remark=1, skill="turn", **job))
+                    steps.append(StepInput(hours=waits[1], memory_fill=0.10, skill="turn", job_done=repair,
+                                           job_fault_avoidable=False if repair else None, **job))
+                steps.append(StepInput(hours=8.0, asleep=True, memory_fill=0.10, panel_error=(0.5,)))
+            self.assertEqual((len(steps), round(clock_hours(steps), 6)), (220, 176.0))
+            return score(steps)
+
+        prevent_both = pairs(False, False)
+        neglect_second = pairs(True, False)
+        prevent_matched = pairs(False, True)
+        self.assertEqual(prevent_both, (0.0, 16.818375, 16.818375, 7.263488))
+        self.assertEqual(neglect_second, (-0.006, 16.870225, 16.864225, 7.281796))  # neglect ahead by 0.04585
+        self.assertEqual(prevent_matched, (0.0, 16.870225, 16.870225, 7.284199))  # report times matched: prevention ahead by the hurt
+        self.assertAlmostEqual(prevent_matched[2] - neglect_second[2], 0.006, delta=1e-9)
+
+        # (b) A reviewer's world: the partial-sleep world of hole 18 with the
+        # same "nice" on the first move of every slot, for both arms.
+        full = dict(panel_error=(0.5,), memory_fill=1.0)
+
+        def slots(nap_moves=None):
+            steps, fill_on_waking = [], 1.0
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"thanked outage {slot}", hours=TICK)
+                steps.append(StepInput(panel_error=(0.5,), memory_fill=fill_on_waking, remark=1, **job))
+                fill_on_waking = 1.0
+                if nap_moves is None:  # neglect
+                    steps += [StepInput(**job, **full)] * 5
+                    steps.append(StepInput(hurt=0.01, job_fault_avoidable=True, **job, **full))
+                    steps += [StepInput(skill="go", **job, **full)] * 9
+                    steps.append(StepInput(skill="go", job_done=True, job_fault_avoidable=False, **job, **full))
+                else:
+                    steps.append(StepInput(skill="go", **job, **full))
+                    steps += [StepInput(hours=TICK, **full)] * (15 - nap_moves)
+                    if nap_moves:
+                        steps.append(StepInput(asleep=True, hours=nap_moves * TICK, **full))
+                        fill_on_waking = 0.99
+            return score(steps)[2:]
+
+        self.assertEqual(slots(), (-7.748238, -1.061698))  # neglect
+        self.assertEqual(slots(2), (-9.148238, -1.689469))  # prevention, the whole quiet window: still behind
+        self.assertEqual(slots(15), (3.851762, 3.293749))  # prevention that can sleep through its free time
+
+    def test_the_tiredness_shelter_holds_at_any_rate_but_the_winner_depends_on_the_rates(self):
+        # Round 13, on hole 18's "no rate changes it". The shelter is the
+        # exemption: waiting time inside an open honest job is charged 0 at any
+        # tiredness rate. Which arm then wins does depend on the rate table.
+        # Two non-default tables, each set before the run; the defaults (pain 3,
+        # tiredness 1) are unchanged and are the only registered table.
+        full = dict(panel_error=(0.5,), memory_fill=1.0)
+
+        def score(steps, rates):
+            meter = IntrinsicCostMeter(rates, CLOCKED)
+            meter.birth_reading((0.5,))
+            felt = [meter.step(step) for step in steps]
+            return tuple(round(x, 6) for x in (math.fsum(f.pain for f in felt), math.fsum(f.tiredness for f in felt), total(felt)))
+
+        job = dict(job_open=True, job_from_owner=True, job_id="switch", **full)
+        serviced = [StepInput(hours=TICK, **job), StepInput(hours=TICK, skill="turn", **job)]
+        interrupted_prevention = serviced + [StepInput(hours=0.10, asleep=True, **full),
+                                             StepInput(hours=0.25, remark=-1, panel_error=(0.5,), memory_fill=0.99),
+                                             StepInput(hours=TICK, asleep=True, **full)]
+        interrupted_neglect = [StepInput(hours=TICK, **job)] * 3 + [
+            StepInput(hours=0.25, remark=-1, **job),
+            StepInput(hours=TICK, hurt=0.01, job_fault_avoidable=True, **job),
+            StepInput(hours=TICK, skill="turn", job_done=True, job_fault_avoidable=False, **job)]
+
+        def partial(plan):
+            steps, fill_on_waking = [], 1.0
+            for slot in range(20):
+                job = dict(job_open=True, job_from_owner=True, job_id=f"scheduled outage {slot}", hours=TICK)
+                steps.append(StepInput(panel_error=(0.5,), memory_fill=fill_on_waking, **job))
+                fill_on_waking = 1.0
+                if plan == "prevent":  # with the whole quiet window slept
+                    steps.append(StepInput(skill="turn", **job, **full))
+                    steps += [StepInput(hours=TICK, **full)] * 13
+                    steps.append(StepInput(asleep=True, hours=2 * TICK, **full))
+                    fill_on_waking = 0.99
+                else:
+                    steps += [StepInput(**job, **full)] * 5
+                    steps.append(StepInput(hurt=0.01, job_fault_avoidable=True, **job, **full))
+                    steps += [StepInput(skill="turn", **job, **full)] * 9
+                    steps.append(StepInput(skill="turn", job_done=True, job_fault_avoidable=False, **job, **full))
+            return steps
+
+        for name, rates, shelter in (("default", ExchangeRates(), 1.0), ("pain 20", ExchangeRates(pain=20.0), 1.0),
+                                     ("tiredness 0.1", ExchangeRates(tiredness=0.1), 0.1)):
+            with self.subTest(table=name):
+                # The shelter: neglect's tiredness is only the post-fault time,
+                # 0.10 hours in the interrupted world and 11 hours in the other,
+                # whatever the table; the 0.35 hours and 6 hours of waiting cost 0.
+                self.assertAlmostEqual(score(interrupted_neglect, rates)[1], -0.10 * shelter, delta=1e-9)
+                self.assertAlmostEqual(score(partial("neglect"), rates)[1], -11.0 * shelter, delta=1e-9)
+        # The winner, raw totals (prevention, neglect):
+        default, high_pain, low_tiredness = ExchangeRates(), ExchangeRates(pain=20.0), ExchangeRates(tiredness=0.1)
+        self.assertEqual((score(interrupted_prevention, default)[2], score(interrupted_neglect, default)[2]), (-3.240177, -3.13))
+        self.assertEqual((score(partial("prevent"), default)[2], score(partial("neglect"), default)[2]), (-13.0, -11.6))
+        self.assertEqual((score(interrupted_prevention, high_pain)[2], score(interrupted_neglect, high_pain)[2]), (-3.240177, -3.3))
+        self.assertEqual((score(partial("prevent"), high_pain)[2], score(partial("neglect"), high_pain)[2]), (-13.0, -15.0))
+        self.assertEqual((score(interrupted_prevention, low_tiredness)[2], score(interrupted_neglect, low_tiredness)[2]),
+                         (-3.024018, -3.04))
+        self.assertEqual((score(partial("prevent"), low_tiredness)[2], score(partial("neglect"), low_tiredness)[2]), (-1.3, -1.7))
+
+    def test_enough_wakings_let_neglect_win_even_with_short_actions(self):
+        # A reviewer's case (round 13) against "the interrupted-sleep reversal
+        # rests on the long free-time action". The world of hole 18 (a), with a
+        # one-tick free action offered, and unconditional "no"s that both arms
+        # hear. Each waking costs prevention one reporting tick of tiredness;
+        # neglect's tiredness stays the 0.10 hours after the fault.
+        full = dict(panel_error=(0.5,), memory_fill=1.0)
+        job = dict(job_open=True, job_from_owner=True, job_id="switch", hours=TICK, **full)
+        serviced = [StepInput(**job), StepInput(skill="turn", **job)]
+        report = StepInput(hours=TICK, remark=-1, panel_error=(0.5,), memory_fill=0.99)  # after a waking
+        awake = StepInput(hours=TICK, **full)
+
+        def nap(hours):
+            return StepInput(hours=hours, asleep=True, **full)
+
+        def neglect(report_steps):  # ten one-tick job decisions; the trip on the ninth
+            steps = []
+            for number in range(1, 11):
+                extra = dict(remark=-1) if number in report_steps else {}
+                if number == 9:
+                    extra.update(hurt=0.01, job_fault_avoidable=True)
+                if number == 10:
+                    extra.update(skill="turn", job_done=True, job_fault_avoidable=False)
+                steps.append(StepInput(**extra, **job))
+            return steps
+
+        def score(steps):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            felt = [meter.step(step) for step in steps]
+            return (len(steps), round(clock_hours(steps), 6)), tuple(round(x, 6) for x in (
+                math.fsum(f.tiredness for f in felt), math.fsum(f.remarks for f in felt),
+                total(felt), discounted([f.total for f in felt])))
+
+        # Three "no"s, at 0.20, 0.30 and 0.40 hours: neglect wins, raw and discounted.
+        nap_and_report = serviced + [nap(0.10), report, nap(TICK), report, nap(TICK), report, nap(TICK)]
+        stay_awake = serviced + [awake, awake, dataclasses.replace(awake, remark=-1), awake,
+                                 dataclasses.replace(awake, remark=-1), awake, dataclasses.replace(awake, remark=-1), nap(TICK)]
+        self.assertEqual(score(nap_and_report), ((9, 0.5), (-0.144069, -9.0, -9.144069, -8.69709)))
+        self.assertEqual(score(stay_awake), ((10, 0.5), (-0.35, -9.0, -9.35, -8.807376)))
+        self.assertEqual(score(neglect({5, 7, 9})), ((10, 0.5), (-0.1, -9.0, -9.13, -8.593958)))
+        # Two "no"s, at 0.20 and 0.35: prevention wins the raw total and loses the discounted one.
+        self.assertEqual(score(serviced + [nap(0.10), report, nap(0.10), report, nap(0.10)]),
+                         ((7, 0.5), (-0.096046, -6.0, -6.096046, -5.856133)))
+        self.assertEqual(score(neglect({5, 8})), ((10, 0.5), (-0.1, -6.0, -6.13, -5.79748)))
+        # One "no": neglect given as ten one-tick decisions scores the same raw
+        # total as the grouping pinned for hole 18 (-3.13) and a higher
+        # discounted one (-3.035294 there). So prevention awake on short steps
+        # (-3.15 raw, -3.027338 discounted) loses to it both ways, and the
+        # nap-and-report plan (-3.048023, -2.957494) still wins both ways.
+        self.assertEqual(score(neglect({5})), ((10, 0.5), (-0.1, -3.0, -3.13, -3.001283)))
+
+    def test_the_toy_remark_rule_handles_a_long_quiet_schedule(self):
+        # A reviewer's case (round 13): one-tick steps and one remark at hour 24
+        # in a world that ends at 24.10. Legal, and 480 decisions away; the
+        # rule must not run out of call depth.
+        F = Fraction
+        self.assertEqual(offered_actions(F(0), [F("0.05")], [F(24)], F("24.1")), [F("0.05")])
+        # And it still refuses a schedule that far off: two remarks 0.02 hours
+        # apart fall inside one decision on any grid of one-tick steps.
+        with self.assertRaisesRegex(ValueError, "no action can be offered"):
+            offered_actions(F(0), [F("0.05"), F("0.25")], [F(24), F("24.02")], F("24.1"))
 
     def test_a_fault_that_came_before_its_job_is_stated_when_the_job_is_announced(self):
         # The statement needs an open job. A fault the model could have avoided,

@@ -250,9 +250,10 @@ class StepInput:
                  before the run. Never a rescaled loss. Same items, same
                  order, no sampling noise. Required on every step: the meter
                  refuses a step without it.
-    skill        kind of command used (None = no move was made). With a job
-                 open it is checked against the closed list and otherwise
-                 ignored: the skill feeling works in free play only. One
+    skill        kind of command used (None = no move was made). With an
+                 eligible job open it is checked against the closed list and
+                 otherwise ignored: the skill feeling works in free play
+                 only. (A forfeited job's moves count as free play.) One
                  decision counts once, however many moves it holds, and it
                  holds moves of ONE kind only: the world splits a mixed
                  command into one decision per kind. A step can name one
