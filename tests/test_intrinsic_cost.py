@@ -2920,6 +2920,29 @@ class RawMeterTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "no action can be offered"):
             offered_actions(F(0), [F("0.05"), F("0.25")], [F(24), F("24.02")], F("24.1"))
 
+    def test_a_fault_tied_to_a_later_job_while_another_job_is_open_as_the_meter_behaves_today(self):
+        # Open, no rule stated, untested (a reviewer's note, round 13). The
+        # method does not say where the statement goes when the model breaks
+        # something during job A and the owner's later job B is the repair.
+        # Pinned as the meter behaves today, not as a decision: the statement
+        # forfeits whichever job is open on the step that carries it.
+        reading = dict(hours=TICK, panel_error=(0.5,))
+        job_a = dict(job_open=True, job_from_owner=True, job_id="A", **reading)
+        job_b = dict(job_a, job_id="B")
+
+        def paid(stated_while_a_is_open):
+            meter = IntrinsicCostMeter(config=CLOCKED)
+            meter.birth_reading((0.5,))
+            meter.step(StepInput(**job_a))
+            meter.step(StepInput(hurt=0.1, job_fault_avoidable=True if stated_while_a_is_open else None, **job_a))
+            done_a = meter.step(StepInput(job_done=True, job_fault_avoidable=False, **job_a))
+            meter.step(StepInput(job_fault_avoidable=None if stated_while_a_is_open else True, **job_b))
+            done_b = meter.step(StepInput(job_done=True, job_fault_avoidable=False, **job_b))
+            return done_a.job_done, done_b.job_done
+
+        self.assertEqual(paid(True), (0.0, 1.0))  # stated on the fault's step: innocent A is forfeited, the repair pays
+        self.assertEqual(paid(False), (1.0, 0.0))  # held until B is announced: A pays, the repair does not
+
     def test_a_fault_that_came_before_its_job_is_stated_when_the_job_is_announced(self):
         # The statement needs an open job. A fault the model could have avoided,
         # followed later by an owner job to put it right, is the one exception
