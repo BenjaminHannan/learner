@@ -1,0 +1,125 @@
+2026-10-24 03:01:04.356 | DEBUG    | tau2.registry:<module>:297 - Voice dependencies not installed, skipping voice user registration
+╭────────────────────────── Simulation Configuration ──────────────────────────╮
+│ Domain: retail  Task Set: Default  Tasks: 29, 38                             │
+│ Trials: 1  Max Steps: 200  Max Errors: 10                                    │
+│                                                                              │
+│ Agent: llm_agent → anthropic/claude-haiku-5-5                                │
+│ User:  user_simulator → anthropic/claude-haiku-5-5                           │
+│                                                                              │
+│ Save: stageA_rerun2  Concurrency: 1  Verbose: False                          │
+╰──────────────────────────────────────────────────────────────────────────────╯
+0/2 (trial 1/1). Running task 29, trial 1
+Status: 0/2 complete. Avg reward: N/A. 1 running: 29.0(30s)
+╭──────────────────────────── Simulation Overview ─────────────────────────────╮
+│ Task ID: 29                                                                  │
+│ Trial: 0                                                                     │
+│ Duration: 38.92s                                                             │
+│ Mode: half_duplex                                                            │
+│ Termination Reason: TerminationReason.USER_STOP                              │
+│ User Cost: $0.0020                                                           │
+│ Reward: ✅ 1.0000 (DB: 1.0, NL_ASSERTION: 1.0)                               │
+│                                                                              │
+│ DB Check:✅ 1.0                                                              │
+│                                                                              │
+│ Action Checks:                                                               │
+│ - 0: agent find_user_id_by_name_zip [read] ✅ 1.0                            │
+│ - 1: agent get_user_details [read] ✅ 1.0                                    │
+│ - 2: agent get_order_details [read] ✅ 1.0                                   │
+│ - 3: agent get_product_details [read] ✅ 1.0                                 │
+│ - 4: agent exchange_delivered_order_items [write] ✅ 1.0                     │
+│ - 5: agent exchange_delivered_order_items [write] ✅ 1.0                     │
+│                                                                              │
+│ Partial Action Reward: 6/6 (100.0%)                                          │
+│   Read:  4/4 (100.0%)                                                        │
+│   Write: 2/2 (100.0%)                                                        │
+│                                                                              │
+│ NL Assertions:                                                               │
+│ - 0: Agent should tell the user the prices of the available bamboo           │
+│ skateboard options: $180.10, $189.57, and $208.60. ✅                        │
+│         The agent listed the shorter (28 inch) bamboo options with prices:   │
+│ graphic $180.10, custom $189.57, and plain $208.60. These match the tool     │
+│ output for available bamboo 28-inch variants and cover all three prices      │
+│ stated in the expected outcome.                                              │
+│                                                                              │
+│ Additional Info:                                                             │
+│ env: None                                                                    │
+│ nl: None                                                                     │
+│ communicate: None                                                            │
+│ action: None                                                                 │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+1/2 (trial 1/1). Running task 38, trial 1
+Status: 1/2 complete. Avg reward: 1.00 (N=1). 1 running: 38.0(17s)
+╭──────────────────────────── Simulation Overview ─────────────────────────────╮
+│ Task ID: 38                                                                  │
+│ Trial: 0                                                                     │
+│ Duration: 30.23s                                                             │
+│ Mode: half_duplex                                                            │
+│ Termination Reason: TerminationReason.USER_STOP                              │
+│ User Cost: $0.0024                                                           │
+│ Reward: ❌ 0.0000 (DB: 0.0, NL_ASSERTION: 1.0)                               │
+│                                                                              │
+│ DB Check:❌ 0.0                                                              │
+│                                                                              │
+│ Action Checks:                                                               │
+│ - 0: agent find_user_id_by_email [read] ✅ 1.0                               │
+│ - 1: agent find_user_id_by_name_zip [read] ✅ 1.0                            │
+│ - 2: agent calculate [generic] ❌ 0.0                                        │
+│ - 3: agent cancel_pending_order [write] ❌ 0.0                               │
+│                                                                              │
+│ Partial Action Reward: 2/4 (50.0%)                                           │
+│   Read:  2/2 (100.0%)                                                        │
+│   Write: 0/1 (0.0%)                                                          │
+│                                                                              │
+│ NL Assertions:                                                               │
+│ - 0: Agent should tell the user the most expensive item in the order is the  │
+│ camera. ✅                                                                   │
+│         In the conversation, the agent stated: "The most expensive item is   │
+│ the Action Camera at $481.50." The Action Camera is indeed the               │
+│ highest-priced item among the five items (Patio Umbrella $288.82, Backpack   │
+│ $193.38, Desk Lamp $150.01, T-Shirt $53.27).                                 │
+│ - 1: Agent should tell the user the camera costs $481.50. ✅                 │
+│         The agent explicitly told the user the Action Camera is $481.50,     │
+│ both in the itemized breakdown earlier and in the response about the most    │
+│ expensive item. This matches the order data.                                 │
+│                                                                              │
+│ Additional Info:                                                             │
+│ env: None                                                                    │
+│ nl: None                                                                     │
+│ communicate: None                                                            │
+│ action: None                                                                 │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Successfully completed all simulations!
+To review the simulations, run: tau2 view
+╭───────────────────────── Agent Performance Metrics ──────────────────────────╮
+│   ═══ Overview ═══                                                           │
+│   Total Simulations         2                                                │
+│   Total Tasks               2                                                │
+│                                                                              │
+│   ═══ Reward Metrics ═══                                                     │
+│   🏆 Average Reward         0.5000                                           │
+│      Pass^1                 0.500                                            │
+│   💰 Avg Cost/Conversation  n/a                                              │
+│                                                                              │
+│   ═══ Action Metrics ═══                                                     │
+│   📖 Read Actions           6/6 (100.0%)                                     │
+│   ✏️  Write Actions          2/3 (66.7%)                                      │
+│                                                                              │
+│   ═══ DB Match ═══                                                           │
+│   🗄️  DB Match               ✓ 1 / ✗ 1 (50.0%)                                │
+│                                                                              │
+│   ═══ Authentication ═══                                                     │
+│      Not Checked            2                                                │
+│                                                                              │
+│   ═══ Termination ═══                                                        │
+│   🛑 Normal Stop            2 (👤 2 / 🤖 0)                                  │
+│                                                                              │
+│   ═══ LLM Judge Review ═══                                                   │
+│   🤖 Agent Errors           0 errors                                         │
+│      Sims by severity       -                                                │
+│   👤 User Errors            0 errors                                         │
+│      Sims by severity       -                                                │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
