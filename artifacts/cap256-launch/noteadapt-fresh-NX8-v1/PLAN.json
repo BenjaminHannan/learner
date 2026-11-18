@@ -1,0 +1,174 @@
+{
+  "after_result": "Bothroutesfail->selectdata-mixture/generalizationwork, not duration; inlineonly->focusnotebookpath; notebookbothpass->smallnote-usePOC and separatelyverifiednewexperienceforreplay",
+  "argv_template": [
+    "python.exe",
+    "-X",
+    "utf8",
+    "-B",
+    "scripts/cap256_launch/noteadapt_fresh_NX8.py",
+    "--root",
+    "<PCroot>",
+    "--plan",
+    "artifacts/cap256-launch/noteadapt-fresh-NX8-v1/PLAN.json",
+    "--plan-sha256",
+    "<PLANsha>"
+  ],
+  "arms": [
+    {
+      "checkpoint": {
+        "path": "C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\noteadapt1280-initial-only-v1\\seed0\\notebook\\final-resume.pt",
+        "sha256": "0b79fcd9910f98efcf7d762bb5f35f9810caf03f7b3731e7a91c1ce8f92eb509"
+      },
+      "manifest": {
+        "path": "artifacts/cap256-launch/notebook48-v1/SEED0-INFERENCE.json",
+        "sha256": "165d11502b64caa080324879f15578a73167f7a342c3ccda68454b00aeb2c5b3"
+      },
+      "placement": "notebook",
+      "seed": 0
+    },
+    {
+      "checkpoint": {
+        "path": "C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\noteadapt1280-initial-only-v1\\seed0\\inline\\final-resume.pt",
+        "sha256": "bb19081b48d55b473a6f650090f570a71a952c679372d54c55e6060fcca5bb13"
+      },
+      "manifest": {
+        "path": "artifacts/cap256-launch/notebook48-v1/SEED0-INFERENCE.json",
+        "sha256": "165d11502b64caa080324879f15578a73167f7a342c3ccda68454b00aeb2c5b3"
+      },
+      "placement": "inline",
+      "seed": 0
+    },
+    {
+      "checkpoint": {
+        "path": "C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\noteadapt1280-initial-only-v1\\seed1\\notebook\\final-resume.pt",
+        "sha256": "36f749b80a49d9903acd1e148ada13a98ac1f274aa604a6f813b431f0e95c16f"
+      },
+      "manifest": {
+        "path": "artifacts/cap256-launch/notebook48-v1/SEED1-INFERENCE.json",
+        "sha256": "ea60f5e7ef6e1727b5cf35033202cab7823b6a3d23d6669e1af96e8dd175ce57"
+      },
+      "placement": "notebook",
+      "seed": 1
+    },
+    {
+      "checkpoint": {
+        "path": "C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\noteadapt1280-initial-only-v1\\seed1\\inline\\final-resume.pt",
+        "sha256": "5a203edf99f9902b135ec2e3c4f2c4812a5e58a5e91f1cf37c1f4fc958dc9a61"
+      },
+      "manifest": {
+        "path": "artifacts/cap256-launch/notebook48-v1/SEED1-INFERENCE.json",
+        "sha256": "ea60f5e7ef6e1727b5cf35033202cab7823b6a3d23d6669e1af96e8dd175ce57"
+      },
+      "placement": "inline",
+      "seed": 1
+    }
+  ],
+  "cases": [
+    "NX-I00:initial",
+    "NX-I01:initial",
+    "NX-I02:initial",
+    "NX-I03:initial",
+    "NX-P00:initial",
+    "NX-P01:initial",
+    "NX-P02:initial",
+    "NX-P03:initial"
+  ],
+  "conditions": [
+    "full",
+    "empty"
+  ],
+  "consumed_NE_POC_calls": 0,
+  "criterion": "positive full-minus-empty strictnumeric+actualEOS gain and at leastone of these four predeclaredpairs bothcorrectfull/notbothempty in eachseed; bothseeds perroute; no notebook>inline requirement",
+  "decoding": "Unchanged pinned native Runtime.answer full fixed4 contract; strictnumeric token exact + actually emitted terminalEOS; no IDs/gold/derivedsummary in inputs",
+  "effective_role": "fresh evaluation only; all variants permanently excluded from futuretraining/replay",
+  "falsifier": "Any seed failing positive fullminusEmpty or missing all predeclared pair conditions means that route fails the fresh initialfact POC; no correction/missing/learnedwriter claim.",
+  "file_pins": [
+    {
+      "path": "scripts/cap256_launch/noteadapt_fresh_NX8.py",
+      "sha256": "84ffd32c7cca1181ef0f99f10afd096af0cdfbe573df5f1f472ae955de406c90"
+    },
+    {
+      "path": "scripts/cap256_launch/noteadapt_fresh_NX8_pc_driver.py",
+      "sha256": "fa79734b542444ae04796ba47fccdc4ca1c51e67942ffb00fc5eebd11a92585a"
+    },
+    {
+      "path": "scripts/cap256_launch/noteadapt_initial.py",
+      "sha256": "b8767d54e2e6798711ea441774bec2245e9f04f227218aa6e58079524cc9f161"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-fresh-NX8-v1/INPUTS.jsonl",
+      "sha256": "0a51af737dd8b98c1f0772d4fa8f7b853df6692c16f9974c8df4dd920b191126"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-fresh-NX8-v1/SOURCE-ADMISSION.json",
+      "sha256": "a826994f859cc30aac913fe8982912d88d0ffa2ccb82e077c99a67b3846dfba8"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-fresh-NX8-v1/WORLD-EVALUATION-RESERVATIONS.json",
+      "sha256": "5445d7d566933d44dc37b6b3f00d9667e8e9780477b9b3af99e70a3cf0715664"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-fresh-NX8-v1/EXPOSURE-TOKEN-RESOURCE-PREFLIGHT.json",
+      "sha256": "390394bb3d5529197bec184c1552d64bb3e55025a625aeb39ca32b7f1597244f"
+    }
+  ],
+  "fixed_rounds": 4,
+  "fresh_inputs": {
+    "path": "artifacts/cap256-launch/noteadapt-fresh-NX8-v1/INPUTS.jsonl",
+    "sha256": "0a51af737dd8b98c1f0772d4fa8f7b853df6692c16f9974c8df4dd920b191126"
+  },
+  "fresh_targets": {
+    "path": "artifacts/cap256-launch/noteadapt-fresh-NX8-v1/TARGETS.jsonl",
+    "sha256": "233a5b1699132fd1ad005c9db249d1752f49dace5b67d7c3bc40dfd9e47cf56e"
+  },
+  "native_calls": 64,
+  "no_redraw_or_replacement": true,
+  "optimizer_updates": 0,
+  "output_cap_bytes": 67108864,
+  "output_namespace": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/noteadapt-fresh-NX8-v1",
+  "paired_analysis": "FullminusEmpty counts and per-item wins/losses; per-predeclaredpair bothcorrectfull/notbothempty; eachroute needsbothseedpasses. No notebook>inline gate.",
+  "predeclared_pairs": [
+    [
+      "NX-I00",
+      "NX-I01"
+    ],
+    [
+      "NX-I02",
+      "NX-I03"
+    ],
+    [
+      "NX-P00",
+      "NX-P01"
+    ],
+    [
+      "NX-P02",
+      "NX-P03"
+    ]
+  ],
+  "prior_role": "never-used EXPERIENCE",
+  "project_cap_bytes": 107374182400,
+  "reserve_bytes": 1073741824,
+  "runner": {
+    "path": "scripts/cap256_launch/noteadapt_fresh_NX8.py",
+    "sha256": "84ffd32c7cca1181ef0f99f10afd096af0cdfbe573df5f1f472ae955de406c90"
+  },
+  "schema": "cap256.noteadapt.fresh-NX8.release.v1",
+  "spend": 0,
+  "training_eligible": false,
+  "wall_seconds": 600,
+  "whole_worlds_reserved_forever": true,
+  "worlds": [
+    "NX-I00",
+    "NX-I01",
+    "NX-I02",
+    "NX-I03",
+    "NX-P00",
+    "NX-P01",
+    "NX-P02",
+    "NX-P03"
+  ],
+  "wrapper": {
+    "path": "scripts/cap256_launch/noteadapt_fresh_NX8_pc_driver.py",
+    "sha256": "fa79734b542444ae04796ba47fccdc4ca1c51e67942ffb00fc5eebd11a92585a"
+  }
+}

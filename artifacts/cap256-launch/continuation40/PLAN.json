@@ -1,0 +1,469 @@
+{
+  "additional_updates": 5120,
+  "additional_visits": 20,
+  "arms": [
+    "loop",
+    "plain"
+  ],
+  "authorized_by": "Ben",
+  "auxiliary_weight": 0,
+  "budget": {
+    "checkpoint_cap_bytes": {
+      "loop": 113246208,
+      "plain": 436207616
+    },
+    "delivery_cap_bytes": 8388608,
+    "delivery_scope": "global-once-including-staging-telemetry-and-logs",
+    "matrix_cap_bytes": 1140850688,
+    "matrix_scope": "new continuation output namespace only; original retained as read-only input",
+    "optimizer_seconds": 1800,
+    "outer_seconds": 4500,
+    "pair_cap_bytes": 566231040,
+    "planned_matrix_peak_bytes": 1140850688,
+    "planned_pair_peak_bytes": 566231040,
+    "project_cap_bytes": 107374182400,
+    "project_scope": "C:/Users/benja/sol-cloud-numeric-capability-v1; both matrices and atomic temporary counted",
+    "raw_cap_bytes_per_pair": 16777216,
+    "retained_free_bytes": 1073741824,
+    "worker_seconds": 4500
+  },
+  "continuation_runner": {
+    "path": "scripts/cap256_launch/train_continue.py",
+    "sha256": "471631cc146ef46d9d0aa53e54bb7453abcd05d8bf65e579bd5a968ffe839657"
+  },
+  "diagnostic_global_updates": [
+    5888,
+    7680,
+    10240
+  ],
+  "falsifier": "either loop seed <244/256 at visit40 means fixed20 additional visits alone did not solve TRAIN fit",
+  "fixed_rounds": 4,
+  "input_namespace": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-capability256-v1",
+  "lr": 0.001,
+  "model_RNG_reset": false,
+  "objective": "numeric-answer-CE-only",
+  "optimizer_reset": false,
+  "output_namespace": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-capability256-continuation40-v1",
+  "preflight_free_bytes": 13321535488,
+  "retained_input_matrix_allocated_bytes": 1116590080,
+  "same_input_frames_masks_targets": true,
+  "schedule_mode": "repeat exact pinned finite5120-update seed schedule once; global update5120->10240 and row visits20->40; no regenerated ordering or seed/optimizer/RNG reset",
+  "schema": "cap256.continuation40.plan.v1",
+  "scope": "one fixed TRAIN-only continuation experiment, no unfamiliar-question reuse",
+  "seeds": [
+    0,
+    1
+  ],
+  "source_checkpoint_total_bytes": 1083313304,
+  "source_optimizer_metadata": [
+    {
+      "Adam_step_max": 5120,
+      "Adam_step_min": 322,
+      "Adam_steps_match_saved_participation": true,
+      "arm": "loop",
+      "checkpoint_bytes": 109633395,
+      "checkpoint_pin": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-v1\\seed0\\loop\\final-resume.pt",
+        "sha256": "82a8a854daeeb9873ac108a9da980567141a34ce193eb86670369255aa57ce93"
+      },
+      "groups": [
+        {
+          "amsgrad": false,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "capturable": false,
+          "decoupled_weight_decay": true,
+          "differentiable": false,
+          "eps": 1e-08,
+          "foreach": null,
+          "fused": null,
+          "lr": 0.001,
+          "maximize": false,
+          "weight_decay": 0
+        }
+      ],
+      "keys": [
+        "DIAGNOSTIC_raw_sha256",
+        "LM_fingerprint_unchanged",
+        "TRAIN_raw_sha256",
+        "activation",
+        "actual_user_day",
+        "arm",
+        "binding",
+        "constructor",
+        "core",
+        "cuda_rng",
+        "declared_rng_seed",
+        "driver_sha256",
+        "generated_outputs_never_training_labels",
+        "initial_cuda_rng",
+        "initial_torch_rng",
+        "input_frames_sha256",
+        "inventory_sha256",
+        "job",
+        "model_state_fingerprints",
+        "optimizer",
+        "optimizer_audit",
+        "optimizer_parameter_names",
+        "participation",
+        "plan_sha256",
+        "prefix",
+        "python_rng",
+        "qualification",
+        "raw_watermark_update",
+        "reader",
+        "release_sha256",
+        "schedule_sha256",
+        "schema",
+        "seal_sha256",
+        "seed",
+        "selection_sha256",
+        "sleep_enabled",
+        "source",
+        "supervisor_pid_metadata",
+        "token_audit_sha256",
+        "torch_rng",
+        "update",
+        "visits"
+      ],
+      "optimizer_names": 108,
+      "optimizer_state_count": 102,
+      "raw_watermark": 5120,
+      "rng_keys_present": true,
+      "schedule_sha256": "7f29f47c297f12eaa9c4e5578403d1be81524afa1c94e045c0831d892aaa661f",
+      "seed": 0,
+      "update": 5120,
+      "visit_values": [
+        20
+      ],
+      "visits_distinct": 256
+    },
+    {
+      "Adam_step_max": 5120,
+      "Adam_step_min": 201,
+      "Adam_steps_match_saved_participation": true,
+      "arm": "plain",
+      "checkpoint_bytes": 432023225,
+      "checkpoint_pin": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-v1\\seed0\\plain\\final-resume.pt",
+        "sha256": "b7ebc82a90edccd6cfb6ec2fe911e50b4fb2c129f12128b4d5453b8d4b9c1030"
+      },
+      "groups": [
+        {
+          "amsgrad": false,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "capturable": false,
+          "decoupled_weight_decay": true,
+          "differentiable": false,
+          "eps": 1e-08,
+          "foreach": null,
+          "fused": null,
+          "lr": 0.001,
+          "maximize": false,
+          "weight_decay": 0
+        }
+      ],
+      "keys": [
+        "DIAGNOSTIC_raw_sha256",
+        "LM_fingerprint_unchanged",
+        "TRAIN_raw_sha256",
+        "activation",
+        "actual_user_day",
+        "arm",
+        "binding",
+        "constructor",
+        "core",
+        "cuda_rng",
+        "declared_rng_seed",
+        "driver_sha256",
+        "generated_outputs_never_training_labels",
+        "initial_cuda_rng",
+        "initial_torch_rng",
+        "input_frames_sha256",
+        "inventory_sha256",
+        "job",
+        "model_state_fingerprints",
+        "optimizer",
+        "optimizer_audit",
+        "optimizer_parameter_names",
+        "participation",
+        "plan_sha256",
+        "prefix",
+        "python_rng",
+        "qualification",
+        "raw_watermark_update",
+        "reader",
+        "release_sha256",
+        "schedule_sha256",
+        "schema",
+        "seal_sha256",
+        "seed",
+        "selection_sha256",
+        "sleep_enabled",
+        "source",
+        "supervisor_pid_metadata",
+        "token_audit_sha256",
+        "torch_rng",
+        "update",
+        "visits"
+      ],
+      "optimizer_names": 378,
+      "optimizer_state_count": 372,
+      "raw_watermark": 5120,
+      "rng_keys_present": true,
+      "schedule_sha256": "7f29f47c297f12eaa9c4e5578403d1be81524afa1c94e045c0831d892aaa661f",
+      "seed": 0,
+      "update": 5120,
+      "visit_values": [
+        20
+      ],
+      "visits_distinct": 256
+    },
+    {
+      "Adam_step_max": 5120,
+      "Adam_step_min": 504,
+      "Adam_steps_match_saved_participation": true,
+      "arm": "loop",
+      "checkpoint_bytes": 109633459,
+      "checkpoint_pin": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-v1\\seed1\\loop\\final-resume.pt",
+        "sha256": "00d7f53a28dfdc066f0d6d6f2c71c8474ae498c517cd98e31b5e317d67a835c3"
+      },
+      "groups": [
+        {
+          "amsgrad": false,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "capturable": false,
+          "decoupled_weight_decay": true,
+          "differentiable": false,
+          "eps": 1e-08,
+          "foreach": null,
+          "fused": null,
+          "lr": 0.001,
+          "maximize": false,
+          "weight_decay": 0
+        }
+      ],
+      "keys": [
+        "DIAGNOSTIC_raw_sha256",
+        "LM_fingerprint_unchanged",
+        "TRAIN_raw_sha256",
+        "activation",
+        "actual_user_day",
+        "arm",
+        "binding",
+        "constructor",
+        "core",
+        "cuda_rng",
+        "declared_rng_seed",
+        "driver_sha256",
+        "generated_outputs_never_training_labels",
+        "initial_cuda_rng",
+        "initial_torch_rng",
+        "input_frames_sha256",
+        "inventory_sha256",
+        "job",
+        "model_state_fingerprints",
+        "optimizer",
+        "optimizer_audit",
+        "optimizer_parameter_names",
+        "participation",
+        "plan_sha256",
+        "prefix",
+        "python_rng",
+        "qualification",
+        "raw_watermark_update",
+        "reader",
+        "release_sha256",
+        "schedule_sha256",
+        "schema",
+        "seal_sha256",
+        "seed",
+        "selection_sha256",
+        "sleep_enabled",
+        "source",
+        "supervisor_pid_metadata",
+        "token_audit_sha256",
+        "torch_rng",
+        "update",
+        "visits"
+      ],
+      "optimizer_names": 108,
+      "optimizer_state_count": 102,
+      "raw_watermark": 5120,
+      "rng_keys_present": true,
+      "schedule_sha256": "d07db744c886c2af2dd620735b3e75cf78f6be3be52fb06e8db2b030e3dacd30",
+      "seed": 1,
+      "update": 5120,
+      "visit_values": [
+        20
+      ],
+      "visits_distinct": 256
+    },
+    {
+      "Adam_step_max": 5120,
+      "Adam_step_min": 192,
+      "Adam_steps_match_saved_participation": true,
+      "arm": "plain",
+      "checkpoint_bytes": 432023225,
+      "checkpoint_pin": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-v1\\seed1\\plain\\final-resume.pt",
+        "sha256": "5bc11a8d8c04ba3c7a273f4674d5197e6d23efd6275428b70095a1fb41b195bf"
+      },
+      "groups": [
+        {
+          "amsgrad": false,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "capturable": false,
+          "decoupled_weight_decay": true,
+          "differentiable": false,
+          "eps": 1e-08,
+          "foreach": null,
+          "fused": null,
+          "lr": 0.001,
+          "maximize": false,
+          "weight_decay": 0
+        }
+      ],
+      "keys": [
+        "DIAGNOSTIC_raw_sha256",
+        "LM_fingerprint_unchanged",
+        "TRAIN_raw_sha256",
+        "activation",
+        "actual_user_day",
+        "arm",
+        "binding",
+        "constructor",
+        "core",
+        "cuda_rng",
+        "declared_rng_seed",
+        "driver_sha256",
+        "generated_outputs_never_training_labels",
+        "initial_cuda_rng",
+        "initial_torch_rng",
+        "input_frames_sha256",
+        "inventory_sha256",
+        "job",
+        "model_state_fingerprints",
+        "optimizer",
+        "optimizer_audit",
+        "optimizer_parameter_names",
+        "participation",
+        "plan_sha256",
+        "prefix",
+        "python_rng",
+        "qualification",
+        "raw_watermark_update",
+        "reader",
+        "release_sha256",
+        "schedule_sha256",
+        "schema",
+        "seal_sha256",
+        "seed",
+        "selection_sha256",
+        "sleep_enabled",
+        "source",
+        "supervisor_pid_metadata",
+        "token_audit_sha256",
+        "torch_rng",
+        "update",
+        "visits"
+      ],
+      "optimizer_names": 378,
+      "optimizer_state_count": 372,
+      "raw_watermark": 5120,
+      "rng_keys_present": true,
+      "schedule_sha256": "d07db744c886c2af2dd620735b3e75cf78f6be3be52fb06e8db2b030e3dacd30",
+      "seed": 1,
+      "update": 5120,
+      "visit_values": [
+        20
+      ],
+      "visits_distinct": 256
+    }
+  ],
+  "source_plan": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/PLAN-v3.json",
+    "sha256": "ceb522253ae98f80ad65c4102563a3a604b5d4dc70b4ffb671d4e59f4c1e8470"
+  },
+  "source_release": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/RELEASE-v4.json",
+    "sha256": "6f0ce5259c468ef363bcd059c7d82c8f9fcf9a14d2b4402d79dae8dcd75b7638"
+  },
+  "source_runner": {
+    "path": "scripts/sol_cloud_capability256_v1.py",
+    "sha256": "dfeef09f14fdcd0a1987c38d6a89a560f4ef02159b732cd1665cf51e9fa39b01"
+  },
+  "source_seal": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/SEAL-v9.json",
+    "sha256": "af4409a378f9d6670b4846a97e4bdf471a019c5b3555d7dc68bcc37ffd4b4c70"
+  },
+  "source_update": 5120,
+  "source_visits": 20,
+  "sources": [
+    {
+      "arm": "loop",
+      "checkpoint": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-v1\\seed0\\loop\\final-resume.pt",
+        "sha256": "82a8a854daeeb9873ac108a9da980567141a34ce193eb86670369255aa57ce93"
+      },
+      "closed": {
+        "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-capability256-v1/seed0/loop/CLOSED.json",
+        "sha256": "825f7a0cf9f0b246015d0dfad91b50cefb417a85e544c52d51a3cf19febb8811"
+      },
+      "seed": 0
+    },
+    {
+      "arm": "plain",
+      "checkpoint": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-v1\\seed0\\plain\\final-resume.pt",
+        "sha256": "b7ebc82a90edccd6cfb6ec2fe911e50b4fb2c129f12128b4d5453b8d4b9c1030"
+      },
+      "closed": {
+        "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-capability256-v1/seed0/plain/CLOSED.json",
+        "sha256": "921f9658d66167715096e16c8252c391ff4f290667120dd2611cdb48c08bdc1d"
+      },
+      "seed": 0
+    },
+    {
+      "arm": "loop",
+      "checkpoint": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-v1\\seed1\\loop\\final-resume.pt",
+        "sha256": "00d7f53a28dfdc066f0d6d6f2c71c8474ae498c517cd98e31b5e317d67a835c3"
+      },
+      "closed": {
+        "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-capability256-v1/seed1/loop/CLOSED.json",
+        "sha256": "938d952ff5327f6edf64f213410b600d8caae9b54195302259edd69c6e5cd703"
+      },
+      "seed": 1
+    },
+    {
+      "arm": "plain",
+      "checkpoint": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-v1\\seed1\\plain\\final-resume.pt",
+        "sha256": "5bc11a8d8c04ba3c7a273f4674d5197e6d23efd6275428b70095a1fb41b195bf"
+      },
+      "closed": {
+        "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-capability256-v1/seed1/plain/CLOSED.json",
+        "sha256": "4f4ae2622572ba7bfc9f2db35f197459083b6a0370198b3ac8b8a8d0ff791f88"
+      },
+      "seed": 1
+    }
+  ],
+  "storage_authorization": "same cap for new output matrix; both retained and new output against actual free disk and standing100GiB project cap; 1GiB reserve; no old seal changes",
+  "success_rule": "both loop seeds >=244/256 strict actual target+emitted EOS; plain scored identically",
+  "success_train_correct": 244,
+  "target_update": 10240,
+  "target_visits": 40
+}

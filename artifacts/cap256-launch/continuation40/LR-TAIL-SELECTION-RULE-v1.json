@@ -1,0 +1,29 @@
+{
+  "CE_role": "secondary",
+  "architecture_inputs_masks_targets_decoder_loops_unchanged": true,
+  "automatic_extensions_or_grid_search": false,
+  "candidate_LR": 0.0003,
+  "checkpoint_selection": "fixed endpoint only",
+  "frozen_conditional_plan_unchanged": true,
+  "heldout_reuse": false,
+  "known_control_at_selection": {
+    "TRAIN_correct": 250,
+    "arm": "loop",
+    "seed": 0
+  },
+  "recorded_utc": "2026-10-01T00:24:55.314156+00:00",
+  "release_preconditions": [
+    "all four valid visit40 endpoints",
+    "both-loop control TRAIN gate fails",
+    "exact preserved visit20 model/Adam/group mapping/per-parameter steps/RNG/input/order/clipping/precision provenance verified",
+    "separate argv/output/resource manifest verified by root"
+  ],
+  "resource_manifest_not_yet_released": true,
+  "schema": "cap256.lr-tail.selection-rule.v1",
+  "selected_by": "root delegation",
+  "selection_timing": "AFTER observing seed0 loop control250/256, BEFORE this owner observes remaining visit40 endpoints; not blind preregistration",
+  "skip_if_both_loop_controls_at_least": 244,
+  "status": "CPU-preparation-only-do-not-dispatch",
+  "success_rule": "both loop tails>=244/256 and neither below its own0.001 control count",
+  "weight_decay": 0
+}

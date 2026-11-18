@@ -1,0 +1,258 @@
+{
+  "TEST_calls": 0,
+  "TRAIN_cases": 32,
+  "additional_visits": 36,
+  "argv_template": [
+    "python.exe",
+    "-X",
+    "utf8",
+    "-B",
+    "scripts/cap256_launch/noteadapt_continue40.py",
+    "--root",
+    "<PCroot>",
+    "--plan",
+    "artifacts/cap256-launch/noteadapt-continue40-v1/PLAN.json",
+    "--plan-sha256",
+    "<PLANsha>"
+  ],
+  "batch": 1,
+  "checkpoint_cap_bytes": 113246208,
+  "combined_seconds": 3000,
+  "data": {
+    "TRAIN": {
+      "inputs": {
+        "path": "artifacts/cap256-launch/noteadapt-initial-v2/TRAIN-inputs.jsonl",
+        "sha256": "4aa29aff10bbe7ba4891ddd8f6fc5b65d7f70d7ef65d39f3f4b1be245c7e2868"
+      },
+      "targets": {
+        "path": "artifacts/cap256-launch/noteadapt-initial-v2/TRAIN-targets.jsonl",
+        "sha256": "be31cae5a3fbe01de4295f2db5a34ef8b6942f0883e6e25d902e4858cfb09ee9"
+      }
+    }
+  },
+  "end_cursor": 1280,
+  "endpoint_analysis": "Fixed final1280 checkpoint: native numeric exact+actually emittedEOS32TRAIN rows perarm, teacherforced exact and meanCE separately; do not equate online pass counts with endpoint accuracy",
+  "eval_seconds": 600,
+  "file_pins": [
+    {
+      "path": "scripts/cap256_launch/noteadapt_continue40.py",
+      "sha256": "60066d2f7d9e61b4045ed5ecf0596ba2d1ae2f1cf8a547d1363585d4d2ffcfa9"
+    },
+    {
+      "path": "scripts/cap256_launch/noteadapt_continue_pc_driver.py",
+      "sha256": "a73e5b997b6c2051b88ab22c6efd360dc642742b280741af698c4770204c75c8"
+    },
+    {
+      "path": "artifacts/sol-nextdemo-dev-20260930/branch-preparation-v1/branch_source_v1.py",
+      "sha256": "fc5e191bf4dd5fbddbe6877ac33419f3fe732806d6f106f7f8aaf73e278ea239"
+    },
+    {
+      "path": "artifacts/sol-nextdemo-dev-20260930/branch-preparation-v1/reviewed_compat_v1.py",
+      "sha256": "d810ae22c11ddb6c5fd093d17c97fb8b7cd47178c9a5b6eb3371f630791d0e7f"
+    },
+    {
+      "path": "artifacts/sol-nextdemo-dev-20260930/branch-preparation-v1/test_reviewed_compat_v1.py",
+      "sha256": "35cd31bc0e9030a19926f9935d185c7633644415b6f1056f17ed2f9fe4d38293"
+    },
+    {
+      "path": "artifacts/sol-nextdemo-dev-20260930/branch-preparation-v1/test_branch_source_legacy_v1.py",
+      "sha256": "9f66b2a5d959adb1a2ebed267e27aef6afcd2ad0442626161c0bebdf7d5e71f0"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-initial-v2/SOURCE-ADMISSION.json",
+      "sha256": "33f65cbc391fecee020224b9bac6c7af8164c6179752bfef51cde9b5f7248422"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-initial-v2/SOURCE-EXPORT-MANIFEST.json",
+      "sha256": "215e9692219b5a3158d6eb11ffb68bc3e74ce4b450cb344be55505c82269b444"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-initial-v2/INDEPENDENT-REVIEW.json",
+      "sha256": "27f1fbae0f8896878240e3ffba4994e1e75862585e0886e5979b6f7ca1d14eb3"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-initial-v2/TOKENIZER-EVIDENCE.json",
+      "sha256": "dee99cbd9a27343f1dd960eaf8adef067d7e20892962a13c4626d8130b87a6f9"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-initial-v2/TRAIN-inputs.jsonl",
+      "sha256": "4aa29aff10bbe7ba4891ddd8f6fc5b65d7f70d7ef65d39f3f4b1be245c7e2868"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-initial-v2/TRAIN-targets.jsonl",
+      "sha256": "be31cae5a3fbe01de4295f2db5a34ef8b6942f0883e6e25d902e4858cfb09ee9"
+    },
+    {
+      "path": "artifacts/cap256-launch/noteadapt-initial-v2/RESOURCE-PREFLIGHT.json",
+      "sha256": "e9252d586df2bf378511ad728a3cbcea4a794819d39176f8a579f2b632650b48"
+    }
+  ],
+  "final_visits": 40,
+  "fit_seconds": 600,
+  "fit_total_seconds": 2400,
+  "fixed_rounds": 4,
+  "native_calls": 128,
+  "optimizer": {
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "clip": 1,
+    "eps": 1e-08,
+    "lr": 0.001,
+    "reset": false,
+    "weight_decay": 0
+  },
+  "output_cap_bytes": 536870912,
+  "output_namespace": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/noteadapt1280-initial-only-v1",
+  "parents": [
+    {
+      "checkpoint": {
+        "path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-capability256-continuation40-v1/seed0/loop/final-resume.pt",
+        "sha256": "2a9e06a1af2b63855d65401a4e08ce839398749c03ab0ffe675658bc1bfb7b4a"
+      },
+      "manifest": {
+        "path": "artifacts/cap256-launch/notebook48-v1/SEED0-INFERENCE.json",
+        "sha256": "165d11502b64caa080324879f15578a73167f7a342c3ccda68454b00aeb2c5b3"
+      },
+      "seed": 0
+    },
+    {
+      "checkpoint": {
+        "path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-capability256-continuation40-v1/seed1/loop/final-resume.pt",
+        "sha256": "2f3a2e0828f6040d4d75bdc4c8456ebd9e1db57b69c0f6217295515a9bd9fd11"
+      },
+      "manifest": {
+        "path": "artifacts/cap256-launch/notebook48-v1/SEED1-INFERENCE.json",
+        "sha256": "ea60f5e7ef6e1727b5cf35033202cab7823b6a3d23d6669e1af96e8dd175ce57"
+      },
+      "seed": 1
+    }
+  ],
+  "placements": [
+    "notebook",
+    "inline"
+  ],
+  "project_cap_bytes": 107374182400,
+  "reserve_bytes": 1073741824,
+  "resumes": [
+    {
+      "checkpoint": {
+        "path": "C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\noteadapt128-initial-only-v2\\seed0\\notebook\\final-resume.pt",
+        "sha256": "66002fd3a9cfc00a16568bf412461235f529244eceae65ca7b31ea8d6da90c12"
+      },
+      "closed": {
+        "path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/noteadapt128-initial-only-v2/seed0/notebook/FIT-CLOSED.json",
+        "sha256": "d42f477b9f1bdce23287c20dabe0000ee9e2d7d4b3c9b46642026437bc4204cb"
+      },
+      "input_frames": {
+        "path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/noteadapt128-initial-only-v2/seed0/notebook/INPUT-FRAMES.jsonl",
+        "sha256": "9828e320c8a014e44748cf67c42b3c9ec2ffc62ae25bd01da21eaa1f6467c6c1"
+      },
+      "placement": "notebook",
+      "seed": 0
+    },
+    {
+      "checkpoint": {
+        "path": "C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\noteadapt128-initial-only-v2\\seed0\\inline\\final-resume.pt",
+        "sha256": "89a9ec458809aa08a96df1755efa20bffe024a16f05be6066684d60fec8493d1"
+      },
+      "closed": {
+        "path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/noteadapt128-initial-only-v2/seed0/inline/FIT-CLOSED.json",
+        "sha256": "94c027ce6723bedf809f56417623ef7db94bd99e64f817cc770512c52a083368"
+      },
+      "input_frames": {
+        "path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/noteadapt128-initial-only-v2/seed0/inline/INPUT-FRAMES.jsonl",
+        "sha256": "0bef9714155b7ea100ee165cebc4f870264e8e278c20abe98bf67be331acc899"
+      },
+      "placement": "inline",
+      "seed": 0
+    },
+    {
+      "checkpoint": {
+        "path": "C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\noteadapt128-initial-only-v2\\seed1\\notebook\\final-resume.pt",
+        "sha256": "4371cd7e720c5b4eb4e7e33f2e9611fe84dff263e445267292d046fe336794c5"
+      },
+      "closed": {
+        "path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/noteadapt128-initial-only-v2/seed1/notebook/FIT-CLOSED.json",
+        "sha256": "e627357cc7ff4ea096610033244517e80b4a84b3e5ef2e9ad7986a09917163d9"
+      },
+      "input_frames": {
+        "path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/noteadapt128-initial-only-v2/seed1/notebook/INPUT-FRAMES.jsonl",
+        "sha256": "9828e320c8a014e44748cf67c42b3c9ec2ffc62ae25bd01da21eaa1f6467c6c1"
+      },
+      "placement": "notebook",
+      "seed": 1
+    },
+    {
+      "checkpoint": {
+        "path": "C:\\Users\\benja\\sol-cloud-numeric-capability-v1\\artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\noteadapt128-initial-only-v2\\seed1\\inline\\final-resume.pt",
+        "sha256": "517527461c7aca7651019fb74686a033a69aa4567425d2cfb282beca60ce98ff"
+      },
+      "closed": {
+        "path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/noteadapt128-initial-only-v2/seed1/inline/FIT-CLOSED.json",
+        "sha256": "32e10e96a858cd3b4fe5cf7b413c6f126ef5439a414b5bacb68d4b7b3b97d85b"
+      },
+      "input_frames": {
+        "path": "C:/Users/benja/sol-cloud-numeric-capability-v1/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/noteadapt128-initial-only-v2/seed1/inline/INPUT-FRAMES.jsonl",
+        "sha256": "0bef9714155b7ea100ee165cebc4f870264e8e278c20abe98bf67be331acc899"
+      },
+      "placement": "inline",
+      "seed": 1
+    }
+  ],
+  "retained_original_matrix_allocated_bytes": 417333248,
+  "runner": {
+    "path": "scripts/cap256_launch/noteadapt_continue40.py",
+    "sha256": "60066d2f7d9e61b4045ed5ecf0596ba2d1ae2f1cf8a547d1363585d4d2ffcfa9"
+  },
+  "schema": "cap256.noteadapt.continuation40.release.v1",
+  "scientific_selection": "Duration-only diagnostic selected after all v2 results; no TEST calls/generalization claim; stop at40visits independent of outcomes",
+  "seeds": [
+    0,
+    1
+  ],
+  "source_plan_sha256": "da6be8a8ca4e83c8edf7b5923c31e1c36edbdb5a8d9594765121aded379eb5aa",
+  "spend": 0,
+  "start_cursor": 128,
+  "telemetry_cap_bytes": 67108864,
+  "train_case_ids": [
+    "NT-I00:initial",
+    "NT-I01:initial",
+    "NT-I02:initial",
+    "NT-I03:initial",
+    "NT-I04:initial",
+    "NT-I05:initial",
+    "NT-I06:initial",
+    "NT-I07:initial",
+    "NT-I08:initial",
+    "NT-I09:initial",
+    "NT-I10:initial",
+    "NT-I11:initial",
+    "NT-I12:initial",
+    "NT-I13:initial",
+    "NT-I14:initial",
+    "NT-I15:initial",
+    "NT-P00:initial",
+    "NT-P01:initial",
+    "NT-P02:initial",
+    "NT-P03:initial",
+    "NT-P04:initial",
+    "NT-P05:initial",
+    "NT-P06:initial",
+    "NT-P07:initial",
+    "NT-P08:initial",
+    "NT-P09:initial",
+    "NT-P10:initial",
+    "NT-P11:initial",
+    "NT-P12:initial",
+    "NT-P13:initial",
+    "NT-P14:initial",
+    "NT-P15:initial"
+  ],
+  "updates_per_fit": 1152,
+  "wrapper": {
+    "path": "scripts/cap256_launch/noteadapt_continue_pc_driver.py",
+    "sha256": "a73e5b997b6c2051b88ab22c6efd360dc642742b280741af698c4770204c75c8"
+  }
+}

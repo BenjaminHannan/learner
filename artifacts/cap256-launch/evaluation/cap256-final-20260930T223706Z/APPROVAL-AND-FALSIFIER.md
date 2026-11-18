@@ -1,0 +1,5 @@
+Ben approved the sealed unfamiliar-question evaluation through the Mac in this task. This approval covers the existing r4 / SEAL-v9 / RELEASE-v4 final phase, all four frozen checkpoints, no training, identical recurrent/plain scoring and the sealed controls.
+
+Before outcomes: both recurrent seeds must each meet TRAIN >=244/256, seen-family >=52/64, structural >=52/64 and range >=26/32. Any required seed/slice miss means the capability gate does not pass. Passing the gate does not by itself establish recurrent advantage; that is a separate paired comparison. No retuning, resampling, repeated test selection or protocol changes.
+
+The first preflight attempt loaded no model and made zero model/optimizer calls. Its freeze used forward slashes instead of copying the exact Windows checkpoint pin from CLOSED.json. The unclaimed freeze and failure receipts were preserved with a SHA256 manifest; the operational path serialization was corrected before the once-only final claim and any predictions. The sealed runner and scientific pins remain unchanged.

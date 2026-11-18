@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "C:\Users\benja\sol-cloud-numeric-capability-v1\scripts\sol_cloud_capability256_v1.py", line 1287, in <module>
+    if __name__=='__main__': main()
+  File "C:\Users\benja\sol-cloud-numeric-capability-v1\scripts\sol_cloud_capability256_v1.py", line 1282, in main
+    if args.phase == 'train': run(args)
+  File "C:\Users\benja\sol-cloud-numeric-capability-v1\scripts\sol_cloud_capability256_v1.py", line 665, in run
+    dec, tok, _ = load_ordered_english(binding['lm_path'], binding['lm_provenance'], binding['adapter_path'], device)
+  File "C:\Users\benja\sol-cloud-numeric-capability-v1\scripts\sol_translator_english_ordered_v10.py", line 20, in load_ordered_english
+    lm,tok,provenance=load_local_lm(model_path,provenance_path,device)
+  File "C:\Users\benja\sol-cloud-numeric-capability-v1\scripts\sol_translator_english_v6.py", line 118, in load_local_lm
+    from transformers import AutoModelForCausalLM,AutoTokenizer
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\__init__.py", line 27, in <module>
+    from . import dependency_versions_check
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\dependency_versions_check.py", line 57, in <module>
+    require_version_core(deps[pkg])
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\utils\versions.py", line 117, in require_version_core
+    return require_version(requirement, hint)
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\utils\versions.py", line 111, in require_version
+    _compare_versions(op, got_ver, want_ver, requirement, pkg, hint)
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\utils\versions.py", line 44, in _compare_versions
+    raise ImportError(
+ImportError: huggingface-hub>=0.34.0,<1.0 is required for a normal functioning of this module, but found huggingface-hub==1.28.0.
+Try: `pip install transformers -U` or `pip install -e '.[dev]'` if you're working with git main

@@ -1,0 +1,58 @@
+{
+  "analysis": [
+    "perseed/arm/cohort correct/32",
+    "actualEOS/format/contractcounts",
+    "savedendpointCE onselectedIDs",
+    "savedTFcorrectness andpairedagreement ifavailable"
+  ],
+  "budget": {
+    "free_reserve_bytes": 1073741824,
+    "new_output_bytes": 67108864,
+    "project_cap_bytes": 100000000000,
+    "spend_USD": 0,
+    "wall_seconds": 600
+  },
+  "dispatch_allowed": false,
+  "endpoint_policy": "four fixed terminal20480 checkpoints only; same64 cases percheckpoint",
+  "execution_order": [
+    [
+      0,
+      "repeat256"
+    ],
+    [
+      0,
+      "diverse512"
+    ],
+    [
+      1,
+      "diverse512"
+    ],
+    [
+      1,
+      "repeat256"
+    ]
+  ],
+  "frames_sha256": "060412dc9dac9e7ff2f3a2f1d84a08457cd29c02c685cdf0573388e5407a16a7",
+  "generation_max_new_tokens": 32,
+  "loops": 4,
+  "native_calls": 256,
+  "optimizer_updates": 0,
+  "raw_frozen_before_scoring": true,
+  "resource_forecast": {
+    "forecast_is_not_measured_diagnostic_or_guarantee": true,
+    "forecast_with4x_reference_and90s_staging_load_allowance": 442.3760000001639,
+    "measured_previous128native_plus128CE_wall_seconds": 44.04700000002049,
+    "reference_doubled_seconds": 88.09400000004098
+  },
+  "saved_endpoint_CE_only": true,
+  "schema": "cap256.train-native64.diagnostic.v1",
+  "scope": "Practice fitting only; original32 andaugmentation32 TRAIN rows; control augmentation counts are transfer to untrained rows. No generalization claim.",
+  "scorer": "original sealed strict canonical numeric tokens plus actually emittedEOS",
+  "selection_sha256": "e62f1357e3cef7315baf8b8b155d0dd4b057f7e981d67f1af2768c8c7c156529",
+  "source_frames": {
+    "path": "artifacts/cap256-launch/mixture10240-v1/TRAIN-FRAMES-PRIVATE.json",
+    "sha256": "cf227a51bb22d6d22a572822266d211b37ca685a18242ccb6546d5a0dd76fc94"
+  },
+  "teacherforced_calls": 0,
+  "teacherforced_correctness": "report only if explicitly saved or saved endpointargmax exists; do not derive fromCE or prestepTRAINlogs"
+}
