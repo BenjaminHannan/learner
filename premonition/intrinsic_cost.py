@@ -200,7 +200,10 @@ class StepInput:
                  open job (something made, or had made, its goal false).
                  Avoidable means: the model's own move caused it, or some
                  feasible sequence of offered moves would have prevented it.
-                 It is stated on the fault's own step.
+                 It is stated on the fault's own step. The one exception: a
+                 fault that came before its job (no job is open on the
+                 fault's step, where the statement would be refused) is
+                 stated on the step that announces the job.
                  REQUIRED on every step that reports the job done (True or
                  False: a "done" step without it is refused), and allowed on
                  any other step with the job open, where None = no fault to
@@ -235,8 +238,10 @@ class StepInput:
                  inside the decision that reports the waking remark), and
                  the world offers as the first awake action only actions
                  that end by the owner's next remark and by the world's end.
-                 The meter has no clock times for remarks: both are the
-                 world's promises.
+                 In general the world offers no action that would leave a
+                 queued remark without a legal reporting decision before
+                 the world's end. The meter has no clock times for remarks:
+                 these are the world's promises.
     panel_error  the world model's error rate (0..1) on each region of the
                  fixed held-out panel, measured at the end of this step
                  (after its training; for a sleep step, on waking). It is a
