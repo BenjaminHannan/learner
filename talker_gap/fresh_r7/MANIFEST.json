@@ -1,0 +1,110 @@
+{
+ "status": "SEALED STATES BUILT (not scored). Do not score until the pre-registered arms are run once.",
+ "files": {
+  "FRESH-R7.json": "acb9b81bef6d088af8da972f27089a4f6e0be2d5af9689516f09631cf8df50f6",
+  "raw_A.json": "609f1c043986ea701a921ec6da6d0a66a0032c7e9bb2b897b9d2f480fc7fe355",
+  "raw_B.json": "a2fef0358abe1c07fd412004ded6c6c6586bfab51c85d58136b3315578ad02f9",
+  "raw_repairs.json": "c9e1348aff18bf39532e91e6a6e02c146f4cdaca4da09f57b5adfd7fa2a9a0b0"
+ },
+ "sealed_files_written": {
+  "rows_FRESH-R7.json": "c6d66fb094a6e8e2188fd7a2c58f0f38f393c681904f361540f4260e0d18c3ac",
+  "states_FRESH-R7.npy": "4528ae1c0dbba604b8849c8b1776018f0a87724e4e79d1b5b7dd43f92235b348",
+  "tok_len_FRESH-R7.npy": "52503a8cf9e59857c9bd27de9c4e5be33ee56c23d806565df46caffcf67696d0",
+  "tok_off_FRESH-R7.npy": "3ba74272cb65ed4f9d36800115a9e401ace9db6fbc9250a5dd126a8f51de350a",
+  "word_tok_FRESH-R7.npy": "2a2a59163c75c795ccdb24a7c082444e253a0ce7a12663685a0550c349012c13"
+ },
+ "shared_file_modified": {
+  "meta.json (/Users/ben-hannan/talker_gap_cache/sealed)": "476c64d8af7eee9881b4fce72d7cd929201bb992d2a745286482161a7a7a5ad0"
+ },
+ "family_counts_in_FRESH-R7.json": {
+  "who": 20,
+  "what": 24,
+  "which": 20,
+  "where": 24,
+  "why": 20,
+  "when": 24,
+  "how": 28
+ },
+ "total_examples": 160,
+ "row_count": 320,
+ "row_count_expected": 320,
+ "replaced_ids": {
+  "r7A_016": "r7A_016b (what)",
+  "r7A_035": "r7A_035b (where)",
+  "r7B_040": "r7B_040b (when)"
+ },
+ "repaired_ids": {
+  "r7A_077": "same id, paraphrase changed so Vastrin is verbatim (was dropped)"
+ },
+ "spare_not_in_set": {
+  "r7A_081": "who, Dorrin; kept out so who = 20 and total = 160"
+ },
+ "flagged_kept": {
+  "r7A_020": "question \"Who crossed the finish line first?\" equals 71 TEACH questions exactly; no passage or 8-gram overlap; kept per SPEC dedup rule"
+ },
+ "dedup": {
+  "teach_passage_8gram_and_exact": "0 hits over 171,940 TEACH rows",
+  "teach_question": "1 id (r7A_020) exact question only",
+  "eval_sets_6gram_and_exact": "0 hits over FRESH-EN-R3, GEN-HELDOUT-R4, NEW-KINDS-R5, NEW-KINDS2-R6",
+  "fineweb_rows_all_8gram_passage_question": "0 hits over 70,414 rows"
+ },
+ "accepted_answers_rule": "canonical; canonical minus leading article (the/a/an); where only: canonical minus leading preposition (single word or next to/in front of/on top of/close to/out of/in back of/at the edge of) and following article; plus extras already present (52 kept across 48 examples; 13 digit alternates of number words, not found verbatim, exempt); all other variants found verbatim in source_text",
+ "build_scripts": [
+  "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model/37c50658-739a-4a96-928b-102f2d7b8dad/scratchpad/r7fix/build_fresh_r7.py",
+  "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model/37c50658-739a-4a96-928b-102f2d7b8dad/scratchpad/r7fix/dedup_r7.py",
+  "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model/37c50658-739a-4a96-928b-102f2d7b8dad/scratchpad/r7fix/finalize_r7.py"
+ ],
+ "model_run_note": "write_split ran the frozen reader encoder over the 320 prompts to cache states (as seal_build does for the four sealed sets). No talker, thinker, or scoring was run on FRESH-R7.",
+ "sample_seed3": [
+  {
+   "id": "r7A_061",
+   "question": "Where did the archers practice on Sundays?",
+   "answer": "at the range beyond the river bend"
+  },
+  {
+   "id": "r7B_072",
+   "question": "How tall is the old oak in Calvan Park?",
+   "answer": "twelve feet"
+  },
+  {
+   "id": "r7B_060",
+   "question": "How did Fenwa tune the old piano?",
+   "answer": "with a tiny brass hammer"
+  },
+  {
+   "id": "r7A_034",
+   "question": "Where did the family wait for their luggage?",
+   "answer": "at carousel six"
+  },
+  {
+   "id": "r7B_015",
+   "question": "Why did Mirrow stay indoors all afternoon?",
+   "answer": "because the hail was falling thick over Calvan Ridge"
+  },
+  {
+   "id": "r7B_075",
+   "question": "How many goals did the team score in the second half?",
+   "answer": "three"
+  },
+  {
+   "id": "r7B_042",
+   "question": "When will Jaspa move the goats?",
+   "answer": "next week"
+  },
+  {
+   "id": "r7B_069",
+   "question": "How much stock did the soup need?",
+   "answer": "two cups"
+  },
+  {
+   "id": "r7A_017",
+   "question": "What did Brannoc leave on the stove?",
+   "answer": "a copper kettle"
+  },
+  {
+   "id": "r7B_076",
+   "question": "How long did the train ride take?",
+   "answer": "five hours"
+  }
+ ]
+}

@@ -1,0 +1,2683 @@
+{
+ "title": "FRESH-R7 talker small-check evaluation set (unseen outside set, 160 examples, not yet scored)",
+ "note": "EVALUATION ONLY. Never trained on or used to select anything. Made-up names. Each example: 1 short-answer question; the canonical answer is a verbatim word span of source_text and paraphrase (common.find_word_span). accepted_answers = canonical; canonical minus a leading article; for where, canonical minus its leading preposition (and the following article); plus the extra variants already present before the repair (digit alternates for number words included). Repair 2026-10-08: r7A_016 replaced by r7A_016b (what), r7A_035 by r7A_035b (where), r7B_040 by r7B_040b (when); r7A_077 restored with a paraphrase where Vastrin is verbatim. Spare, not in this set: r7A_081 (who), because who is 20 with r7A_077. Flagged, kept: r7A_020 question equals 71 TEACH questions exactly (no passage or 8-gram overlap).",
+ "examples": [
+  {
+   "id": "r7A_001",
+   "family": "where",
+   "source_text": "The science club meets in the attic room above the library every Friday.",
+   "paraphrase": "Every Friday, the science club gathers in the attic room above the library.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where does the science club meet on Fridays?",
+     "canonical_answer": "in the attic room above the library",
+     "accepted_answers": [
+      "in the attic room above the library",
+      "attic room above the library",
+      "the attic room above the library",
+      "in the attic room",
+      "the attic room"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_002",
+   "family": "who",
+   "source_text": "Quarrin bakes sourdough loaves every morning before the shop opens.",
+   "paraphrase": "Each morning, before the shop opens, Quarrin is the one who bakes sourdough loaves.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who bakes sourdough loaves every morning?",
+     "canonical_answer": "Quarrin",
+     "accepted_answers": [
+      "Quarrin"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_003",
+   "family": "what",
+   "source_text": "Each spring the Tallow Guild repaints a wooden sign that marks the bridge.",
+   "paraphrase": "The Tallow Guild gives a fresh coat of paint each spring to a wooden sign marking the bridge.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What does the Tallow Guild repaint each spring?",
+     "canonical_answer": "a wooden sign",
+     "accepted_answers": [
+      "a wooden sign",
+      "wooden sign"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_004",
+   "family": "what",
+   "source_text": "The clerk at the Morrowdell office filed the permits in a green cabinet.",
+   "paraphrase": "The permits ended up filed in a green cabinet, thanks to the clerk at the Morrowdell office.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the clerk file the permits in?",
+     "canonical_answer": "a green cabinet",
+     "accepted_answers": [
+      "a green cabinet",
+      "green cabinet"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_005",
+   "family": "where",
+   "source_text": "Searchers found the lost ball in the tall reeds after dusk.",
+   "paraphrase": "Searchers tracked the lost ball down in the tall reeds after dusk.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where was the lost ball found?",
+     "canonical_answer": "in the tall reeds",
+     "accepted_answers": [
+      "in the tall reeds",
+      "tall reeds",
+      "the tall reeds"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_006",
+   "family": "which",
+   "source_text": "Only the battery drill rides in Tavrin's van, since the manual drill stays home.",
+   "paraphrase": "Since the manual drill stays home, Tavrin's van carries only the battery drill.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which drill rides in Tavrin's van?",
+     "canonical_answer": "the battery drill",
+     "accepted_answers": [
+      "the battery drill",
+      "battery drill"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_007",
+   "family": "what",
+   "source_text": "Bettrum used a hand plane to smooth the cedar shelf before painting it.",
+   "paraphrase": "Before the cedar shelf was painted, Bettrum smoothed it with a hand plane.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did Bettrum use to smooth the cedar shelf?",
+     "canonical_answer": "a hand plane",
+     "accepted_answers": [
+      "a hand plane",
+      "hand plane"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_008",
+   "family": "what",
+   "source_text": "The choir sang a hymn written by Olmasta in the cold chapel.",
+   "paraphrase": "A hymn written by Olmasta was sung by the choir in the cold chapel.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the choir sing in the cold chapel?",
+     "canonical_answer": "a hymn written by Olmasta",
+     "accepted_answers": [
+      "a hymn written by Olmasta",
+      "hymn written by Olmasta"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_009",
+   "family": "who",
+   "source_text": "When the snow piled up, Xilda shoveled the steps and salted the path.",
+   "paraphrase": "Once the snow piled up, the steps were cleared and the path salted by Xilda.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who shoveled the steps?",
+     "canonical_answer": "Xilda",
+     "accepted_answers": [
+      "Xilda"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_010",
+   "family": "which",
+   "source_text": "Though the pears in the same orchard survived, frost damaged the plum trees.",
+   "paraphrase": "Frost damaged the plum trees, while the pears in the same orchard came through fine.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which trees did frost damage?",
+     "canonical_answer": "the plum trees",
+     "accepted_answers": [
+      "the plum trees",
+      "plum trees"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_011",
+   "family": "what",
+   "source_text": "Pelbrin's team practiced penalty kicks with a heavy leather ball.",
+   "paraphrase": "For penalty kicks, Pelbrin's team used a heavy leather ball.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did Pelbrin's team use for penalty kicks?",
+     "canonical_answer": "a heavy leather ball",
+     "accepted_answers": [
+      "a heavy leather ball",
+      "heavy leather ball"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_012",
+   "family": "which",
+   "source_text": "Compared with the south row, the bees in the north row are the strongest.",
+   "paraphrase": "The bees in the north row are the strongest, compared with the south row.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which bees are the strongest?",
+     "canonical_answer": "the bees in the north row",
+     "accepted_answers": [
+      "the bees in the north row",
+      "bees in the north row"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_013",
+   "family": "what",
+   "source_text": "The teacher handed out printed quizzes about the Vellon Coast before lunch.",
+   "paraphrase": "Printed quizzes about the Vellon Coast reached the desks before lunch, thanks to the teacher.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the teacher hand out before lunch?",
+     "canonical_answer": "printed quizzes about the Vellon Coast",
+     "accepted_answers": [
+      "printed quizzes about the Vellon Coast",
+      "quizzes about the Vellon Coast"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_014",
+   "family": "which",
+   "source_text": "The jazz stage shut early, but the folk stage kept going until midnight.",
+   "paraphrase": "Until midnight, the folk stage kept going, while the jazz stage shut early.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which stage ran until midnight?",
+     "canonical_answer": "the folk stage",
+     "accepted_answers": [
+      "the folk stage",
+      "folk stage"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_015",
+   "family": "where",
+   "source_text": "The spare router is kept in the supply locker.",
+   "paraphrase": "In the supply locker, the spare router is kept.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where is the spare router kept?",
+     "canonical_answer": "in the supply locker",
+     "accepted_answers": [
+      "in the supply locker",
+      "supply locker",
+      "the supply locker"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_016b",
+   "family": "what",
+   "source_text": "The potters at Oldwick dip every bowl in Velk glaze before they fire it.",
+   "paraphrase": "Before firing, every bowl at Oldwick is dipped by the potters in Velk glaze.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What do the potters at Oldwick dip every bowl in before firing?",
+     "canonical_answer": "Velk glaze",
+     "accepted_answers": [
+      "Velk glaze"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_017",
+   "family": "what",
+   "source_text": "Brannoc left a copper kettle on the stove after the soup boiled over.",
+   "paraphrase": "Once the soup boiled over, the stove still held a copper kettle that Brannoc had left there.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did Brannoc leave on the stove?",
+     "canonical_answer": "a copper kettle",
+     "accepted_answers": [
+      "a copper kettle",
+      "copper kettle"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_018",
+   "family": "where",
+   "source_text": "The night shift writes its reports in the control shed, away from the wind.",
+   "paraphrase": "Away from the wind, the night shift writes its reports in the control shed.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where does the night shift write its reports?",
+     "canonical_answer": "in the control shed",
+     "accepted_answers": [
+      "in the control shed",
+      "control shed",
+      "the control shed"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_019",
+   "family": "who",
+   "source_text": "Haddren stirred the lentil stew for an hour and added cumin last.",
+   "paraphrase": "Cumin was added last, after Haddren had stirred the lentil stew for an hour.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who stirred the lentil stew?",
+     "canonical_answer": "Haddren",
+     "accepted_answers": [
+      "Haddren"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_020",
+   "family": "who",
+   "source_text": "On the last lap, Serpha passed two runners and crossed the finish line first.",
+   "paraphrase": "Crossing the finish line first was Serpha, who had passed two runners on the last lap.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who crossed the finish line first?",
+     "canonical_answer": "Serpha",
+     "accepted_answers": [
+      "Serpha"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_021",
+   "family": "what",
+   "source_text": "For the picnic, Quentrik packed a jar of pickled beets and some cold rice.",
+   "paraphrase": "Quentrik put a jar of pickled beets into the picnic, along with rice.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did Quentrik pack for the picnic?",
+     "canonical_answer": "a jar of pickled beets",
+     "accepted_answers": [
+      "a jar of pickled beets",
+      "jar of pickled beets"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_022",
+   "family": "what",
+   "source_text": "The travelers crossed the river on a rope bridge strung between two cedars.",
+   "paraphrase": "Between two cedars, a rope bridge was strung, and the travelers crossed the river on it.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the travelers cross the river on?",
+     "canonical_answer": "a rope bridge",
+     "accepted_answers": [
+      "a rope bridge",
+      "rope bridge"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_023",
+   "family": "who",
+   "source_text": "Each patient's fever was logged every two hours by the night nurse, Mavrin.",
+   "paraphrase": "The night nurse, Mavrin, wrote down each patient's fever every two hours.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who logged each patient's fever?",
+     "canonical_answer": "Mavrin",
+     "accepted_answers": [
+      "Mavrin"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_024",
+   "family": "what",
+   "source_text": "The fox buried a red apple beneath the pine roots near the fence.",
+   "paraphrase": "Beneath the pine roots near the fence, a red apple was buried by the fox.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the fox bury beneath the pine roots?",
+     "canonical_answer": "a red apple",
+     "accepted_answers": [
+      "a red apple",
+      "red apple"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_025",
+   "family": "which",
+   "source_text": "Ferrane's lentils simmered in the clay pot, not the iron pot.",
+   "paraphrase": "Not the iron pot, but the clay pot held the lentils that Ferrane cooked.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which pot held Ferrane's lentils?",
+     "canonical_answer": "the clay pot",
+     "accepted_answers": [
+      "the clay pot",
+      "clay pot"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_026",
+   "family": "who",
+   "source_text": "Drovel drove the old van across the salt flats to Parrow Bend.",
+   "paraphrase": "Across the salt flats to Parrow Bend went the old van, driven by Drovel.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who drove the old van across the salt flats?",
+     "canonical_answer": "Drovel",
+     "accepted_answers": [
+      "Drovel"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_027",
+   "family": "what",
+   "source_text": "The engineer designed a sluice gate that would open during the spring melt.",
+   "paraphrase": "The engineer's design was a sluice gate that would open during the spring melt.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the engineer design?",
+     "canonical_answer": "a sluice gate",
+     "accepted_answers": [
+      "a sluice gate",
+      "sluice gate"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_028",
+   "family": "which",
+   "source_text": "The green bike is what Hovant bought from the shop, not the red one.",
+   "paraphrase": "Hovant bought the green bike from the shop, and passed on the red one.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which bike did Hovant buy?",
+     "canonical_answer": "the green bike",
+     "accepted_answers": [
+      "the green bike",
+      "green bike"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_029",
+   "family": "what",
+   "source_text": "Ulvane wrote a letter about the tide tables to the harbor office.",
+   "paraphrase": "To the harbor office went a letter about the tide tables, written by Ulvane.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did Ulvane write to the harbor office?",
+     "canonical_answer": "a letter about the tide tables",
+     "accepted_answers": [
+      "a letter about the tide tables",
+      "letter about the tide tables"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_030",
+   "family": "who",
+   "source_text": "Naldis fixed the loose hinge on the barn gate with a brass screw.",
+   "paraphrase": "With a brass screw, Naldis repaired the loose hinge on the barn gate.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who fixed the loose hinge on the barn gate?",
+     "canonical_answer": "Naldis",
+     "accepted_answers": [
+      "Naldis"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_031",
+   "family": "which",
+   "source_text": "Only the yellow kite, out of the two Tirsk built, took to the air.",
+   "paraphrase": "Out of two kites built by Tirsk, the yellow kite was the only one that flew.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which kite took to the air?",
+     "canonical_answer": "the yellow kite",
+     "accepted_answers": [
+      "the yellow kite",
+      "yellow kite"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_032",
+   "family": "what",
+   "source_text": "The band rehearsed a slow waltz called Morrow Lantern before the gig.",
+   "paraphrase": "A slow waltz called Morrow Lantern was what the band practiced ahead of the gig.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the band rehearse before the gig?",
+     "canonical_answer": "a slow waltz called Morrow Lantern",
+     "accepted_answers": [
+      "a slow waltz called Morrow Lantern",
+      "slow waltz called Morrow Lantern"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_033",
+   "family": "where",
+   "source_text": "When foxes come near, the rabbits hide beneath the old stone wall.",
+   "paraphrase": "Beneath the old stone wall, the rabbits hide whenever foxes come near.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where do the rabbits hide when foxes come near?",
+     "canonical_answer": "beneath the old stone wall",
+     "accepted_answers": [
+      "beneath the old stone wall",
+      "old stone wall",
+      "the old stone wall"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_034",
+   "family": "where",
+   "source_text": "After landing, the family waited for their luggage at carousel six.",
+   "paraphrase": "Their luggage came out at carousel six, where the family had been waiting since landing.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did the family wait for their luggage?",
+     "canonical_answer": "at carousel six",
+     "accepted_answers": [
+      "at carousel six",
+      "carousel six"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_035b",
+   "family": "where",
+   "source_text": "Ferry crews keep spare rope in the blue locker beside Harrow Pier.",
+   "paraphrase": "Spare rope is kept by the ferry crews in the blue locker beside Harrow Pier.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where do the ferry crews keep spare rope?",
+     "canonical_answer": "in the blue locker beside Harrow Pier",
+     "accepted_answers": [
+      "in the blue locker beside Harrow Pier",
+      "blue locker beside Harrow Pier"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_036",
+   "family": "which",
+   "source_text": "Only the Heron, not the Vellis, made it back to the harbor after the storm.",
+   "paraphrase": "After the storm, it was the Heron that made it back to the harbor, unlike the Vellis.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which boat made it back to the harbor?",
+     "canonical_answer": "the Heron",
+     "accepted_answers": [
+      "the Heron",
+      "Heron"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_037",
+   "family": "where",
+   "source_text": "Quelder hid the spare drumsticks under the piano bench.",
+   "paraphrase": "Under the piano bench, Quelder stashed the spare drumsticks.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did Quelder hide the spare drumsticks?",
+     "canonical_answer": "under the piano bench",
+     "accepted_answers": [
+      "under the piano bench",
+      "piano bench",
+      "the piano bench"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_038",
+   "family": "where",
+   "source_text": "Mushroom soup simmers on the back burner until it thickens.",
+   "paraphrase": "Until it thickens, the mushroom soup keeps simmering on the back burner.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where does the mushroom soup simmer?",
+     "canonical_answer": "on the back burner",
+     "accepted_answers": [
+      "on the back burner",
+      "back burner",
+      "the back burner"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_039",
+   "family": "which",
+   "source_text": "The blue group, one of four reading groups, finished the novel first.",
+   "paraphrase": "Finishing the novel first was the blue group, one of four reading groups.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which group finished the novel first?",
+     "canonical_answer": "the blue group",
+     "accepted_answers": [
+      "the blue group",
+      "blue group"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_040",
+   "family": "what",
+   "source_text": "The coach drew a diagram of the zone defense on the whiteboard.",
+   "paraphrase": "On the whiteboard, the coach sketched a diagram of the zone defense.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the coach draw on the whiteboard?",
+     "canonical_answer": "a diagram of the zone defense",
+     "accepted_answers": [
+      "a diagram of the zone defense",
+      "diagram of the zone defense"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_041",
+   "family": "where",
+   "source_text": "Students eat lunch on the bleachers near the gym during rainy weeks.",
+   "paraphrase": "Students have lunch on the bleachers near the gym when the weather is wet.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where do students eat lunch during rainy weeks?",
+     "canonical_answer": "on the bleachers near the gym",
+     "accepted_answers": [
+      "on the bleachers near the gym",
+      "bleachers near the gym",
+      "the bleachers near the gym"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_042",
+   "family": "what",
+   "source_text": "The hawk carried a field mouse to the top of the dead elm.",
+   "paraphrase": "To the top of the dead elm, the hawk flew with a field mouse.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the hawk carry to the top of the dead elm?",
+     "canonical_answer": "a field mouse",
+     "accepted_answers": [
+      "a field mouse",
+      "field mouse"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_043",
+   "family": "who",
+   "source_text": "Imbrey, the youngest in the class, read the poem aloud to everyone.",
+   "paraphrase": "Out loud to everyone went the poem, recited by Imbrey, the youngest in the class.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who read the poem aloud?",
+     "canonical_answer": "Imbrey",
+     "accepted_answers": [
+      "Imbrey"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_044",
+   "family": "where",
+   "source_text": "The jazz trio played in the back room of the Coppice Inn until dawn.",
+   "paraphrase": "Until dawn, the jazz trio was heard in the back room of the Coppice Inn.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did the jazz trio play until dawn?",
+     "canonical_answer": "in the back room of the Coppice Inn",
+     "accepted_answers": [
+      "in the back room of the Coppice Inn",
+      "back room of the Coppice Inn",
+      "the back room of the Coppice Inn"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_045",
+   "family": "which",
+   "source_text": "Because of ice, the east lift stayed shut while the west lift kept carrying riders.",
+   "paraphrase": "The west lift kept carrying riders, since ice shut the east lift.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which lift stayed shut?",
+     "canonical_answer": "the east lift",
+     "accepted_answers": [
+      "the east lift",
+      "east lift"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_046",
+   "family": "who",
+   "source_text": "Tessaru won the spelling bee, while her cousin Ombel finished second.",
+   "paraphrase": "Ombel came second, while Tessaru took the spelling bee.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who won the spelling bee?",
+     "canonical_answer": "Tessaru",
+     "accepted_answers": [
+      "Tessaru"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_047",
+   "family": "where",
+   "source_text": "The owl nests in a hollow oak every spring.",
+   "paraphrase": "Every spring the owl makes its nest in a hollow oak.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where does the owl nest?",
+     "canonical_answer": "in a hollow oak",
+     "accepted_answers": [
+      "in a hollow oak",
+      "hollow oak",
+      "a hollow oak"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_048",
+   "family": "which",
+   "source_text": "Before the tenors even stood up, the bass section sang the opening hymn.",
+   "paraphrase": "The bass section got the opening hymn going, before the tenors stood up.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which section sang the opening hymn?",
+     "canonical_answer": "the bass section",
+     "accepted_answers": [
+      "the bass section",
+      "bass section"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_049",
+   "family": "what",
+   "source_text": "Students in Room Nine built a model volcano from clay and vinegar.",
+   "paraphrase": "From clay and vinegar, the students in Room Nine built a model volcano.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the students in Room Nine build?",
+     "canonical_answer": "a model volcano",
+     "accepted_answers": [
+      "a model volcano",
+      "model volcano"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_050",
+   "family": "which",
+   "source_text": "Zanthe's dessert choice was a pear crumble, passing over the lemon tart.",
+   "paraphrase": "Passing over the lemon tart, Zanthe chose a pear crumble for dessert.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which dessert did Zanthe choose?",
+     "canonical_answer": "a pear crumble",
+     "accepted_answers": [
+      "a pear crumble",
+      "pear crumble"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_051",
+   "family": "which",
+   "source_text": "The white boat lost the race by two lengths to the red boat.",
+   "paraphrase": "Beating the white boat by two lengths, the red boat won the race.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which boat won the race?",
+     "canonical_answer": "the red boat",
+     "accepted_answers": [
+      "the red boat",
+      "red boat"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_052",
+   "family": "which",
+   "source_text": "The city chose the Osmar crew, not the Velk crew, to repair the main pipe.",
+   "paraphrase": "The main pipe went to the Osmar crew, the city's pick over the Velk crew.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which crew fixed the main pipe?",
+     "canonical_answer": "the Osmar crew",
+     "accepted_answers": [
+      "the Osmar crew",
+      "Osmar crew"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_053",
+   "family": "what",
+   "source_text": "The mechanic used a torque wrench to tighten the bolts on the tractor.",
+   "paraphrase": "To tighten the bolts on the tractor, the mechanic reached for a torque wrench.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the mechanic use to tighten the bolts?",
+     "canonical_answer": "a torque wrench",
+     "accepted_answers": [
+      "a torque wrench",
+      "torque wrench"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_054",
+   "family": "which",
+   "source_text": "Morvo sleeps by the kitchen door, but Gimmet is the dog that sleeps in the barn.",
+   "paraphrase": "In the barn at night is where Gimmet sleeps, while Morvo rests by the kitchen door.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which dog sleeps in the barn?",
+     "canonical_answer": "Gimmet",
+     "accepted_answers": [
+      "Gimmet"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_055",
+   "family": "what",
+   "source_text": "The students studied the migration patterns of geese for their final project.",
+   "paraphrase": "The migration patterns of geese were the subject the students studied for their final project.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the students study for their final project?",
+     "canonical_answer": "the migration patterns of geese",
+     "accepted_answers": [
+      "the migration patterns of geese",
+      "migration patterns of geese"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_056",
+   "family": "who",
+   "source_text": "Dorlo tuned the piano in the hall before the choir began rehearsing.",
+   "paraphrase": "Dorlo had already tuned the hall's piano before the choir began rehearsing.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who tuned the piano in the hall?",
+     "canonical_answer": "Dorlo",
+     "accepted_answers": [
+      "Dorlo"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_057",
+   "family": "where",
+   "source_text": "Hail gathered on the flat roof above the greenhouse during the storm.",
+   "paraphrase": "During the storm, a layer of hail built up on the flat roof above the greenhouse.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did the hail gather during the storm?",
+     "canonical_answer": "on the flat roof above the greenhouse",
+     "accepted_answers": [
+      "on the flat roof above the greenhouse",
+      "flat roof above the greenhouse",
+      "the flat roof above the greenhouse",
+      "on the flat roof",
+      "the flat roof"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_058",
+   "family": "what",
+   "source_text": "The pilgrims carried a silver lantern up the pass after midnight.",
+   "paraphrase": "Up the pass after midnight, the pilgrims hauled a silver lantern.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the pilgrims carry up the pass?",
+     "canonical_answer": "a silver lantern",
+     "accepted_answers": [
+      "a silver lantern",
+      "silver lantern"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_059",
+   "family": "which",
+   "source_text": "Rain soaked the valley all afternoon, while the hills got only a light dusting.",
+   "paraphrase": "Rain drenched the valley the whole afternoon, though the hills saw only a dusting.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which place got rain all afternoon?",
+     "canonical_answer": "the valley",
+     "accepted_answers": [
+      "the valley",
+      "valley"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_060",
+   "family": "who",
+   "source_text": "The stray goat named Yeldin wandered into the orchard after dark.",
+   "paraphrase": "After dark, into the orchard wandered a stray goat named Yeldin.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who wandered into the orchard after dark?",
+     "canonical_answer": "Yeldin",
+     "accepted_answers": [
+      "Yeldin"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_061",
+   "family": "where",
+   "source_text": "The archers practiced every Sunday at the range beyond the river bend.",
+   "paraphrase": "On Sundays the archers trained at the range beyond the river bend.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did the archers practice on Sundays?",
+     "canonical_answer": "at the range beyond the river bend",
+     "accepted_answers": [
+      "at the range beyond the river bend",
+      "range beyond the river bend",
+      "the range beyond the river bend"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_062",
+   "family": "what",
+   "source_text": "The sailors checked a faded barometer before leaving the Ostrel harbor.",
+   "paraphrase": "Before the sailors left the Ostrel harbor, a faded barometer was checked.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the sailors check before leaving the Ostrel harbor?",
+     "canonical_answer": "a faded barometer",
+     "accepted_answers": [
+      "a faded barometer",
+      "faded barometer"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_063",
+   "family": "who",
+   "source_text": "Umbrey played the cello at the spring concert, and Fiskor sang two songs.",
+   "paraphrase": "Umbrey was the one who played the cello at the spring concert, while Fiskor sang two songs.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who played the cello at the spring concert?",
+     "canonical_answer": "Umbrey",
+     "accepted_answers": [
+      "Umbrey"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_064",
+   "family": "what",
+   "source_text": "At the border, the guard asked the driver for a stamped visa.",
+   "paraphrase": "At the border, the driver had to hand over a stamped visa when the guard asked.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the guard ask the driver for?",
+     "canonical_answer": "a stamped visa",
+     "accepted_answers": [
+      "a stamped visa",
+      "stamped visa"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_065",
+   "family": "who",
+   "source_text": "Ketheo sharpened the chisel before carving the oak door panel.",
+   "paraphrase": "The chisel that Ketheo sharpened was then used to carve the oak door panel.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who sharpened the chisel?",
+     "canonical_answer": "Ketheo",
+     "accepted_answers": [
+      "Ketheo"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_066",
+   "family": "which",
+   "source_text": "For tiles, Ostrane reaches past the steel hammer for the wooden mallet.",
+   "paraphrase": "The steel hammer is left alone; Ostrane uses the wooden mallet for tiles.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which tool does Ostrane use for tiles?",
+     "canonical_answer": "the wooden mallet",
+     "accepted_answers": [
+      "the wooden mallet",
+      "wooden mallet"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_067",
+   "family": "which",
+   "source_text": "Instead of the mountain pass, the coastal road was the one we chose.",
+   "paraphrase": "We chose the coastal road rather than taking the mountain pass.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which road did we choose?",
+     "canonical_answer": "the coastal road",
+     "accepted_answers": [
+      "the coastal road",
+      "coastal road"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_068",
+   "family": "who",
+   "source_text": "Pitrusk carried the maps and the spare compass up the glacier trail.",
+   "paraphrase": "Up the glacier trail went Pitrusk, carrying the maps and the spare compass.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who carried the maps up the glacier trail?",
+     "canonical_answer": "Pitrusk",
+     "accepted_answers": [
+      "Pitrusk"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_069",
+   "family": "who",
+   "source_text": "Hobrath kicked the winning goal in the final minute of the match.",
+   "paraphrase": "In the match's final minute, Hobrath scored the winning goal.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who kicked the winning goal?",
+     "canonical_answer": "Hobrath",
+     "accepted_answers": [
+      "Hobrath"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_070",
+   "family": "what",
+   "source_text": "During the storm, strong winds tore the red awning off the bakery.",
+   "paraphrase": "Off the bakery went the red awning, torn loose by strong winds in the storm.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the strong winds tear off the bakery?",
+     "canonical_answer": "the red awning",
+     "accepted_answers": [
+      "the red awning",
+      "red awning"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_071",
+   "family": "where",
+   "source_text": "Lorwin parked the rented scooter behind the ticket booth.",
+   "paraphrase": "Behind the ticket booth, Lorwin left the rented scooter.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did Lorwin park the rented scooter?",
+     "canonical_answer": "behind the ticket booth",
+     "accepted_answers": [
+      "behind the ticket booth",
+      "ticket booth",
+      "the ticket booth"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_072",
+   "family": "who",
+   "source_text": "During the flood, Calvuno rowed the boats back to the dock.",
+   "paraphrase": "The boats were rowed back to the dock by Calvuno once the flood had come.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who rowed the boats back to the dock?",
+     "canonical_answer": "Calvuno",
+     "accepted_answers": [
+      "Calvuno"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_073",
+   "family": "which",
+   "source_text": "Among the three gates, the north gate stayed locked all winter.",
+   "paraphrase": "All winter, the north gate stayed locked while the other two gates were opened.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which gate stayed locked all winter?",
+     "canonical_answer": "the north gate",
+     "accepted_answers": [
+      "the north gate",
+      "north gate"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_074",
+   "family": "who",
+   "source_text": "The beekeeper, Lorvane, moved the hives to the hillside before the frost.",
+   "paraphrase": "The beekeeper, Lorvane, got the hives onto the hillside ahead of the frost.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who moved the hives to the hillside?",
+     "canonical_answer": "Lorvane",
+     "accepted_answers": [
+      "Lorvane"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_075",
+   "family": "where",
+   "source_text": "The tourists waited for the bus beneath the clock tower.",
+   "paraphrase": "Beneath the clock tower, the tourists waited for the bus.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did the tourists wait for the bus?",
+     "canonical_answer": "beneath the clock tower",
+     "accepted_answers": [
+      "beneath the clock tower",
+      "clock tower",
+      "the clock tower"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_076",
+   "family": "who",
+   "source_text": "Sillo taught the Thursday chemistry class while the principal was away.",
+   "paraphrase": "Covering for the absent principal, Sillo taught the Thursday chemistry class.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who taught the Thursday chemistry class?",
+     "canonical_answer": "Sillo",
+     "accepted_answers": [
+      "Sillo"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_077",
+   "family": "who",
+   "source_text": "Vastrin repairs the printing presses at the Dunmar factory on weekdays.",
+   "paraphrase": "Repairing the printing presses at the Dunmar factory on weekdays belongs to Vastrin.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who repairs the printing presses?",
+     "canonical_answer": "Vastrin",
+     "accepted_answers": [
+      "Vastrin"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_078",
+   "family": "which",
+   "source_text": "The trail splits at the bridge. Walkers following the river take the right path.",
+   "paraphrase": "Walkers who follow the river at the bridge take the right path.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Which path do walkers following the river take?",
+     "canonical_answer": "the right path",
+     "accepted_answers": [
+      "the right path",
+      "right path"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_079",
+   "family": "who",
+   "source_text": "Kellorin trained the sheepdog pup to herd ducks around the pond.",
+   "paraphrase": "Kellorin spent time training the sheepdog pup to herd ducks around the pond.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Who trained the sheepdog pup?",
+     "canonical_answer": "Kellorin",
+     "accepted_answers": [
+      "Kellorin"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7A_080",
+   "family": "what",
+   "source_text": "The otter cracked open a clam on the flat rock by the stream.",
+   "paraphrase": "The otter, on the flat rock by the stream, cracked open a clam.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "What did the otter crack open on the flat rock?",
+     "canonical_answer": "a clam",
+     "accepted_answers": [
+      "a clam",
+      "clam"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_001",
+   "family": "where",
+   "source_text": "Velka hid the spare key behind the old mill before the frost came.",
+   "paraphrase": "Before the frost came, the spare key was hidden by Velka behind the old mill.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did Velka hide the spare key?",
+     "canonical_answer": "behind the old mill",
+     "accepted_answers": [
+      "behind the old mill",
+      "old mill"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_002",
+   "family": "where",
+   "source_text": "Early each morning, Tarsin feeds the goats in the stone pen near the harbor.",
+   "paraphrase": "The goats are fed in the stone pen near the harbor by Tarsin, early each morning.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where does Tarsin feed the goats?",
+     "canonical_answer": "in the stone pen near the harbor",
+     "accepted_answers": [
+      "in the stone pen near the harbor",
+      "stone pen near the harbor"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_003",
+   "family": "where",
+   "source_text": "The brass telescope was left on the rail of the Ombrey ferry by a tired sailor.",
+   "paraphrase": "A tired sailor left the brass telescope on the rail of the Ombrey ferry.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where was the brass telescope left?",
+     "canonical_answer": "on the rail of the Ombrey ferry",
+     "accepted_answers": [
+      "on the rail of the Ombrey ferry",
+      "rail of the Ombrey ferry"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_004",
+   "family": "where",
+   "source_text": "Gorrin, the lamp keeper, sleeps in the lantern room at the top of Sable Tower.",
+   "paraphrase": "Sleeping in the lantern room at the top of Sable Tower is the lamp keeper, Gorrin.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where does Gorrin sleep?",
+     "canonical_answer": "in the lantern room at the top of Sable Tower",
+     "accepted_answers": [
+      "in the lantern room at the top of Sable Tower",
+      "lantern room at the top of Sable Tower"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_005",
+   "family": "where",
+   "source_text": "The choir practiced in the flooded schoolhouse near Merrin Creek last week.",
+   "paraphrase": "The choir, last week, practiced in the flooded schoolhouse near Merrin Creek.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did the choir practice?",
+     "canonical_answer": "in the flooded schoolhouse near Merrin Creek",
+     "accepted_answers": [
+      "in the flooded schoolhouse near Merrin Creek",
+      "flooded schoolhouse near Merrin Creek"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_006",
+   "family": "where",
+   "source_text": "Ebbri stored the winter quilts under the staircase of the Quillmarsh inn.",
+   "paraphrase": "The winter quilts were stored by Ebbri under the staircase of the Quillmarsh inn.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did Ebbri store the winter quilts?",
+     "canonical_answer": "under the staircase of the Quillmarsh inn",
+     "accepted_answers": [
+      "under the staircase of the Quillmarsh inn",
+      "staircase of the Quillmarsh inn"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_007",
+   "family": "where",
+   "source_text": "Two boys fished off the pier at Sorrel Flats until the tide turned.",
+   "paraphrase": "Until the tide turned, two boys fished off the pier at Sorrel Flats.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did the two boys fish?",
+     "canonical_answer": "off the pier at Sorrel Flats",
+     "accepted_answers": [
+      "off the pier at Sorrel Flats",
+      "pier at Sorrel Flats"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_008",
+   "family": "where",
+   "source_text": "At midnight, Jaspa buried the old compass beneath the orchard wall.",
+   "paraphrase": "Jaspa buried the old compass beneath the orchard wall at midnight.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Where did Jaspa bury the old compass?",
+     "canonical_answer": "beneath the orchard wall",
+     "accepted_answers": [
+      "beneath the orchard wall",
+      "orchard wall"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_009",
+   "family": "why",
+   "source_text": "The footbridge at Pelsa was closed all week because the cables had rusted.",
+   "paraphrase": "Because the cables had rusted, the footbridge at Pelsa was shut for a whole week.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why was the footbridge at Pelsa closed?",
+     "canonical_answer": "because the cables had rusted",
+     "accepted_answers": [
+      "because the cables had rusted",
+      "the cables had rusted"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_010",
+   "family": "why",
+   "source_text": "Nolk skipped the harvest dance because his knee was swollen from a fall.",
+   "paraphrase": "Because his knee was swollen from a fall, Nolk skipped the harvest dance.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did Nolk skip the harvest dance?",
+     "canonical_answer": "because his knee was swollen from a fall",
+     "accepted_answers": [
+      "because his knee was swollen from a fall",
+      "his knee was swollen from a fall"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_011",
+   "family": "why",
+   "source_text": "Because the clock had stopped, the school bell at Harrowdale rang late on Monday.",
+   "paraphrase": "The school bell at Harrowdale rang late on Monday, because the clock had stopped.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did the school bell at Harrowdale ring late?",
+     "canonical_answer": "because the clock had stopped",
+     "accepted_answers": [
+      "because the clock had stopped",
+      "the clock had stopped"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_012",
+   "family": "why",
+   "source_text": "Sanvel went back to the cold shed, because the ink had frozen solid in its jar.",
+   "paraphrase": "Because the ink had frozen solid in its jar, Sanvel went back to the cold shed.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did Sanvel go back to the cold shed?",
+     "canonical_answer": "because the ink had frozen solid in its jar",
+     "accepted_answers": [
+      "because the ink had frozen solid in its jar",
+      "the ink had frozen solid in its jar"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_013",
+   "family": "why",
+   "source_text": "Trosk did not feed the hens today because the gate latch was jammed shut.",
+   "paraphrase": "Because the gate latch was jammed shut, Trosk did not feed the hens today.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did Trosk not feed the hens today?",
+     "canonical_answer": "because the gate latch was jammed shut",
+     "accepted_answers": [
+      "because the gate latch was jammed shut",
+      "the gate latch was jammed shut"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_014",
+   "family": "why",
+   "source_text": "The new mill wheel was installed in April because the old one had cracked in two.",
+   "paraphrase": "Because the old one had cracked in two, a new mill wheel was installed in April.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why was the new mill wheel installed?",
+     "canonical_answer": "because the old one had cracked in two",
+     "accepted_answers": [
+      "because the old one had cracked in two",
+      "the old one had cracked in two"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_015",
+   "family": "why",
+   "source_text": "Mirrow stayed indoors all afternoon because the hail was falling thick over Calvan Ridge.",
+   "paraphrase": "Mirrow spent the whole afternoon inside, because the hail was falling thick over Calvan Ridge.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did Mirrow stay indoors all afternoon?",
+     "canonical_answer": "because the hail was falling thick over Calvan Ridge",
+     "accepted_answers": [
+      "because the hail was falling thick over Calvan Ridge",
+      "the hail was falling thick over Calvan Ridge"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_016",
+   "family": "why",
+   "source_text": "The lamp crew rowed back early because the fog had thickened over Ketrow Bay.",
+   "paraphrase": "Because the fog had thickened over Ketrow Bay, the lamp crew rowed back early.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did the lamp crew row back early?",
+     "canonical_answer": "because the fog had thickened over Ketrow Bay",
+     "accepted_answers": [
+      "because the fog had thickened over Ketrow Bay",
+      "the fog had thickened over Ketrow Bay"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_017",
+   "family": "why",
+   "source_text": "Idrel canceled the picnic because the sky over Tovet Ridge was turning black.",
+   "paraphrase": "The picnic was canceled by Idrel because the sky over Tovet Ridge was turning black.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did Idrel cancel the picnic?",
+     "canonical_answer": "because the sky over Tovet Ridge was turning black",
+     "accepted_answers": [
+      "because the sky over Tovet Ridge was turning black",
+      "the sky over Tovet Ridge was turning black"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_018",
+   "family": "why",
+   "source_text": "The orchard gate stayed locked for days. It stayed locked because the wasps had built a nest inside the hinge.",
+   "paraphrase": "For days the orchard gate was kept shut, because the wasps had built a nest inside the hinge.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did the orchard gate stay locked for days?",
+     "canonical_answer": "because the wasps had built a nest inside the hinge",
+     "accepted_answers": [
+      "because the wasps had built a nest inside the hinge",
+      "the wasps had built a nest inside the hinge"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_019",
+   "family": "why",
+   "source_text": "Jaspa wore a heavy coat to the market because the morning air was bitter.",
+   "paraphrase": "To the market Jaspa wore a heavy coat, because the morning air was bitter.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did Jaspa wear a heavy coat to the market?",
+     "canonical_answer": "because the morning air was bitter",
+     "accepted_answers": [
+      "because the morning air was bitter",
+      "the morning air was bitter"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_020",
+   "family": "why",
+   "source_text": "The pumpkins were sold off early because the first frost had blackened their vines.",
+   "paraphrase": "Because the first frost had blackened their vines, the pumpkins were sold off early.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why were the pumpkins sold off early?",
+     "canonical_answer": "because the first frost had blackened their vines",
+     "accepted_answers": [
+      "because the first frost had blackened their vines",
+      "the first frost had blackened their vines"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_021",
+   "family": "why",
+   "source_text": "Tarsin rationed the flour to two cups a day because the mill had stopped for repairs.",
+   "paraphrase": "Because the mill had stopped for repairs, Tarsin rationed the flour to two cups a day.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did Tarsin ration the flour?",
+     "canonical_answer": "because the mill had stopped for repairs",
+     "accepted_answers": [
+      "because the mill had stopped for repairs",
+      "the mill had stopped for repairs"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_022",
+   "family": "why",
+   "source_text": "Ruzhi moved the beehives to the north field because the clover in the south field had been sprayed.",
+   "paraphrase": "To the north field Ruzhi moved the beehives, because the clover in the south field had been sprayed.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did Ruzhi move the beehives to the north field?",
+     "canonical_answer": "because the clover in the south field had been sprayed",
+     "accepted_answers": [
+      "because the clover in the south field had been sprayed",
+      "the clover in the south field had been sprayed"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_023",
+   "family": "why",
+   "source_text": "Because the road washed out near Tessock Cove, the mail van took the coastal route.",
+   "paraphrase": "The coastal route was taken by the mail van, because the road washed out near Tessock Cove.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did the mail van take the coastal route?",
+     "canonical_answer": "because the road washed out near Tessock Cove",
+     "accepted_answers": [
+      "because the road washed out near Tessock Cove",
+      "the road washed out near Tessock Cove"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_024",
+   "family": "why",
+   "source_text": "Quendle was nervous before the concert because it was the first time she had sung alone.",
+   "paraphrase": "Because it was the first time she had sung alone, Quendle felt nervous before the concert.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why was Quendle nervous before the concert?",
+     "canonical_answer": "because it was the first time she had sung alone",
+     "accepted_answers": [
+      "because it was the first time she had sung alone",
+      "it was the first time she had sung alone"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_025",
+   "family": "why",
+   "source_text": "The class ended early because the power had failed across the whole village.",
+   "paraphrase": "The class, because the power had failed across the whole village, ended early.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did the class end early?",
+     "canonical_answer": "because the power had failed across the whole village",
+     "accepted_answers": [
+      "because the power had failed across the whole village",
+      "the power had failed across the whole village"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_026",
+   "family": "why",
+   "source_text": "Hesk resigned from the dye works because his hands kept cracking from the acid.",
+   "paraphrase": "Because his hands kept cracking from the acid, Hesk gave up his place at the dye works.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did Hesk resign from the dye works?",
+     "canonical_answer": "because his hands kept cracking from the acid",
+     "accepted_answers": [
+      "because his hands kept cracking from the acid",
+      "his hands kept cracking from the acid"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_027",
+   "family": "why",
+   "source_text": "The rowing team lost the final race because their stroke rate fell in the last mile.",
+   "paraphrase": "The final race was lost by the rowing team because their stroke rate fell in the last mile.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did the rowing team lose the final race?",
+     "canonical_answer": "because their stroke rate fell in the last mile",
+     "accepted_answers": [
+      "because their stroke rate fell in the last mile",
+      "their stroke rate fell in the last mile"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_028",
+   "family": "why",
+   "source_text": "Fenwa put the drum kit in storage because the rehearsal room was flooded again.",
+   "paraphrase": "Fenwa had the drum kit put into storage because the rehearsal room was flooded again.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "Why did Fenwa put the drum kit in storage?",
+     "canonical_answer": "because the rehearsal room was flooded again",
+     "accepted_answers": [
+      "because the rehearsal room was flooded again",
+      "the rehearsal room was flooded again"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_029",
+   "family": "when",
+   "source_text": "Velka repainted the boathouse after the storm, using bright green paint.",
+   "paraphrase": "Using bright green paint, Velka repainted the boathouse after the storm.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did Velka repaint the boathouse?",
+     "canonical_answer": "after the storm",
+     "accepted_answers": [
+      "after the storm"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_030",
+   "family": "when",
+   "source_text": "On Tuesday, the market in Varnhold sold out of rye bread.",
+   "paraphrase": "The market in Varnhold sold out of rye bread on Tuesday.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did the market in Varnhold sell out of rye bread?",
+     "canonical_answer": "on Tuesday",
+     "accepted_answers": [
+      "on Tuesday"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_031",
+   "family": "when",
+   "source_text": "Ebbri rowed the skiff out to the reef at dawn with a net and a lantern.",
+   "paraphrase": "With a net and a lantern, Ebbri rowed the skiff out to the reef at dawn.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did Ebbri row the skiff out to the reef?",
+     "canonical_answer": "at dawn",
+     "accepted_answers": [
+      "at dawn"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_032",
+   "family": "when",
+   "source_text": "Farmers in Harrowdale plant their barley in early March, once the soil warms.",
+   "paraphrase": "Once the soil warms, farmers in Harrowdale plant their barley in early March.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When do farmers in Harrowdale plant their barley?",
+     "canonical_answer": "in early March",
+     "accepted_answers": [
+      "in early March"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_033",
+   "family": "when",
+   "source_text": "The choir sang the old harvest hymns during the long drought, and the wells were low.",
+   "paraphrase": "The old harvest hymns were sung by the choir during the long drought, and the wells were low.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did the choir sing the old harvest hymns?",
+     "canonical_answer": "during the long drought",
+     "accepted_answers": [
+      "during the long drought"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_034",
+   "family": "when",
+   "source_text": "Sanvel found the lost ring in the sand last night, near the old jetty.",
+   "paraphrase": "Near the old jetty, Sanvel found the lost ring in the sand last night.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did Sanvel find the lost ring?",
+     "canonical_answer": "last night",
+     "accepted_answers": [
+      "last night"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_035",
+   "family": "when",
+   "source_text": "Dessa brought her cello to the library on Saturday for the open reading session.",
+   "paraphrase": "For the open reading session, Dessa brought her cello to the library on Saturday.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did Dessa bring her cello to the library?",
+     "canonical_answer": "on Saturday",
+     "accepted_answers": [
+      "on Saturday"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_036",
+   "family": "when",
+   "source_text": "The lamp on the quay was lit after the fog rolled in.",
+   "paraphrase": "After the fog rolled in, the lamp on the quay was lit.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When was the lamp on the quay lit?",
+     "canonical_answer": "after the fog rolled in",
+     "accepted_answers": [
+      "after the fog rolled in"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_037",
+   "family": "when",
+   "source_text": "Mirrow planted the new hedge in the garden. The work was done during the first warm week of spring.",
+   "paraphrase": "During the first warm week of spring, Mirrow planted a new hedge in the garden.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did Mirrow plant the new hedge?",
+     "canonical_answer": "during the first warm week of spring",
+     "accepted_answers": [
+      "during the first warm week of spring"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_038",
+   "family": "when",
+   "source_text": "The new bakery opened on the third of June in the old tannery building.",
+   "paraphrase": "In the old tannery building, the new bakery opened on the third of June.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did the new bakery open?",
+     "canonical_answer": "on the third of June",
+     "accepted_answers": [
+      "on the third of June"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_039",
+   "family": "when",
+   "source_text": "The ferryman blows his horn across Hallow Creek every morning at seven.",
+   "paraphrase": "Across Hallow Creek the ferryman blows his horn, every morning at seven.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When does the ferryman blow his horn across Hallow Creek?",
+     "canonical_answer": "every morning at seven",
+     "accepted_answers": [
+      "every morning at seven"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_040b",
+   "family": "when",
+   "source_text": "Masons from Brenn Yard poured the harbor wall during the second week of June.",
+   "paraphrase": "During the second week of June, the harbor wall was poured by masons from Brenn Yard.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did the masons pour the harbor wall?",
+     "canonical_answer": "during the second week of June",
+     "accepted_answers": [
+      "during the second week of June"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_041",
+   "family": "when",
+   "source_text": "The old tram line was closed during the winter the river froze solid.",
+   "paraphrase": "During the winter the river froze solid, the old tram line was closed.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When was the old tram line closed?",
+     "canonical_answer": "during the winter the river froze solid",
+     "accepted_answers": [
+      "during the winter the river froze solid"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_042",
+   "family": "when",
+   "source_text": "Jaspa will move the goats to the high meadow next week.",
+   "paraphrase": "The goats will be moved to the high meadow by Jaspa next week.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When will Jaspa move the goats?",
+     "canonical_answer": "next week",
+     "accepted_answers": [
+      "next week"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_043",
+   "family": "when",
+   "source_text": "Quendle practices the tuba in the evening, with the windows open.",
+   "paraphrase": "With the windows open, Quendle practices the tuba in the evening.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When does Quendle practice the tuba?",
+     "canonical_answer": "in the evening",
+     "accepted_answers": [
+      "in the evening"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_044",
+   "family": "when",
+   "source_text": "Idrel will send the invoice as soon as the crates reach the dock.",
+   "paraphrase": "The invoice will be sent by Idrel as soon as the crates reach the dock.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When will Idrel send the invoice?",
+     "canonical_answer": "as soon as the crates reach the dock",
+     "accepted_answers": [
+      "as soon as the crates reach the dock"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_045",
+   "family": "when",
+   "source_text": "The bell at the Ostry church rings at noon on feast days.",
+   "paraphrase": "The Ostry church bell is rung at noon on feast days.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When does the bell at the Ostry church ring?",
+     "canonical_answer": "at noon on feast days",
+     "accepted_answers": [
+      "at noon on feast days"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_046",
+   "family": "when",
+   "source_text": "Brinnick said the ferry would leave in the early hours.",
+   "paraphrase": "The ferry would leave in the early hours, according to Brinnick.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When would the ferry leave?",
+     "canonical_answer": "in the early hours",
+     "accepted_answers": [
+      "in the early hours"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_047",
+   "family": "when",
+   "source_text": "The kettle boiled over after lunch, and Ketrow mopped up the stove.",
+   "paraphrase": "Ketrow mopped up the stove, for the kettle boiled over after lunch.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did the kettle boil over?",
+     "canonical_answer": "after lunch",
+     "accepted_answers": [
+      "after lunch"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_048",
+   "family": "when",
+   "source_text": "The coastal road stayed closed for three weeks during the spring floods.",
+   "paraphrase": "During the spring floods, the coastal road stayed closed for three weeks.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did the coastal road stay closed?",
+     "canonical_answer": "during the spring floods",
+     "accepted_answers": [
+      "during the spring floods"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_049",
+   "family": "when",
+   "source_text": "Trosk learned to sail last winter in the sheltered cove.",
+   "paraphrase": "In the sheltered cove, Trosk learned to sail last winter.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did Trosk learn to sail?",
+     "canonical_answer": "last winter",
+     "accepted_answers": [
+      "last winter"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_050",
+   "family": "when",
+   "source_text": "The herd crossed the river at low tide with the dogs swimming beside it.",
+   "paraphrase": "With the dogs swimming beside it, the herd crossed the river at low tide.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did the herd cross the river?",
+     "canonical_answer": "at low tide",
+     "accepted_answers": [
+      "at low tide"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_051",
+   "family": "when",
+   "source_text": "By the time the moon rose, the fishing boats had all returned to Harrowdale harbor.",
+   "paraphrase": "The fishing boats had all returned to Harrowdale harbor by the time the moon rose.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When had the fishing boats returned?",
+     "canonical_answer": "by the time the moon rose",
+     "accepted_answers": [
+      "by the time the moon rose"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_052",
+   "family": "when",
+   "source_text": "The nightly market moved indoors during the heavy rains in Pelsa.",
+   "paraphrase": "In Pelsa the nightly market moved indoors during the heavy rains.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "When did the nightly market move indoors?",
+     "canonical_answer": "during the heavy rains",
+     "accepted_answers": [
+      "during the heavy rains"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_053",
+   "family": "how",
+   "source_text": "Dessa crossed the flooded field by climbing the fence along its edge.",
+   "paraphrase": "Along its edge, Dessa crossed the flooded field by climbing the fence.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did Dessa cross the flooded field?",
+     "canonical_answer": "by climbing the fence",
+     "accepted_answers": [
+      "by climbing the fence"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_054",
+   "family": "how",
+   "source_text": "Gorrin cleaned the copper pots with a rusty spoon after supper.",
+   "paraphrase": "After supper, Gorrin cleaned the copper pots with a rusty spoon.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did Gorrin clean the copper pots?",
+     "canonical_answer": "with a rusty spoon",
+     "accepted_answers": [
+      "with a rusty spoon"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_055",
+   "family": "how",
+   "source_text": "The letters were sorted by hand in the back room of the post office.",
+   "paraphrase": "In the back room of the post office, the letters were sorted by hand.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How were the letters sorted?",
+     "canonical_answer": "by hand",
+     "accepted_answers": [
+      "by hand"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_056",
+   "family": "how",
+   "source_text": "Trosk loosened the stuck jar by heating the lid over a candle.",
+   "paraphrase": "By heating the lid, Trosk loosened the stuck jar, using a candle.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did Trosk loosen the stuck jar?",
+     "canonical_answer": "by heating the lid",
+     "accepted_answers": [
+      "by heating the lid"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_057",
+   "family": "how",
+   "source_text": "The nurse reached the far farms on foot after the mule went lame.",
+   "paraphrase": "After the mule went lame, the nurse reached the far farms on foot.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did the nurse reach the far farms?",
+     "canonical_answer": "on foot",
+     "accepted_answers": [
+      "on foot"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_058",
+   "family": "how",
+   "source_text": "Idrel sends the parcels to the coast by sled in winter.",
+   "paraphrase": "The parcels go to the coast by sled, sent by Idrel in winter.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How does Idrel send the parcels to the coast?",
+     "canonical_answer": "by sled",
+     "accepted_answers": [
+      "by sled"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_059",
+   "family": "how",
+   "source_text": "The goat opened the gate by pushing the latch with its nose.",
+   "paraphrase": "By pushing the latch with its nose, the goat opened the gate.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did the goat open the gate?",
+     "canonical_answer": "by pushing the latch with its nose",
+     "accepted_answers": [
+      "by pushing the latch with its nose"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_060",
+   "family": "how",
+   "source_text": "Fenwa tuned the old piano with a tiny brass hammer.",
+   "paraphrase": "The old piano was tuned by Fenwa with a tiny brass hammer.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did Fenwa tune the old piano?",
+     "canonical_answer": "with a tiny brass hammer",
+     "accepted_answers": [
+      "with a tiny brass hammer"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_061",
+   "family": "how",
+   "source_text": "Sanvel won the race by leaning across the finish line.",
+   "paraphrase": "By leaning across the finish line, Sanvel won the race.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did Sanvel win the race?",
+     "canonical_answer": "by leaning across the finish line",
+     "accepted_answers": [
+      "by leaning across the finish line"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_062",
+   "family": "how",
+   "source_text": "The farmers counted the sheep by walking them through a narrow gate.",
+   "paraphrase": "By walking them through a narrow gate, the farmers got a count of the sheep.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did the farmers count the sheep?",
+     "canonical_answer": "by walking them through a narrow gate",
+     "accepted_answers": [
+      "by walking them through a narrow gate"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_063",
+   "family": "how",
+   "source_text": "Quendle opened the stubborn window with a crowbar.",
+   "paraphrase": "The stubborn window was opened with a crowbar by Quendle.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did Quendle open the stubborn window?",
+     "canonical_answer": "with a crowbar",
+     "accepted_answers": [
+      "with a crowbar"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_064",
+   "family": "how",
+   "source_text": "The sailors signaled the harbor by flashing a red lantern twice.",
+   "paraphrase": "By flashing a red lantern twice, the sailors signaled the harbor.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did the sailors signal the harbor?",
+     "canonical_answer": "by flashing a red lantern",
+     "accepted_answers": [
+      "by flashing a red lantern"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_065",
+   "family": "how",
+   "source_text": "The vet calmed the restless horse by humming a low tune.",
+   "paraphrase": "By humming a low tune, the vet calmed the restless horse.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did the vet calm the restless horse?",
+     "canonical_answer": "by humming a low tune",
+     "accepted_answers": [
+      "by humming a low tune"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_066",
+   "family": "how",
+   "source_text": "Tessaly thickened the soup with crushed barley before the guests arrived.",
+   "paraphrase": "Just before the guests arrived, Tessaly thickened the soup with crushed barley.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How did Tessaly thicken the soup?",
+     "canonical_answer": "with crushed barley",
+     "accepted_answers": [
+      "with crushed barley"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_067",
+   "family": "how",
+   "source_text": "Nolk carried six crates to the cart before the rain began.",
+   "paraphrase": "Before the rain began, Nolk carried six crates to the cart.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How many crates did Nolk carry?",
+     "canonical_answer": "six",
+     "accepted_answers": [
+      "six",
+      "6"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_068",
+   "family": "how",
+   "source_text": "The bakery sold forty loaves on Friday and then closed.",
+   "paraphrase": "On Friday the bakery sold forty loaves before it closed.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How many loaves did the bakery sell?",
+     "canonical_answer": "forty",
+     "accepted_answers": [
+      "forty",
+      "40"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_069",
+   "family": "how",
+   "source_text": "The soup needed two cups of stock and a handful of rice.",
+   "paraphrase": "A handful of rice and two cups of stock were needed by the soup.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How much stock did the soup need?",
+     "canonical_answer": "two cups",
+     "accepted_answers": [
+      "two cups",
+      "2 cups"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_070",
+   "family": "how",
+   "source_text": "The tunnel took four days to dry after the flood.",
+   "paraphrase": "After the flood, it took the tunnel four days to dry.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How long did the tunnel take to dry?",
+     "canonical_answer": "four days",
+     "accepted_answers": [
+      "four days",
+      "4 days"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_071",
+   "family": "how",
+   "source_text": "The mule walked nine miles before it lay down in the ditch.",
+   "paraphrase": "Before it lay down in the ditch, the mule walked nine miles.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How far did the mule walk?",
+     "canonical_answer": "nine miles",
+     "accepted_answers": [
+      "nine miles",
+      "9 miles"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_072",
+   "family": "how",
+   "source_text": "The old oak in Calvan Park stands twelve feet tall, with a hollow trunk.",
+   "paraphrase": "With a hollow trunk, the old oak in Calvan Park stands twelve feet tall.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How tall is the old oak in Calvan Park?",
+     "canonical_answer": "twelve feet",
+     "accepted_answers": [
+      "twelve feet",
+      "12 feet"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_073",
+   "family": "how",
+   "source_text": "Each lantern needs three wicks, and the shop sells them in packs.",
+   "paraphrase": "The shop sells wicks in packs, and each lantern needs three.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How many wicks does each lantern need?",
+     "canonical_answer": "three",
+     "accepted_answers": [
+      "three",
+      "3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_074",
+   "family": "how",
+   "source_text": "Pelsa paid twenty coins for the mooring rope.",
+   "paraphrase": "For the mooring rope, twenty coins were paid by Pelsa.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How much did Pelsa pay for the mooring rope?",
+     "canonical_answer": "twenty coins",
+     "accepted_answers": [
+      "twenty coins",
+      "20 coins"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_075",
+   "family": "how",
+   "source_text": "The team scored none in the first half and three goals in the second half.",
+   "paraphrase": "In the first half the team scored none, but in the second half it scored three goals.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How many goals did the team score in the second half?",
+     "canonical_answer": "three",
+     "accepted_answers": [
+      "three",
+      "3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_076",
+   "family": "how",
+   "source_text": "The train ride from Ambrick took five hours on the old line.",
+   "paraphrase": "On the old line, the train ride from Ambrick took five hours.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How long did the train ride take?",
+     "canonical_answer": "five hours",
+     "accepted_answers": [
+      "five hours",
+      "5 hours"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_077",
+   "family": "how",
+   "source_text": "The band played for two hours without a break at the Harrowdale fair.",
+   "paraphrase": "Without a break, the band played for two hours at the Harrowdale fair.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How long did the band play?",
+     "canonical_answer": "two hours",
+     "accepted_answers": [
+      "two hours",
+      "2 hours"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_078",
+   "family": "how",
+   "source_text": "The class had thirteen students but only nine chairs.",
+   "paraphrase": "The class, with only nine chairs, held thirteen students.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How many students were in the class?",
+     "canonical_answer": "thirteen",
+     "accepted_answers": [
+      "thirteen",
+      "13"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_079",
+   "family": "how",
+   "source_text": "Brinnick added half a cup of honey to the bread dough.",
+   "paraphrase": "Half a cup of honey went into the bread dough, added by Brinnick.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How much honey did Brinnick add to the bread dough?",
+     "canonical_answer": "half a cup",
+     "accepted_answers": [
+      "half a cup"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7B_080",
+   "family": "how",
+   "source_text": "The hen laid seven eggs in the barn during the cold week.",
+   "paraphrase": "In the barn, seven eggs were laid by the hen during the cold week.",
+   "questions": [
+    {
+     "type": "short_answer",
+     "question": "How many eggs did the hen lay?",
+     "canonical_answer": "seven",
+     "accepted_answers": [
+      "seven",
+      "7"
+     ]
+    }
+   ]
+  }
+ ]
+}

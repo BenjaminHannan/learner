@@ -1,0 +1,630 @@
+{
+ "target_yes_no_share_teach": 0.5107,
+ "dev_kinds": [
+  "role_in_play",
+  "choice_pick",
+  "occupation",
+  "opponent",
+  "found_item",
+  "forgot",
+  "object_eaten",
+  "permission"
+ ],
+ "test_kinds": [
+  "team_member",
+  "object_read",
+  "goal_want",
+  "family_relation",
+  "object_made",
+  "rule_must"
+ ],
+ "practised_kinds_never_dev_or_test": [
+  "giver_recipient_roles",
+  "comparative_direction",
+  "explicit_negation_with_positive_alternative",
+  "event_ordering",
+  "unambiguous_descriptive_reference",
+  "two_simple_relations_combined"
+ ],
+ "eval_family_names_never_dev_or_test": [
+  "attribute_lookup",
+  "cause_reason",
+  "comparative_direction",
+  "counting_quantity",
+  "direction_turn",
+  "duration_length",
+  "event_ordering",
+  "explicit_negation_with_positive_alternative",
+  "giver_recipient_roles",
+  "instrument_purpose",
+  "location_tracking",
+  "price_cost",
+  "source_origin",
+  "speech_quote",
+  "time_when",
+  "two_simple_relations_combined",
+  "unambiguous_descriptive_reference",
+  "weather_condition"
+ ],
+ "rule_passage_guard": "Any train-kind row whose source_text (the shown passage) also appears in a dev or test row is dropped from training (split=dropped_passage_overlap_with_dev_test).",
+ "rule_practised_slice": "Among the remaining train rows, group by source_text (the passage; covers -s/-y sibling pairs and repeated passages). Take whole passage groups in ascending sha256(source_text) order until at least 2000 rows; all rows of those passages are split=practised_slice, so no passage is split between slice and train. Remaining rows are split=train.",
+ "per_split": {
+  "train": {
+   "rows": 125544,
+   "yes_no_share": 0.5108,
+   "distinct_kinds": 46,
+   "distinct_passages": 108464,
+   "answer_words_mean": 1.264
+  },
+  "dev": {
+   "rows": 24997,
+   "yes_no_share": 0.5099,
+   "distinct_kinds": 8,
+   "distinct_passages": 20661,
+   "answer_words_mean": 1.263
+  },
+  "test": {
+   "rows": 18300,
+   "yes_no_share": 0.5115,
+   "distinct_kinds": 6,
+   "distinct_passages": 15378,
+   "answer_words_mean": 1.28
+  },
+  "dropped_passage_overlap_with_dev_test": {
+   "rows": 968,
+   "yes_no_share": 0.4876,
+   "distinct_kinds": 43,
+   "distinct_passages": 705,
+   "answer_words_mean": 1.259
+  },
+  "practised_slice": {
+   "rows": 2001,
+   "yes_no_share": 0.5182,
+   "distinct_kinds": 46,
+   "distinct_passages": 1725,
+   "answer_words_mean": 1.239
+  },
+  "dropped_dev_test_passage_overlap": {
+   "rows": 130,
+   "yes_no_share": 0.5077,
+   "distinct_kinds": 8,
+   "distinct_passages": 105,
+   "answer_words_mean": 1.277
+  }
+ },
+ "practised_slice": {
+  "n_rows": 2001,
+  "n_passages": 1725,
+  "ids_file": "/Users/ben-hannan/Desktop/projects/talker-gap-wt/talker_gap/diag/practised_slice_ids.txt",
+  "ids_sha256": "00bfcf21deb57c25a4dcc777b62971f94dbd9a0a63c71242ef1425247ca7dc93"
+ },
+ "train_kinds_n": 46,
+ "candidate_kinds_in_sha_order": [
+  {
+   "kind": "plan_next",
+   "role": "train",
+   "rows": 2594,
+   "yes_no_share": 0.6164,
+   "wh_question_share": 0.3905,
+   "note": ""
+  },
+  {
+   "kind": "hobby",
+   "role": "train",
+   "rows": 2833,
+   "yes_no_share": 0.5884,
+   "wh_question_share": 0.414,
+   "note": ""
+  },
+  {
+   "kind": "wish",
+   "role": "train",
+   "rows": 2863,
+   "yes_no_share": 0.5823,
+   "wh_question_share": 0.4177,
+   "note": ""
+  },
+  {
+   "kind": "habit",
+   "role": "train",
+   "rows": 2368,
+   "yes_no_share": 0.5671,
+   "wh_question_share": 0.4358,
+   "note": ""
+  },
+  {
+   "kind": "part_whole",
+   "role": "train",
+   "rows": 2687,
+   "yes_no_share": 0.6204,
+   "wh_question_share": 0.3796,
+   "note": ""
+  },
+  {
+   "kind": "found_item",
+   "role": "dev",
+   "rows": 3334,
+   "yes_no_share": 0.5,
+   "wh_question_share": 0.5,
+   "note": ""
+  },
+  {
+   "kind": "clothing",
+   "role": "train",
+   "rows": 3156,
+   "yes_no_share": 0.4718,
+   "wh_question_share": 0.5288,
+   "note": ""
+  },
+  {
+   "kind": "owner_possession",
+   "role": "train",
+   "rows": 3036,
+   "yes_no_share": 0.4509,
+   "wh_question_share": 0.5481,
+   "note": ""
+  },
+  {
+   "kind": "search_for",
+   "role": "train",
+   "rows": 3122,
+   "yes_no_share": 0.466,
+   "wh_question_share": 0.534,
+   "note": ""
+  },
+  {
+   "kind": "goal_want",
+   "role": "test",
+   "rows": 2947,
+   "yes_no_share": 0.5433,
+   "wh_question_share": 0.4567,
+   "note": ""
+  },
+  {
+   "kind": "naming",
+   "role": "train",
+   "rows": 2866,
+   "yes_no_share": 0.4184,
+   "wh_question_share": 0.583,
+   "note": ""
+  },
+  {
+   "kind": "caretaker",
+   "role": "train",
+   "rows": 1601,
+   "yes_no_share": 0.7608,
+   "wh_question_share": 0.2467,
+   "note": ""
+  },
+  {
+   "kind": "occupation",
+   "role": "dev",
+   "rows": 3292,
+   "yes_no_share": 0.5064,
+   "wh_question_share": 0.4948,
+   "note": ""
+  },
+  {
+   "kind": "feeling_state",
+   "role": "train",
+   "rows": 3012,
+   "yes_no_share": 0.5535,
+   "wh_question_share": 0.4465,
+   "note": ""
+  },
+  {
+   "kind": "winner",
+   "role": "train",
+   "rows": 3081,
+   "yes_no_share": 0.4602,
+   "wh_question_share": 0.5401,
+   "note": ""
+  },
+  {
+   "kind": "game_played",
+   "role": "train",
+   "rows": 2994,
+   "yes_no_share": 0.4603,
+   "wh_question_share": 0.5421,
+   "note": ""
+  },
+  {
+   "kind": "object_eaten",
+   "role": "dev",
+   "rows": 3156,
+   "yes_no_share": 0.5282,
+   "wh_question_share": 0.4728,
+   "note": ""
+  },
+  {
+   "kind": "like_best",
+   "role": "train",
+   "rows": 2972,
+   "yes_no_share": 0.4677,
+   "wh_question_share": 0.5326,
+   "note": ""
+  },
+  {
+   "kind": "named_after",
+   "role": "train",
+   "rows": 3090,
+   "yes_no_share": 0.4605,
+   "wh_question_share": 0.5395,
+   "note": ""
+  },
+  {
+   "kind": "patient_target",
+   "role": "train",
+   "rows": 2728,
+   "yes_no_share": 0.5781,
+   "wh_question_share": 0.4219,
+   "note": ""
+  },
+  {
+   "kind": "fear",
+   "role": "train",
+   "rows": 2408,
+   "yes_no_share": 0.5814,
+   "wh_question_share": 0.4223,
+   "note": ""
+  },
+  {
+   "kind": "visitor",
+   "role": "train",
+   "rows": 2874,
+   "yes_no_share": 0.4492,
+   "wh_question_share": 0.5511,
+   "note": ""
+  },
+  {
+   "kind": "choice_pick",
+   "role": "dev",
+   "rows": 3274,
+   "yes_no_share": 0.5092,
+   "wh_question_share": 0.4908,
+   "note": ""
+  },
+  {
+   "kind": "teacher_of",
+   "role": "train",
+   "rows": 2394,
+   "yes_no_share": 0.5902,
+   "wh_question_share": 0.4102,
+   "note": ""
+  },
+  {
+   "kind": "lost_item",
+   "role": "train",
+   "rows": 3104,
+   "yes_no_share": 0.463,
+   "wh_question_share": 0.5383,
+   "note": ""
+  },
+  {
+   "kind": "best_friend",
+   "role": "train",
+   "rows": 2810,
+   "yes_no_share": 0.4068,
+   "wh_question_share": 0.5957,
+   "note": ""
+  },
+  {
+   "kind": "object_read",
+   "role": "test",
+   "rows": 3234,
+   "yes_no_share": 0.4845,
+   "wh_question_share": 0.5179,
+   "note": ""
+  },
+  {
+   "kind": "title_role",
+   "role": "train",
+   "rows": 2657,
+   "yes_no_share": 0.3726,
+   "wh_question_share": 0.6274,
+   "note": ""
+  },
+  {
+   "kind": "topic_about",
+   "role": "train",
+   "rows": 3049,
+   "yes_no_share": 0.5467,
+   "wh_question_share": 0.4595,
+   "note": ""
+  },
+  {
+   "kind": "joiner",
+   "role": "train",
+   "rows": 2701,
+   "yes_no_share": 0.6172,
+   "wh_question_share": 0.3873,
+   "note": ""
+  },
+  {
+   "kind": "fact_yes_no",
+   "role": "train",
+   "rows": 2830,
+   "yes_no_share": 0.411,
+   "wh_question_share": 0.5862,
+   "note": ""
+  },
+  {
+   "kind": "replacement",
+   "role": "train",
+   "rows": 2389,
+   "yes_no_share": 0.4328,
+   "wh_question_share": 0.5672,
+   "note": ""
+  },
+  {
+   "kind": "opponent",
+   "role": "dev",
+   "rows": 3124,
+   "yes_no_share": 0.5182,
+   "wh_question_share": 0.4824,
+   "note": ""
+  },
+  {
+   "kind": "category_member",
+   "role": "train",
+   "rows": 2794,
+   "yes_no_share": 0.5966,
+   "wh_question_share": 0.4073,
+   "note": ""
+  },
+  {
+   "kind": "family_relation",
+   "role": "test",
+   "rows": 3234,
+   "yes_no_share": 0.4845,
+   "wh_question_share": 0.5161,
+   "note": ""
+  },
+  {
+   "kind": "object_made",
+   "role": "test",
+   "rows": 3234,
+   "yes_no_share": 0.4845,
+   "wh_question_share": 0.5158,
+   "note": ""
+  },
+  {
+   "kind": "agent_action",
+   "role": "train",
+   "rows": 3074,
+   "yes_no_share": 0.4577,
+   "wh_question_share": 0.5426,
+   "note": ""
+  },
+  {
+   "kind": "creator",
+   "role": "train",
+   "rows": 2084,
+   "yes_no_share": 0.5955,
+   "wh_question_share": 0.4069,
+   "note": ""
+  },
+  {
+   "kind": "ability",
+   "role": "train",
+   "rows": 2804,
+   "yes_no_share": 0.4055,
+   "wh_question_share": 0.5942,
+   "note": ""
+  },
+  {
+   "kind": "forgot",
+   "role": "dev",
+   "rows": 2947,
+   "yes_no_share": 0.5222,
+   "wh_question_share": 0.4781,
+   "note": ""
+  },
+  {
+   "kind": "role_in_play",
+   "role": "dev",
+   "rows": 2849,
+   "yes_no_share": 0.5121,
+   "wh_question_share": 0.4872,
+   "note": ""
+  },
+  {
+   "kind": "language_spoken",
+   "role": "train",
+   "rows": 2958,
+   "yes_no_share": 0.4364,
+   "wh_question_share": 0.5683,
+   "note": ""
+  },
+  {
+   "kind": "neighbor",
+   "role": "train",
+   "rows": 2975,
+   "yes_no_share": 0.4397,
+   "wh_question_share": 0.5603,
+   "note": ""
+  },
+  {
+   "kind": "loser",
+   "role": "train",
+   "rows": 2786,
+   "yes_no_share": 0.4415,
+   "wh_question_share": 0.5592,
+   "note": ""
+  },
+  {
+   "kind": "companion_with",
+   "role": "train",
+   "rows": 2388,
+   "yes_no_share": 0.5544,
+   "wh_question_share": 0.4468,
+   "note": ""
+  },
+  {
+   "kind": "team_member",
+   "role": "test",
+   "rows": 3122,
+   "yes_no_share": 0.534,
+   "wh_question_share": 0.4811,
+   "note": ""
+  },
+  {
+   "kind": "learned",
+   "role": "train",
+   "rows": 3201,
+   "yes_no_share": 0.4792,
+   "wh_question_share": 0.527,
+   "note": ""
+  },
+  {
+   "kind": "dislike",
+   "role": "train",
+   "rows": 2504,
+   "yes_no_share": 0.6657,
+   "wh_question_share": 0.3347,
+   "note": ""
+  },
+  {
+   "kind": "helper",
+   "role": "train",
+   "rows": 2926,
+   "yes_no_share": 0.4303,
+   "wh_question_share": 0.5694,
+   "note": ""
+  },
+  {
+   "kind": "container_contents",
+   "role": "train",
+   "rows": 2531,
+   "yes_no_share": 0.6586,
+   "wh_question_share": 0.3414,
+   "note": ""
+  },
+  {
+   "kind": "pronoun_reference",
+   "role": "train",
+   "rows": 3016,
+   "yes_no_share": 0.4473,
+   "wh_question_share": 0.5531,
+   "note": ""
+  },
+  {
+   "kind": "rule_must",
+   "role": "test",
+   "rows": 2529,
+   "yes_no_share": 0.55,
+   "wh_question_share": 0.4496,
+   "note": ""
+  },
+  {
+   "kind": "if_then",
+   "role": "train",
+   "rows": 2380,
+   "yes_no_share": 0.6521,
+   "wh_question_share": 0.3508,
+   "note": ""
+  },
+  {
+   "kind": "permission",
+   "role": "dev",
+   "rows": 3151,
+   "yes_no_share": 0.4843,
+   "wh_question_share": 0.5157,
+   "note": ""
+  },
+  {
+   "kind": "event_ordering",
+   "role": "train",
+   "rows": 2970,
+   "yes_no_share": 0.4387,
+   "wh_question_share": 0.5623,
+   "note": "practised (kinds.py 1-6 = FRESH-EN-R3 family); eval family name"
+  },
+  {
+   "kind": "two_simple_relations_combined",
+   "role": "train",
+   "rows": 2805,
+   "yes_no_share": 0.5943,
+   "wh_question_share": 0.4057,
+   "note": "practised (kinds.py 1-6 = FRESH-EN-R3 family); eval family name"
+  },
+  {
+   "kind": "comparative_direction",
+   "role": "train",
+   "rows": 3008,
+   "yes_no_share": 0.5502,
+   "wh_question_share": 0.4501,
+   "note": "practised (kinds.py 1-6 = FRESH-EN-R3 family); eval family name"
+  },
+  {
+   "kind": "explicit_negation_with_positive_alternative",
+   "role": "train",
+   "rows": 3221,
+   "yes_no_share": 0.5175,
+   "wh_question_share": 0.4825,
+   "note": "practised (kinds.py 1-6 = FRESH-EN-R3 family); eval family name"
+  },
+  {
+   "kind": "giver_recipient_roles",
+   "role": "train",
+   "rows": 2980,
+   "yes_no_share": 0.4406,
+   "wh_question_share": 0.5591,
+   "note": "practised (kinds.py 1-6 = FRESH-EN-R3 family); eval family name"
+  },
+  {
+   "kind": "unambiguous_descriptive_reference",
+   "role": "train",
+   "rows": 2889,
+   "yes_no_share": 0.577,
+   "wh_question_share": 0.423,
+   "note": "practised (kinds.py 1-6 = FRESH-EN-R3 family); eval family name"
+  }
+ ],
+ "v2_change": "Dev rows whose source_text also occurs in a test row are moved to split=dropped_dev_test_passage_overlap. Train side, practised slice and test are unchanged from v1, so practised_slice_ids.txt is still valid.",
+ "v1_failed_check": "dev/test shared passages = 105 (v1 had no dev-vs-test passage rule)",
+ "dev_rows_moved_to_dropped": 130,
+ "dropped_dev_ids_file": "/Users/ben-hannan/Desktop/projects/talker-gap-wt/talker_gap/diag/D4_work/v2_dev_rows_moved_to_dropped_ids.txt",
+ "verification_v2": {
+  "dev_test_shared_passages": 0,
+  "dev_test_passages_in_train_side": 0,
+  "practised_slice_ids_unchanged": true,
+  "dev_and_test_kinds_present": true,
+  "dev_yes_no_share_within_0.02_of_teach": true,
+  "test_yes_no_share_within_0.02_of_teach": true
+ },
+ "open_question_not_fixed_here": "Dev/test yes/no share is ~51% (TEACH mix) while the four eval sets are 10.7% yes/no. dev_test_eval_mix_alternative in v1 is optional; not applied.",
+ "rule_kind_level_v1": "A row is split=dev if its kind is in dev_kinds, split=test if its kind is in test_kinds. Kinds are picked from the candidates in sha256(kind name) order by a deterministic greedy step that keeps the pooled yes/no share closest to the TEACH share.",
+ "passage_overlap_before_guard_v1": {
+  "dev_test_distinct_passages": 36039,
+  "dev_test_rows_whose_passage_occurs_in_a_train_kind_row": 933,
+  "train_kind_rows_dropped_by_guard": 968
+ },
+ "verification_expected_zero_v1": {
+  "slice_rows_whose_passage_is_in_final_train": 0,
+  "dev_test_rows_whose_passage_is_in_final_train": 0,
+  "dev_test_rows_whose_passage_is_in_slice": 0,
+  "eval_item_source_text_exact_in_teach": 0
+ },
+ "dev_test_eval_mix_alternative_v1": {
+  "use": "optional; same dev/test kinds, but DEV and TEST yes/no rows are thinned to match the eval sets",
+  "target_yes_no_share_eval_all_four": 0.1068,
+  "dev_test_rows_before": 43427,
+  "dev_test_short_rows": 21256,
+  "dev_test_yes_no_rows_before": 22171,
+  "dev_test_yes_no_rows_kept": 2542,
+  "dev_test_rows_after": 23798,
+  "rule": "keep all short_answer rows; keep the first n_keep yes/no rows of DEV+TEST ordered by (sha256(id), id)",
+  "kept_yes_no_ids_sha256": "29cc33870dff0904cb97815b23f53e9240d289711aaad7a70cafc627917b1515"
+ },
+ "diagnostic_first_id_hash_slice_v1": {
+  "rule": "first 2000 train rows by sha256(id); REPLACED, because siblings split passages",
+  "slice_rows_whose_passage_also_in_other_train_rows": 521
+ },
+ "rule_kind_level_v2": "A row is split=dev if its kind is in dev_kinds AND its source_text does not occur in any test-kind row (otherwise split=dropped_dev_test_passage_overlap). A row is split=test if its kind is in test_kinds. Dev/test kinds are unchanged from v1.",
+ "rule_dev_test_passage_guard_v2": "Dev rows whose source_text occurs in a test row are moved to dropped_dev_test_passage_overlap (130 rows, ids in D4_work/v2_dev_rows_moved_to_dropped_ids.txt). Test is never changed.",
+ "rule_passage_guard_v2_note": "Train-side guard is unchanged from v1: a train-kind row is dropped if its source_text occurs in ANY dev or test row, including the 130 dev rows moved above. This is conservative, and it keeps the train side and practised_slice_ids.txt identical to v1.",
+ "rule_practised_slice_v2": "Unchanged from v1 (rule_practised_slice_v1 is not re-derived by D4; the slice ids are taken from practised_slice_ids.txt). D4 verified: no slice passage on the train side; all slice ids are TEACH ids of kept (train-side) kinds. The ascending sha256(source_text) selection order is UNTESTED.",
+ "dev_test_eval_mix_alternative_v1_note": "v1 thinning block (dev_test_eval_mix_alternative_v1) is NOT applied in v2 and its counts refer to v1 dev. D4 verified only the counts 22,171 yes/no and 21,256 short in v1 dev+test; the kept-id sha256 was not re-derived.",
+ "note_on_stale_blocks": "Blocks ending in _v1 describe the v1 split and do not apply to v2. Use the *_v2 rules and the verification_v2 block."
+}

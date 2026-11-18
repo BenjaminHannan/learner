@@ -1,0 +1,53 @@
+CHECKS
+PASS dev_test_kinds_disjoint | intersection=[]
+PASS dev_test_kinds_exist_in_teach | dev=8 test=6 missing=[]
+PASS leave_kinds_out_train_side | train-side kinds ∩ dev/test kinds=[]; n_train_side_kinds=46
+PASS dev_test_rows_only_in_dev_test | every dev/test-kind row labelled dev/test and no other row is
+PASS reproduce_count_train | reconstructed=125544 proposal=125544
+PASS reproduce_count_practised_slice | reconstructed=2001 proposal=2001
+PASS reproduce_count_dev | reconstructed=25127 proposal=25127
+PASS reproduce_count_test | reconstructed=18300 proposal=18300
+PASS reproduce_count_dropped_passage_overlap_with_dev_test | reconstructed=968 proposal=968
+PASS yn_mix_within_0.02_train | split yn=0.5108 overall yn=0.5107
+PASS yn_mix_within_0.02_practised_slice | split yn=0.5182 overall yn=0.5107
+PASS yn_mix_within_0.02_dev | split yn=0.5098 overall yn=0.5107
+PASS yn_mix_within_0.02_test | split yn=0.5115 overall yn=0.5107
+PASS slice_ids_unique | lines=2001 unique=2001
+PASS slice_ids_all_in_teach | found=2001 of 2001
+PASS slice_rows_labelled_practised | labels={'practised_slice': 2001}
+PASS slice_kinds_are_kept_train_kinds | n_slice_kinds=46 n_kept_kinds=46
+PASS slice_count_matches_proposal | ids=2001 proposal=2001
+PASS passages_dev_test_not_in_train_side | shared passages=0
+PASS passages_slice_not_in_train | shared passages=0
+FAIL passages_dev_vs_test_disjoint | shared dev/test passages=105 (stricter than proposal rules; proposal does not state it)
+OVERALL {'n': 171940, 'n_yes_no': 87807, 'yn_share': 0.5107, 'short_words_mean': 1.542, 'short_chars_mean': 6.761, 'short_chars_p50': 6.0, 'short_chars_p90': 12.0, 'short_chars_max': 32, 'short_gt8chars_share': 0.1844, 'short_sub_src_ci': 0.9701, 'short_sub_src_cs': 0.9607, 'short_sub_para_ci': 0.9442, 'short_sub_q_ci': 0.0177, 'short_novel_word_share': 0.0045}
+typ {'short_answer': 84133, 'yes_no': 87807} empty_ans 0
+yn answers {'no': 38365, 'yes': 49442}
+SPLIT train {'n': 125544, 'yn_share': 0.5108, 'distinct_kinds': 46, 'distinct_passages': 108464, 'answer_words_mean_split': 1.264, 'short_chars_mean': 6.756, 'short_gt8chars_share': 0.1811}
+SPLIT practised_slice {'n': 2001, 'yn_share': 0.5182, 'distinct_kinds': 46, 'distinct_passages': 1725, 'answer_words_mean_split': 1.239, 'short_chars_mean': 6.546, 'short_gt8chars_share': 0.1577}
+SPLIT dev {'n': 25127, 'yn_share': 0.5098, 'distinct_kinds': 8, 'distinct_passages': 20766, 'answer_words_mean_split': 1.263, 'short_chars_mean': 6.648, 'short_gt8chars_share': 0.1781}
+SPLIT test {'n': 18300, 'yn_share': 0.5115, 'distinct_kinds': 6, 'distinct_passages': 15378, 'answer_words_mean_split': 1.28, 'short_chars_mean': 7.007, 'short_gt8chars_share': 0.224}
+SPLIT dropped_passage_overlap_with_dev_test {'n': 968, 'yn_share': 0.4876, 'distinct_kinds': 43, 'distinct_passages': 705, 'answer_words_mean_split': 1.259, 'short_chars_mean': 6.115, 'short_gt8chars_share': 0.0907}
+EVAL {'FRESH-EN-R3.json': {'n_q': 96, 'yn_share': 0.1146, 'short_chars_mean': 10.518, 'short_gt8chars_share': 0.6353, 'exact_src_in_teach': 0, 'exact_para_in_teach': 0, 'exact_question_in_teach': 4}, 'GEN-HELDOUT-R4.json': {'n_q': 96, 'yn_share': 0.0833, 'short_chars_mean': 11.682, 'short_gt8chars_share': 0.7841, 'exact_src_in_teach': 0, 'exact_para_in_teach': 0, 'exact_question_in_teach': 5}, 'NEW-KINDS-R5.json': {'n_q': 96, 'yn_share': 0.125, 'short_chars_mean': 9.143, 'short_gt8chars_share': 0.3929, 'exact_src_in_teach': 0, 'exact_para_in_teach': 0, 'exact_question_in_teach': 1}, 'NEW-KINDS2-R6.json': {'n_q': 96, 'yn_share': 0.1042, 'short_chars_mean': 10.163, 'short_gt8chars_share': 0.6047, 'exact_src_in_teach': 0, 'exact_para_in_teach': 0, 'exact_question_in_teach': 0}}
+EVAL yn all four 0.1068
+FAM attribute_lookup False [] 0 16
+FAM cause_reason False [] 0 16
+FAM comparative_direction True ['practised_slice', 'train'] 3008 32
+FAM counting_quantity False [] 0 16
+FAM direction_turn False [] 0 16
+FAM duration_length False [] 0 16
+FAM event_ordering True ['dropped_passage_overlap_with_dev_test', 'practised_slice', 'train'] 2970 32
+FAM explicit_negation_with_positive_alternative True ['dropped_passage_overlap_with_dev_test', 'practised_slice', 'train'] 3221 32
+FAM giver_recipient_roles True ['dropped_passage_overlap_with_dev_test', 'practised_slice', 'train'] 2980 32
+FAM instrument_purpose False [] 0 16
+FAM location_tracking False [] 0 16
+FAM price_cost False [] 0 16
+FAM source_origin False [] 0 16
+FAM speech_quote False [] 0 16
+FAM time_when False [] 0 16
+FAM two_simple_relations_combined True ['dropped_passage_overlap_with_dev_test', 'practised_slice', 'train'] 2805 32
+FAM unambiguous_descriptive_reference True ['practised_slice', 'train'] 2889 32
+FAM weather_condition False [] 0 16
+NEAR {'attribute_lookup': [], 'cause_reason': [], 'counting_quantity': [], 'direction_turn': ['comparative_direction'], 'duration_length': [], 'instrument_purpose': [], 'location_tracking': [], 'price_cost': [], 'source_origin': [], 'speech_quote': [], 'time_when': [], 'weather_condition': []}
+SAYBACK {"target_chars_all": {"mean": 28.328, "p50": 27.0, "p90": 37.0, "p99": 47.0, "max": 73}, "target_words_all": {"mean": 5.943, "p50": 6.0, "p90": 8.0, "p99": 9.0, "max": 14}, "answer_chars_all": {"mean": 4.617, "p50": 3.0, "p90": 8.0, "p99": 16.0, "max": 32}, "answer_words_all": {"mean": 1.265, "p50": 1.0, "p90": 2.0, "p99": 3.0, "max": 7}, "answer_gt8chars_all_share": 0.0902, "answer_gt8chars_n_all": 15514, "answer_gt8chars_n_short": 15514, "answer_gt8chars_share_short": 0.1844, "answer_gt8chars_share_yes_no": 0.0, "target_chars_short": {"mean": 30.077, "p50": 28.0, "p90": 39.0, "p99": 48.0, "max": 73}, "answer_chars_short": {"mean": 6.761, "p50": 6.0, "p90": 12.0, "p99": 18.0, "max": 32}, "target_words_short": {"mean": 6.079, "p50": 6.0, "p90": 8.0, "p99": 10.0, "max": 14}, "answer_words_short": {"mean": 1.542, "p50": 1.0, "p90": 2.0, "p99": 4.0, "max": 7}, "distinct_short_answers_gt8": 6283, "eval_short_answers_gt8_share": 0.6064}
+TOP_GT8 [('a balloon', 437), ('a pumpkin', 398), ('a lantern', 395), ('a goldfish', 389), ('a squirrel', 282), ('a compass', 227), ('a tractor', 210), ('a whistle', 188), ('the farmer', 187), ('the parrot', 123), ('the pitcher', 123), ('the kitten', 122)]
