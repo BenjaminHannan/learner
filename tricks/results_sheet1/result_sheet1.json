@@ -1,0 +1,412 @@
+{
+ "model": "Qwen/Qwen3.5-4B",
+ "n_train": 100,
+ "n_test": 200,
+ "sheets": [
+  {
+   "idx": 0,
+   "group": "baseline",
+   "name": "baseline",
+   "sheet": "Solve the problem step by step. End your reply with a final line of the form 'Final answer: <number>'. You have a python tool: use it for any arithmetic or computation instead of calculating by hand.",
+   "train": {
+    "accuracy": 0.67,
+    "n": 100,
+    "mean_tokens": 842.22,
+    "mean_tool_calls": 0.98,
+    "ci95": [
+     0.58,
+     0.76
+    ]
+   },
+   "test": {
+    "accuracy": 0.66,
+    "n": 200,
+    "mean_tokens": 874.425,
+    "mean_tool_calls": 0.93,
+    "ci95": [
+     0.595,
+     0.725
+    ]
+   }
+  },
+  {
+   "idx": 1,
+   "group": "general",
+   "name": "Literal program translation",
+   "sheet": "You solve math word problems by turning them into a short Python program.\n\n1. Read the problem once. Write one variable per quantity, using each number exactly as given, with a comment quoting the phrase it comes from.\n2. Translate each sentence into one line of code, in the order the story gives them. Translate words literally: 'twice as many as X' means 2*X, 'half as much' means X/2, 'N% off' means multiply by (1 - N/100).\n3. Call the python tool once with the whole program and print the final quantity.\n4. Report the printed value as is. Do not round, floor or ceil unless the problem explicitly asks for whole units or rounding.\n\nTreat the given numbers as correct even if the story seems unrealistic. Never replace a number with one you think was intended, and never reinterpret the question to make it look nicer. Keep the reply brief: a few lines of explanation, the tool call, then the answer.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.68,
+    "n": 100,
+    "mean_tokens": 476.82,
+    "mean_tool_calls": 0.85,
+    "ci95": [
+     0.59,
+     0.77
+    ]
+   },
+   "test": {
+    "accuracy": 0.68,
+    "n": 200,
+    "mean_tokens": 421.965,
+    "mean_tool_calls": 0.84,
+    "ci95": [
+     0.615,
+     0.745
+    ]
+   }
+  },
+  {
+   "idx": 2,
+   "group": "general",
+   "name": "Equation sheet then compute",
+   "sheet": "Solve the problem in three short phases.\n\nPhase 1 - Model: List every quantity in the problem with its value. Then write one equation per sentence that relates quantities, and name what the question asks for. Make sure every sentence with a number is used exactly once. Make sure each relationship refers to the right base: per item, per day, per person, or total.\n\nPhase 2 - Compute: Use the python tool to evaluate the equations. Do not calculate by hand. Use the numbers exactly as written.\n\nPhase 3 - Answer: State the result. Give the exact computed value without rounding, unless the problem asks for rounding.\n\nAccept the problem as stated, even if the numbers look strange or the situation seems impossible. Do not guess at typos or invent alternative readings. Do not debate interpretations at length; pick the most direct reading of the words and finish.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.76,
+    "n": 100,
+    "mean_tokens": 527.6,
+    "mean_tool_calls": 1.0,
+    "ci95": [
+     0.68,
+     0.85
+    ]
+   },
+   "test": {
+    "accuracy": 0.77,
+    "n": 200,
+    "mean_tokens": 522.28,
+    "mean_tool_calls": 0.985,
+    "ci95": [
+     0.715,
+     0.825
+    ]
+   }
+  },
+  {
+   "idx": 3,
+   "group": "general",
+   "name": "Concise decisive solver",
+   "sheet": "You are a fast, decisive math solver. Your reply must stay short, well under 500 words.\n\nHow to work:\n- In 2 to 5 bullet points, write the steps needed, following the problem's wording directly.\n- Make a single python tool call that computes the answer from the given numbers and prints it.\n- Then give one sentence stating the result.\n\nRules:\n- Use every number exactly as given. Large or unusual numbers are intentional; never change them.\n- Do not second-guess, explore alternative interpretations, or comment on whether the scenario is realistic. The most literal reading of the sentence is the right one.\n- Do not round or convert to whole items unless the question explicitly asks.\n- Once the tool prints the result, stop reasoning and answer.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.7,
+    "n": 100,
+    "mean_tokens": 266.36,
+    "mean_tool_calls": 1.03,
+    "ci95": [
+     0.61,
+     0.79
+    ]
+   },
+   "test": {
+    "accuracy": 0.755,
+    "n": 200,
+    "mean_tokens": 254.98,
+    "mean_tool_calls": 1.015,
+    "ci95": [
+     0.695,
+     0.81
+    ]
+   }
+  },
+  {
+   "idx": 4,
+   "group": "general",
+   "name": "Compute then audit",
+   "sheet": "Solve the word problem step by step, using the python tool for all arithmetic.\n\nAfter you get a result, do one quick audit before answering. Re-read the problem sentence by sentence and check:\n- Did I use each given number exactly as written, once, in the right place?\n- Does each phrase ('twice as many as', 'half as much', 'per', 'each', 'the rest', 'more than', 'times') apply to the quantity the sentence actually names?\n- Did I compute exactly what the question asks for, such as the remaining amount, the total, or the per-unit value?\n- Did I avoid rounding that the problem did not ask for?\n\nIf the audit finds an error, fix it with one more python call. Otherwise, answer.\n\nDo not alter numbers you find unrealistic, and do not swap in a different question. Solve exactly what is written. Keep the audit to a short checklist, not a long debate.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.77,
+    "n": 100,
+    "mean_tokens": 684.32,
+    "mean_tool_calls": 1.1,
+    "ci95": [
+     0.68,
+     0.86
+    ]
+   },
+   "test": {
+    "accuracy": 0.72,
+    "n": 200,
+    "mean_tokens": 805.37,
+    "mean_tool_calls": 1.175,
+    "ci95": [
+     0.655,
+     0.78
+    ]
+   }
+  },
+  {
+   "idx": 5,
+   "group": "general",
+   "name": "Exact arithmetic discipline",
+   "sheet": "Solve the problem carefully, with exact arithmetic.\n\n- Use the python tool for every calculation. Prefer fractions.Fraction or integers so that no precision is lost. Print the final result as a decimal with enough digits, for example float(result) or a high-precision string.\n- Copy numbers from the problem digit by digit. Never retype a large number from memory or add separators like commas in code.\n- Keep fractional results as they are. Do not round, floor or ceil unless the problem explicitly says to, for example 'whole', 'round to', or 'how many complete'.\n- Take the problem's numbers and wording at face value, even when the scenario looks odd. Do not substitute numbers you think were intended.\n- Write the steps briefly: what each quantity is, how it is computed, and the tool output.\n\nAfter the tool returns, copy its printed value into your answer, without rewriting the digits by hand.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.75,
+    "n": 100,
+    "mean_tokens": 605.35,
+    "mean_tool_calls": 1.18,
+    "ci95": [
+     0.66,
+     0.84
+    ]
+   },
+   "test": {
+    "accuracy": 0.735,
+    "n": 200,
+    "mean_tokens": 632.41,
+    "mean_tool_calls": 1.115,
+    "ci95": [
+     0.675,
+     0.795
+    ]
+   }
+  },
+  {
+   "idx": 6,
+   "group": "general",
+   "name": "Worked-example template",
+   "sheet": "Solve word problems by following this template exactly.\n\nGiven: list each number with a short label, copied exactly from the problem.\nFind: the quantity the question asks for.\nSteps: numbered steps. Each step is one operation taken directly from one phrase in the problem.\n\nThen call python once, with code that mirrors the steps and prints the answer.\n\nExample of the format:\nGiven: price = 12, count = 5, paid = 100\nFind: change\nSteps: 1) cost = price*count  2) change = paid - cost\nThen a python call that prints the change.\nResult: <printed value>\n\nRules:\n- Follow the wording literally. Do not add assumptions, fix suspected typos, or reinterpret strange numbers.\n- Report the printed value without rounding unless the problem asks for it.\n- No extra discussion after the result.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.53,
+    "n": 100,
+    "mean_tokens": 217.93,
+    "mean_tool_calls": 0.64,
+    "ci95": [
+     0.43,
+     0.63
+    ]
+   },
+   "test": {
+    "accuracy": 0.54,
+    "n": 200,
+    "mean_tokens": 230.88,
+    "mean_tool_calls": 0.715,
+    "ci95": [
+     0.47,
+     0.615
+    ]
+   }
+  },
+  {
+   "idx": 7,
+   "group": "quirk",
+   "name": "Literal rules, no sanity fixes",
+   "sheet": "Solve the math word problem by computing exactly what the text says, even when the numbers are huge or unrealistic.\n\nRules:\n1. Use every number exactly as written. Never assume a typo, never substitute a 'more reasonable' number, and never question whether the scenario is possible.\n2. Negative, fractional and absurd results are valid answers. Do not clamp a result to 0. Do not take absolute values. Do not say 'impossible'.\n3. Do not round, floor or ceil unless the problem explicitly asks for it. Give the full decimal value. Whole items are not required.\n4. Follow the problem's operations directly. For example, change = amount paid minus total cost, and remaining = available minus used, even if the result is below zero.\n5. Use the python tool for all arithmetic. Write one short script that computes the answer and print() it.\n6. Once you have the printed result, state it and stop. Do not reconsider interpretations or keep second-guessing.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.79,
+    "n": 100,
+    "mean_tokens": 373.74,
+    "mean_tool_calls": 1.01,
+    "ci95": [
+     0.71,
+     0.87
+    ]
+   },
+   "test": {
+    "accuracy": 0.75,
+    "n": 200,
+    "mean_tokens": 395.765,
+    "mean_tool_calls": 1.035,
+    "ci95": [
+     0.695,
+     0.81
+    ]
+   }
+  },
+  {
+   "idx": 8,
+   "group": "quirk",
+   "name": "Program-first answer key",
+   "sheet": "The answer key for these problems was produced by a short Python program that applies the story's arithmetic literally to the given numbers. Your job is to reproduce that program.\n\nProcedure:\n1. In one or two sentences, state the plan. Which quantities are multiplied, added, subtracted or divided?\n2. Call the python tool once with a script like:\n   a = ...  # name each given quantity\n   b = ...\n   result = ...  # the story's formula\n   print(result)\n   Use plain / for division. Do not use round(), int(), //, math.ceil, max(0, ...) or abs() unless the problem explicitly says to round.\n3. Report the printed value exactly as given, with full precision. The value may be negative, a fraction, or unrealistically large, and that is expected. Never replace given numbers with 'corrected' ones and never argue that the scenario is impossible.\n4. Keep the reply short. After the tool result, write the answer immediately; do not re-derive or explore alternative readings.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.74,
+    "n": 100,
+    "mean_tokens": 300.75,
+    "mean_tool_calls": 0.99,
+    "ci95": [
+     0.65,
+     0.83
+    ]
+   },
+   "test": {
+    "accuracy": 0.74,
+    "n": 200,
+    "mean_tokens": 285.015,
+    "mean_tool_calls": 0.985,
+    "ci95": [
+     0.68,
+     0.8
+    ]
+   }
+  },
+  {
+   "idx": 9,
+   "group": "quirk",
+   "name": "Solve with small numbers first",
+   "sheet": "Large numbers in these problems are only placeholders. Solve the problem's structure first, then plug in the actual values.\n\nSteps:\n1. Pretend each large number is a small, ordinary number. Work out the chain of operations a typical grade-school solution would use, step by step, as a formula. Read carefully:\n   - 'each' and 'per' mean multiply.\n   - 'X times as many as Y' means X*Y.\n   - 'half as much' means divide by 2.\n   - Count every item or day that the text mentions, including all repeated ones.\n2. Now put the real numbers into that same formula, unchanged. Use the python tool to evaluate it and print() the result.\n3. Accept the result as is. It may be negative, fractional or absurd; that is correct for this task. Never change the formula or the numbers to make the answer 'sensible', never clamp to zero, and never round unless told to.\n4. Report the result with full precision and stop. Do not write long deliberations.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.8,
+    "n": 100,
+    "mean_tokens": 554.43,
+    "mean_tool_calls": 0.88,
+    "ci95": [
+     0.72,
+     0.88
+    ]
+   },
+   "test": {
+    "accuracy": 0.76,
+    "n": 200,
+    "mean_tokens": 562.875,
+    "mean_tool_calls": 0.865,
+    "ci95": [
+     0.705,
+     0.82
+    ]
+   }
+  },
+  {
+   "idx": 10,
+   "group": "quirk",
+   "name": "Quantity table then equation",
+   "sheet": "Solve carefully by first defining every quantity.\n\n1. Make a short list of each given quantity with its exact meaning and unit. Note whether it is a total or a per-item, per-serving, per-day or per-hour amount. For example, distinguish 'calories per serving' from 'calories per bag'.\n2. Write the unknown as an equation or formula built from that list, following the wording literally.\n   - If a later sentence repeats a quantity given earlier, use the stated value.\n   - 'Twice as many as A' means 2*A, not A+A plus extra.\n3. Evaluate the formula with the python tool. print() the final value, and print intermediate values too if useful.\n4. The given numbers are deliberately large and may make the result negative, fractional or physically impossible. That is fine: report the computed value exactly. Do not assume typos, do not substitute numbers, do not clamp to 0, and do not round unless asked.\n5. Be concise. Once the tool returns, give the answer without further debate.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.8,
+    "n": 100,
+    "mean_tokens": 605.81,
+    "mean_tool_calls": 0.94,
+    "ci95": [
+     0.72,
+     0.88
+    ]
+   },
+   "test": {
+    "accuracy": 0.74,
+    "n": 200,
+    "mean_tokens": 580.335,
+    "mean_tool_calls": 0.92,
+    "ci95": [
+     0.685,
+     0.8
+    ]
+   }
+  },
+  {
+   "idx": 11,
+   "group": "quirk",
+   "name": "Strict brevity budget",
+   "sheet": "Be brief and decisive. Long replies get cut off and score zero.\n\nFormat:\n- Write at most 5 short lines of reasoning that translate the problem into arithmetic.\n- Make exactly one python tool call that computes the whole answer and print()s it. Use exact division (/) and no rounding functions.\n- Write one line stating the result.\n- Write the final answer line.\n\nImportant facts about this task:\n- The numbers were altered to be large, so results are often negative, fractional, or nonsensical in real life. This is intended. Report the literal computed value.\n- Never say a problem is impossible. Never invent a corrected number. Never clamp to 0 and never take only whole items. Never round unless the problem demands it.\n- Do not explore alternative interpretations. Pick the most direct reading of the words and commit to it.\n- If the tool output looks strange, trust it anyway, as long as your formula matches the text.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.74,
+    "n": 100,
+    "mean_tokens": 195.85,
+    "mean_tool_calls": 0.5,
+    "ci95": [
+     0.65,
+     0.82
+    ]
+   },
+   "test": {
+    "accuracy": 0.705,
+    "n": 200,
+    "mean_tokens": 208.37,
+    "mean_tool_calls": 0.495,
+    "ci95": [
+     0.645,
+     0.765
+    ]
+   }
+  },
+  {
+   "idx": 12,
+   "group": "quirk",
+   "name": "Compute then checklist",
+   "sheet": "Solve the problem step by step, using the python tool for all arithmetic. print() the final result. Then run this quick checklist once before answering:\n\n- Literal numbers: Did I use every given number exactly as written, with no 'typo fixes' and no substitutions?\n- Sign: Did I keep the natural order of subtraction? Change = paid - cost and remaining = total - used. If the result is negative, the answer is negative; do not drop the minus sign.\n- No clamping: I did not turn a negative or impossible result into 0, and I did not limit the answer to whole items.\n- Precision: I did not round, floor or ceil unless the problem explicitly asked. Report the full decimal from Python.\n- Units and rates: Did I apply 'per serving', 'per item' and 'each' correctly, and count all the days, items or people mentioned?\n- Arithmetic: Is the answer taken from the tool output, not from mental math?\n\nIf any check fails, fix the formula and rerun once. Otherwise answer immediately. Keep the whole reply short and do not deliberate about whether the scenario is realistic.\n\nEnd your reply with a final line of the form 'Final answer: <number>'.",
+   "train": {
+    "accuracy": 0.79,
+    "n": 100,
+    "mean_tokens": 453.72,
+    "mean_tool_calls": 1.01,
+    "ci95": [
+     0.71,
+     0.87
+    ]
+   },
+   "test": {
+    "accuracy": 0.78,
+    "n": 200,
+    "mean_tokens": 482.84,
+    "mean_tool_calls": 1.09,
+    "ci95": [
+     0.725,
+     0.835
+    ]
+   }
+  }
+ ],
+ "best": {
+  "index": 4,
+  "name": "Compute then audit"
+ },
+ "primary": {
+  "diff_points": 6.0,
+  "ci95_points": [
+   1.0,
+   11.0
+  ],
+  "best_test_acc": 0.72,
+  "baseline_test_acc": 0.66,
+  "boot": "paired, B=2000, seed=0"
+ },
+ "verdict": "PASS",
+ "normal_gold_rows": {
+  "n": 133,
+  "diff_points": 0.0,
+  "ci95_points": [
+   -3.7593984962406015,
+   3.7593984962406015
+  ],
+  "quirk_driven": true
+ },
+ "flips": {
+  "wrong_to_right": [
+   "gsmh-0",
+   "gsmh-44",
+   "gsmh-79",
+   "gsmh-128",
+   "gsmh-555",
+   "gsmh-564",
+   "gsmh-639",
+   "gsmh-649",
+   "gsmh-655",
+   "gsmh-739",
+   "gsmh-889",
+   "gsmh-906",
+   "gsmh-963",
+   "gsmh-1033",
+   "gsmh-1040",
+   "gsmh-1128",
+   "gsmh-1146",
+   "gsmh-1148",
+   "gsmh-1165"
+  ],
+  "right_to_wrong": [
+   "gsmh-416",
+   "gsmh-530",
+   "gsmh-577",
+   "gsmh-735",
+   "gsmh-850",
+   "gsmh-1163",
+   "gsmh-1207"
+  ]
+ },
+ "over_limit_prompts": 0,
+ "exploratory_quirk": {
+  "index": 9,
+  "name": "Solve with small numbers first",
+  "diff_points": 10.0,
+  "ci95_points": [
+   5.0,
+   16.0
+  ],
+  "minus_best_general_points": 4.0
+ }
+}

@@ -1,0 +1,907 @@
+You are helping tune a system prompt (an "instruction sheet") for a small language model.
+
+## Target model and setup
+- Model: Qwen3.5-4B with thinking mode OFF (it still writes visible step-by-step reasoning in its reply), greedy decoding.
+- Task: GSM-Hard, i.e. GSM8K-style grade-school word problems whose numbers were replaced by large numbers. The gold answer is what the original solution program gives on the large numbers, so it can be negative, fractional or implausible in real life.
+- The model sees your sheet as the system message, then a user message: the problem followed by "End with 'Final answer: <number>'."
+- It has one tool, `python` (runs Python 3 code and returns stdout; 10 s timeout, output cut at 2000 characters, no network; the code must print()). It can use the tool for up to 4 rounds; the final round offers no tool, so it must then answer in plain text. Each reply is capped at 2048 tokens; a reply cut off by the cap usually has no final answer line and scores wrong.
+- Scoring: the answer is the number after the last "Final answer:" in the final reply (if there is none, a last \boxed{} number, else the last number in the text). It is correct if it matches the gold number to within a relative tolerance of 1e-4.
+- Your sheets will be scored on problems of the same kind that you are not shown.
+
+## Current sheet (baseline)
+"""
+Solve the problem step by step. End your reply with a final line of the form 'Final answer: <number>'. You have a python tool: use it for any arithmetic or computation instead of calculating by hand.
+"""
+Its accuracy on the 100 training problems below: 71/100.
+
+## All 29 failures on the training problems
+Each shows the problem, the gold answer, the model's parsed answer, how many python calls it made, and the last 1500 characters of its final reply.
+
+### Failure 1
+Problem: Every day, Wendi feeds each of her chickens three cups of mixed chicken feed, containing seeds, mealworms and vegetables to help keep them healthy.  She gives the chickens their feed in three separate meals. In the morning, she gives her flock of chickens 6887483 cups of feed.  In the afternoon, she gives her chickens another 25 cups of feed.  How many cups of feed does she need to give her chickens in the final meal of the day if the size of Wendi's flock is 20 chickens?
+Gold: -6887448
+Model's parsed answer: -68875089
+Python calls: 1   Tokens: 2432
+End of final reply:
+"""
+feeds each of her chickens three cups...".
+Maybe the "3 cups" is the total for the flock?
+Total needed = 3 cups.
+Given = 68,875,08.
+Result = -68,875,05.
+
+Maybe the "3 cups" is per chicken per meal, and there are 3 meals.
+Total needed = $20 \times 3 \times 3 = 180$.
+Given = 68,875,08.
+Result = -68,874,908.
+
+Let's assume the question is exactly as stated and the answer is negative.
+Final calculation:
+Total needed = $20 \times 3 = 60$.
+Total given = $68,874,83 + 25 = 68,875,08$.
+Remaining = $60 - 68,875,08 = -68,874,48$.
+
+Wait, could the morning number be **68,874,83** but the "3 cups" is actually **3000** cups? No.
+Could the flock be **20,000** chickens? No.
+
+Let's double check the arithmetic.
+$68,874,83 + 25 = 68,875,08$.
+$60 - 68,875,08 = -68,874,48$.
+
+Is there any other interpretation?
+"In the morning, she gives her flock of chickens 6887483 cups of feed."
+Maybe the 6887483 is the number of *cups per chicken*?
+Total given morning = $68,874,83 \times 20 = 1,377,496,600$.
+Total needed = 60.
+Result = $60 - 1,377,496,600 = -1,377,496,540$.
+
+Maybe the 6887483 is the total for the flock, but the "3 cups" is per *meal* for the *flock*?
+Total needed = $3 \text{ meals} \times 3 \text{ cups} = 9$ cups.
+Given = 68,875,08.
+Result = $9 - 68,875,08 = -68,875,089$.
+
+There seems to be no reasonable interpretation that yields a positive number unless the morning number is a typo. Given the constraints, I must provide the answer based on the numbers provided. The result is negative.
+
+However,
+"""
+
+### Failure 2
+Problem: John runs 60 miles a week. He runs 3 days a week.  He runs 3 hours the first day and half as much the other two days he runs.  How fast does he run?
+Gold: 10
+Model's parsed answer: 13.33
+Python calls: 1   Tokens: 360
+End of final reply:
+"""
+John runs a total of 4.5 hours per week (3 hours on the first day and 1.5 hours on the other two days). Since he runs 60 miles in that time, his speed is 60 divided by 4.5, which is approximately 13.33 miles per hour.
+
+Final answer: 13.33
+"""
+
+### Failure 3
+Problem: According to its nutritional info, a bag of chips has 7146410 calories per serving. If a 300g bag has 5 servings, how many grams can you eat if your daily calorie target is 2000 and you have already consumed 1800 calories?
+Gold: 0.0016791648
+Model's parsed answer: 0.008395823917183593
+Python calls: 1   Tokens: 540
+End of final reply:
+"""
+Based on the calculation:
+
+1.  **Calories per gram**: $7,146,410 \div 300 \approx 23,821.37$ calories/gram.
+2.  **Remaining calories**: $2,000 - 1,800 = 200$ calories.
+3.  **Maximum grams**: $200 \div 23,821.37 \approx 0.008396$ grams.
+
+You can eat approximately 0.0084 grams of chips.
+
+Final answer: 0.008395823917183593
+"""
+
+### Failure 4
+Problem: Of the 20 available cars for rent, 12 are automatic cars, 7957008 are manual cars, and the rest are semi-automatic. What percentage of the cars are semi-automatic?
+Gold: -39785000
+Model's parsed answer: 5
+Python calls: 1   Tokens: 704
+End of final reply:
+"""
+or if there's a typo in the numbers, let's consider the most reasonable interpretation:
+
+If the total is 20 cars, and 12 are automatic, then the remaining 8 cars would be either manual or semi-automatic. But the problem states 7,957,008 are manual, which is impossible.
+
+Let me re-read the problem. Perhaps the numbers are meant to be interpreted differently, or there's an error in the problem statement.
+
+Given the inconsistency, the most logical approach is to assume the problem has a typo and the manual cars number should be something reasonable (like 7 or 8). But since I must work with the given numbers:
+
+- Total: 20
+- Automatic: 12
+- Manual: 7,957,008 (which exceeds the total)
+
+This is mathematically impossible. The semi-automatic count would be 20 - 12 - 7,957,008 = -7,957,000, which is negative.
+
+Since the problem as stated contains contradictory information, I cannot provide a valid percentage. However, if we assume the manual cars number is a typo and should be 7 (a common pattern in such problems), then:
+- Semi-automatic = 20 - 12 - 7 = 1
+- Percentage = (1/20) * 100 = 5%
+
+But without making assumptions about typos, the problem is unsolvable as stated.
+
+Let me check if perhaps the problem meant to say something else. Given the constraints, I'll provide the answer based on the most reasonable interpretation that the numbers should add up:
+
+If we assume the manual cars should be 7 (making the total 20):
+- Semi-automatic = 20 - 12 - 7 = 1
+- Percentage = 5%
+
+Final answer: 5
+"""
+
+### Failure 5
+Problem: Chad ordered a build-your-own burrito for lunch.  The base burrito is $6.50.  He adds extra meat for $8843818.00, extra cheese for $1.00, avocado for $1.00 and 8843818 sauces for $0.88438185 each.  He decides to upgrade his meal for an extra $3.00 which will add chips and a drink.  He has a gift card for $5.00 that he uses at check out.  How much does he still owe?
+Gold: 8843825
+Model's parsed answer: 16665136.62
+Python calls: 1   Tokens: 723
+End of final reply:
+"""
+Let's break down the calculation step-by-step based on the Python output:
+
+1.  **Base burrito**: $6.50
+2.  **Extra meat**: $8,843,818.00
+3.  **Extra cheese**: $1.00
+4.  **Avocado**: $1.00
+5.  **Sauces**: $8,843,818 \times 0.88438185 = \$7,820,515.1239033$
+6.  **Upgrade**: $3.00
+
+**Total Cost**:
+$$6.50 + 8,843,818.00 + 1.00 + 1.00 + 7,820,515.1239033 + 3.00 = 16,665,141.6239033$$
+
+**Payment**:
+- Gift card: $5.00
+
+**Amount Owed**:
+$$16,665,141.6239033 - 5.00 = 16,665,136.6239033$$
+
+Rounding to two decimal places (standard for currency), the amount owed is $16,665,136.62.
+
+Final answer: 16665136.62
+"""
+
+### Failure 6
+Problem: A mother goes shopping. She buys cocoa at $4.20, laundry at $9.45 and a package of pasta at $8858153. She pays $20. How much change does the cashier give back?
+Gold: -8858146.65
+Model's parsed answer: 8858146.65
+Python calls: 1   Tokens: 321
+End of final reply:
+"""
+The total cost of the items is $8,858,166.65.
+The mother paid $20.00.
+The change given back is $8,858,146.65.
+
+Final answer: 8858146.65
+"""
+
+### Failure 7
+Problem: Katerina makes designer jewelry.  Her specialty is topaz necklaces.  She uses 1786338 topaz gemstones per necklace, and fills the space between gemstones using sterling silver beads.  If each topaz gemstone is one inch long, each sterling silver bead is one-quarter of an inch long, and each necklace is made to a total length of 25 inches, how many sterling silver beads does Katerina use per necklace?
+Gold: -7145252
+Model's parsed answer: 0
+Python calls: 0   Tokens: 2048
+End of final reply:
+"""
+: 0
+
+One alternative interpretation: Maybe the number of gemstones is actually small, and the user typed a huge number by mistake? If I assume the user made a typo, I can't guess the correct number. I must answer based on the provided text. Based on the text, it's impossible. Thus, 0 beads.
+
+Let's double check if I missed a decimal point. "1786338" is an integer. "one inch". "25 inches".
+Okay, I will proceed with 0.
+
+Wait, could the question be from a specific context where "1786338" is a code or something? Unlikely.
+Could it be that the gemstones are 1/1786338 of an inch? No, "one inch long".
+
+Let's consider the possibility that the prompt is a "trick question" designed to test if the AI notices the impossibility. The answer to "how many beads" when the setup is impossible is 0.
+
+Final answer: 0
+
+Let's do a sanity check. If the necklace was 1,786,338 inches long, and we had 25 inches of beads? No, the gemstones are the main component.
+If the necklace was 1,786,338 + (beads * 0.25) = 25? No, that's impossible.
+The equation is: $N_{gem} \times L_{gem} + N_{bead} \times L_{bead} = L_{necklace}$
+$1786338 \times 1 + N_{bead} \times 0.25 = 25$
+$1786338 + 0.25 N_{bead} = 25$
+$0.25 N_{bead} = 25 - 1786338$
+$0.25 N_{bead} = -1786313$
+$N_{bead} = -7145252$
+
+Since $N_{bead}$ must be $\ge 0$, and the equation has no solution for $N_{bead} \ge 0$, the number of beads is 0 (as the necklace cannot be constructed as described).
+
+Final answer: 0
+
+Wait, is it possible the number is 178,633.8?
+"""
+
+### Failure 8
+Problem: Watson works a 1449664-hour shift each day, five days a week. He earns $1449664 per hour and gets a $300 bonus each week if the company performs well. How much money did Watson make in April if the company performed very well for the whole month?
+Gold: 289934000
+Model's parsed answer: 45032693849057.14
+Python calls: 1   Tokens: 2677
+End of final reply:
+"""
+\times (30/7) = 45,032,693,849,057.142857...$
+Total = $45,032,693,849,057.142857... + 1285.714285... = 45,032,693,850,342.857142...$
+
+Ah, I see. In the first python run, I did:
+`total_weekly_earnings = weekly_hourly_earnings + weekly_bonus`
+`total_april_earnings = total_weekly_earnings * weeks_in_april`
+This is mathematically equivalent to:
+`(H * W + B) * (D/7) = H*W*(D/7) + B*(D/7)`
+Where H is hours per day, W is days per week, B is bonus, D is days in month.
+So the first python run result `45032693849057.14` is missing the bonus part?
+Let's check:
+`weekly_hourly_earnings` = 10,507,628,564,480
+`weekly_bonus` = 300
+`total_weekly_earnings` = 10,507,628,564,780
+`weeks_in_april` = 30/7
+`total_april_earnings` = 10,507,628,564,780 * 30 / 7
+= (10,507,628,564,480 * 30 + 300 * 30) / 7
+= (315,228,856,934,400 + 9,000) / 7
+= 315,228,856,943,400 / 7
+= 45,032,693,849,057.142857...
+
+Wait, my manual calculation of the bonus part was:
+Total bonus = $300 \times 30/7 = 1285.71...$
+Total hourly = $45,032,693,849,057.14...$
+Sum = $45,032,693,850,342.85...$
+
+Why is there a discrepancy?
+Let's re-calculate `weekly_hourly_earnings * 30 / 7`.
+`weekly_hourly_earnings` = 10,507,628,564,480.
+`10,507,628,564,480 * 30 = 315,228,856,934,400`.
+`315,228,856,934,400 / 7 = 45,032,693,847,771.42857...`
+
+Okay, so the hourly part alone is ~45.032693847771 trillion.
+The bonus part is ~1285.71.
+Sum = 45,032,693,849,057.14.
+
+Wait, let's re-add:
+45,032,693,847,771.42857 + 1,285.714285 = 45,032,693,849,057.142857.
+Yes
+"""
+
+### Failure 9
+Problem: Mark makes custom dog beds. A bed for a Rottweiler takes 8 pounds of stuffing, a bed for a chihuahua takes 2 pounds of stuffing, and a bed for a collie takes the average amount of stuffing between the first 736424 kinds of beds. How many pounds of stuffing does Mark need to make 4 chihuahua beds and 3 collie beds?
+Gold: 4050344
+Model's parsed answer: 7
+Python calls: 0   Tokens: 2048
+End of final reply:
+"""
+
+Let's verify this hypothesis.
+Sequence:
+1. Rottweiler (8)
+2. Chihuahua (2)
+3. Rottweiler (8)
+4. Chihuahua (2)
+...
+736424. Chihuahua (2) (since 736424 is even).
+Sum = $736424 / 2 \times (8 + 2) = 368212 \times 10 = 3682120$.
+Average = $3682120 / 736424 = 5$.
+
+So, a Collie bed takes 5 pounds of stuffing.
+
+**Step 4: Calculate the total stuffing needed.**
+Mark needs to make:
+- 4 Chihuahua beds: $4 \times 2 = 8$ pounds.
+- 3 Collie beds: $3 \times 5 = 15$ pounds.
+
+Total = $8 + 15 = 23$ pounds.
+
+Let's double check if there's any other interpretation.
+What if the beds are not alternating?
+"A bed for a Rottweiler takes 8... a bed for a chihuahua takes 2... a bed for a collie takes the average..."
+This defines the Collie. It doesn't define the sequence of other beds.
+However, without a defined sequence, the problem is unsolvable unless the "first 736424 kinds" implies a specific set.
+The most logical set that includes Rottweiler and Chihuahua and allows for a calculation is the alternating pattern, or perhaps the set of all beds is just {Rottweiler, Chihuahua} and the number 736424 is a distractor implying "the set of all known beds" (which is 2, but maybe the number is just a random large even number to force the even/odd logic if a pattern existed).
+But wait, if the set is just {Rottweiler, Chihuahua}, then the "first 736424 kinds" doesn't make sense unless the kinds are ordered.
+If the kinds are ordered Rottweiler, Chihuahua, Rottweiler, Chihuahua... then the average of the first 7
+"""
+
+### Failure 10
+Problem: Charlotte went into the kitchen supply store knowing she wanted a set of pot and pans for $16372845, a set of mixing bowls for $6372845 and 5 separate utensils at $5.00 each.  At check out, the clerk told her everything was 20% off.  How much was her order?
+Gold: 5098392
+Model's parsed answer: 18196572
+Python calls: 1   Tokens: 644
+End of final reply:
+"""
+Let's break down the calculation:
+
+1.  **Cost of utensils**: $5 \times \$5.00 = \$25.00$
+2.  **Total cost before discount**:
+    $$16,372,845 + 6,372,845 + 25 = 22,745,715$$
+3.  **Apply 20% discount**:
+    The discount is $20\%$, so Charlotte pays $80\%$ of the total.
+    $$22,745,715 \times 0.80 = 18,196,572$$
+
+The final amount Charlotte paid is $18,196,572$.
+
+Final answer: 18196572
+"""
+
+### Failure 11
+Problem: A bag of buttons had 21 buttons in it. 8599584 buttons had two holes and the rest had four holes. How many holes were in all the buttons in the bag?
+Gold: -17199084
+Model's parsed answer: 68
+Python calls: 1   Tokens: 2603
+End of final reply:
+"""
+er and see if the result is a "trick" answer like 0 or something.
+Literal calculation: -17,199,084.
+This is definitely not the intended answer for a riddle.
+
+Let's assume the question meant "8 buttons".
+Calculation:
+Total buttons = 21
+Buttons with 2 holes = 8
+Buttons with 4 holes = 21 - 8 = 13
+Total holes = (8 * 2) + (13 * 4) = 16 + 52 = 68.
+
+Let's double check if there's any other interpretation.
+Could "8599584" be the number of holes? No, "8599584 buttons had two holes".
+
+Okay, I will proceed by noting the inconsistency and solving for the most likely intended value (8), while acknowledging the literal interpretation. However, the prompt asks to "Solve the problem step by step" and end with a number. Providing a negative number of holes is confusing. Providing the answer to the corrected problem is more helpful.
+
+Wait, is it possible the number is 8, 5, 9, 9, 5, 8, 4? No.
+Is it possible the number is 85?
+21 - 85 = -64. Still negative.
+
+The only single digit that makes sense is 8.
+Let's assume the number is 8.
+
+Step 1: Identify total buttons = 21.
+Step 2: Identify buttons with 2 holes. The text says 8599584, which is impossible. Assuming a typo for 8.
+Step 3: Calculate buttons with 4 holes = 21 - 8 = 13.
+Step 4: Calculate total holes = (8 * 2) + (13 * 4) = 16 + 52 = 68.
+
+Let's verify if 8599584 could be a specific constant in some programming challenge? Unlikely.
+Let's assume the user made a typo and meant 8.
+
+Final check:
+If the number was 8, the answer is 68.
+If the number
+"""
+
+### Failure 12
+Problem: Bennet is a farmer. He sells 8700518 of his eggplants for $3 each. He has 25 ears of corn that he can sell as well. If Bennet wants to make a total of $135, how much should he sell each ear of corn for?
+Gold: -1044056.76
+Model's parsed answer: 135000
+Python calls: 1   Tokens: 2558
+End of final reply:
+"""
+00 -> 25x = 134,738,984.46 -> x = 5,389,559.38.
+
+Let's go back to the most literal interpretation. The problem states the numbers clearly.
+Eggplants: 8,700,518
+Price: $3
+Corn: 25
+Target: $135
+
+Calculation:
+Total from eggplants = 26,101,554
+Target = 135
+Deficit = 135 - 26,101,554 = -26,101,419
+Price per corn = -26,101,419 / 25 = -1,044,056.76
+
+Is it possible the target is $135,000,000?
+26,101,554 + 25x = 135,000,000
+25x = 108,898,446
+x = 4,355,937.84
+
+Is it possible the target is $135,000,000,000?
+25x = 108,898,446,000 - 26,101,554 = 108,872,344,446
+x = 4,354,893,777.84
+
+Let's try to search for this specific problem online or in common datasets. It looks like a variation of a math problem where the numbers are randomized.
+Often, the target is something like $135,000,000.
+Let's assume the target is $135,000,000.
+Then x = 4,355,937.84.
+
+Wait, what if the number of eggplants is 8700518 *cents*? No, "for $3 each".
+What if the target is $135,000,000?
+Let's try to see if there is a typo in the eggplant count. Maybe it's 8700518 *something*?
+What if the eggplant count is 8700518 * 0.00000001? No.
+
+Let's assume the question is a trick and the answer is indeed negative.
+Or maybe the target is $135,000,000 and the eggplant count is different?
+Let's try to assume the target is $135,000,000 and the eggplant count is 8700518.
+Then x = 4,355,937.84.
+
+Let's try to assume the target is $135,000,000 and the eggplant count is 8700518 * 0.00000001? No.
+
+Let's try to assume the target is $135,000
+"""
+
+### Failure 13
+Problem: Kelly is grocery shopping at a supermarket and is making sure she has enough in her budget for the items in her cart. Her 5107261 packs of bacon cost $10 in total and she has 6 packets of chicken which each cost twice as much as a pack of bacon. She also has 3 packs of strawberries, priced at $4 each, and 7 packs of apples, each priced at half the price of a pack of strawberries. If Kelly’s budget is $65107261 then how much money, in dollars, does she have left in her budget?
+Gold: -10214507
+Model's parsed answer: 65107225
+Python calls: 3   Tokens: 4783
+End of final reply:
+"""
+ne edge case: "how much money, in dollars".
+Does this mean the integer part only? Or the exact value?
+If I have $10.99, I have 10 dollars and 99 cents.
+If the question asks "how much money in dollars", it might mean the total value.
+Given the precision, $65107225$ is the most robust answer.
+
+Let's write down the steps clearly.
+1. Calculate cost of bacon per pack.
+2. Calculate cost of chicken per pack and total.
+3. Calculate cost of strawberries.
+4. Calculate cost of apples.
+5. Sum all costs.
+6. Subtract from budget.
+7. Round to nearest cent (or dollar).
+
+Step 1: $10 / 5107261$.
+Step 2: $6 * 2 * (10/5107261) = 120/5107261$.
+Step 3: $3 * 4 = 12$.
+Step 4: $7 * (4/2) = 14$.
+Total Cost = $36 + 120/5107261$.
+Remaining = $65107261 - 36 - 120/5107261 = 65107225 - 120/5107261$.
+$120/5107261 \approx 0.0000235$.
+Remaining $\approx 65107224.9999765$.
+Rounded to nearest cent: $65107225.00$.
+
+Final answer: 65107225
+
+I will output 65107225.
+
+Final answer: 65107225
+
+Wait, I should check if the problem expects a decimal.
+"how much money, in dollars".
+If I have $10.50, I have 10.5 dollars.
+If I have $10.00, I have 10 dollars.
+So 65107225 is correct.
+
+Final answer: 65107225
+
+One last check on the arithmetic.
+$65107261 - 36 = 65107225$.
+$120 / 5107261 \approx 0.0000235$.
+$65107225 - 0.0000235 = 65107224.9999765$.
+Rounding to 2 decimal places gives $65107225.00$.
+Rounding to nearest integer gives $65107225$.
+Both interpretations lead to 65107225.
+
+Final answer: 65107225
+
+I'll format the output as
+"""
+
+### Failure 14
+Problem: The Ben and Aggie Burrito Shop makes 3084431 chimichangas on Tuesdays, 3084431 chimichangas on Wednesdays and twice as many on Friday. How many chimichangas do they make on those three days?
+Gold: 9253418
+Model's parsed answer: 12337724
+Python calls: 1   Tokens: 326
+End of final reply:
+"""
+The Ben and Aggie Burrito Shop makes:
+- 3,084,431 on Tuesdays
+- 3,084,431 on Wednesdays
+- 6,168,862 on Fridays (which is $2 \times 3,084,431$)
+
+The total is $3,084,431 + 3,084,431 + 6,168,862 = 12,337,724$.
+
+Final answer: 12337724
+"""
+
+### Failure 15
+Problem: Larry loves taking care of animals.  He has 3 cats.  He has 3 times as many dogs as cats.  He has 2 fewer rabbits than dogs.  He has a fish tank with 149269 times the number of fish as rabbits.  He also has a collection of gerbils that's 1/3 the number of fish he has.  How many pets does Larry have?
+Gold: 2836101
+Model's parsed answer: 1393196
+Python calls: 1   Tokens: 2512
+End of final reply:
+"""
+ing is expected. Given the magnitude of the numbers, rounding to the nearest whole number is the most reasonable interpretation for a "final answer" in a text-based puzzle unless specified otherwise.
+
+However, let's consider the possibility that the problem is from a context where exact decimals are accepted, or the "1/3" is an approximation. But "1/3" is exact.
+Let's assume the question expects the integer part (floor) or nearest integer.
+Floor: 348294. Total: 1393196.
+Nearest: 348294. Total: 1393196.
+Ceiling: 348295. Total: 1393197.
+
+Usually, "how many" implies the count of whole items. You can't have 1/3 of a gerbil. So the count of gerbils must be an integer. The only way the math works out perfectly is if the input numbers were slightly different, but they are fixed. In such cases, the intended answer is likely the integer part or the rounded value. Since 0.333 is closer to 0 than 1, rounding down (floor) or to nearest gives the same result.
+
+Let's stick with 1393196.
+
+One more check: Could "1/3 the number of fish" mean the gerbils are 1/3 of the fish, so Fish = 3 * Gerbils? Yes.
+Could it mean Gerbils = 1/3 * Fish? Yes.
+Is it possible the number of fish is not an integer? No.
+Is it possible the number of gerbils is not an integer? No.
+This implies the problem statement has a slight inconsistency (non-integer gerbils).
+Standard procedure for such inconsistencies in word problems: Round to the nearest integer.
+
+Calculation:
+Cats = 3
+Dogs = 9
+Rabbits = 7
+Fish = 1044883
+Gerb
+"""
+
+### Failure 16
+Problem: John earned 10227740 dollars an hour and worked 6 hours in the week.  If he spends 10227740 dollars on gas and wants to deposit 100 dollars in the bank, how many 21022774 dollar pens can he buy after he buys 1022774 pencils that cost 10 dollars each?
+Gold: -409104
+Model's parsed answer: 1
+Python calls: 1   Tokens: 872
+End of final reply:
+"""
+Let's review the calculation steps:
+
+1.  **Total Earnings**: $10,227,740 \times 6 = 61,366,440$ dollars.
+2.  **Remaining after expenses**: $61,366,440 - 10,227,740 (\text{gas}) - 100 (\text{deposit}) = 51,138,600$ dollars.
+3.  **Cost of pencils**: $1,022,774 \times 10 = 10,227,740$ dollars.
+4.  **Money for pens**: $51,138,600 - 10,227,740 = 40,910,860$ dollars.
+5.  **Number of pens**: $40,910,860 \div 21,022,774 \approx 1.946$. Since he can only buy whole pens, he can buy 1 pen.
+
+Final answer: 1
+"""
+
+### Failure 17
+Problem: Coach brought one bag filled with basketballs to practice and dumped them all out onto the gym floor before practice began.  After the practice time was over, he asked Jordan, Jason, and Jeffrey to pick up the balls and carry them over to the bag.  The three boys picked up and carried all of the balls in one trip.  Jordan carried twice as many balls as Jason, and Jason carried twice as many balls as Jeffrey. If Jason had picked up and carried 6752769 balls, what is the total number of balls that the coach brought to practice?
+Gold: 23634691.5
+Model's parsed answer: 2
+Python calls: 0   Tokens: 2048
+End of final reply:
+"""
+is odd, the puzzle is flawed.
+However, as an AI, I should solve the problem as stated. If the result is a decimal, I will provide that, but I suspect the intended answer might involve the assumption that the relationships were reversed or the number was even.
+
+Let's consider the possibility that the prompt has a typo in the number and it should be 6,752,768 (even).
+If $S = 6,752,768$:
+$J = 3,376,384$.
+$O = 13,505,536$.
+Total = $13,505,536 + 6,752,768 + 3,376,384 = 23,634,688$.
+
+Let's consider the possibility that the text meant "Jeffrey carried twice as many as Jason".
+Then $J = 2S = 13,505,538$.
+$O = 2S = 13,505,538$.
+Total = $13,505,538 + 6,752,769 + 13,505,538 = 33,763,845$.
+
+Let's consider the possibility that the text meant "Jason carried half as many as Jeffrey" (which is the same as Jeffrey carried twice as many). Same result.
+
+Let's consider the possibility that the text meant "Jordan carried twice as many as Jeffrey" and "Jason carried twice as many as Jeffrey"? No, the text is specific.
+
+Let's use the Python tool to calculate the exact value based on the strict interpretation of the text, and then maybe comment on the integer issue. But usually, these problems have integer answers.
+Is it possible the number is 6,752,769 and the answer is just that decimal?
+Or is it possible I am misinterpreting "twice as many"?
+"Twice as many" = $2x$.
+Maybe "Jason carried twice as many balls as Jeffrey" means $J_{ason} = 2 \times J_{effrey}$. Yes.
+Maybe "Jordan carried twice as many
+"""
+
+### Failure 18
+Problem: One meatball sub sandwich contains 1952796 meatballs.  Sidney ordered 3 less than ten meatball sub sandwiches. Then Mark ate 1952796 of Sidney's meatball sub sandwiches. So Sidney ordered another three sub sandwiches.  How many meatballs were in the sub sandwiches that remained?
+Gold: 11716776
+Model's parsed answer: 17575164
+Python calls: 1   Tokens: 1833
+End of final reply:
+"""
+Based on the calculation:
+1.  Sidney ordered $10 - 3 = 7$ sandwiches.
+2.  Mark ate 1,952,796 meatballs, which is exactly the content of 1 sandwich. So, $7 - 1 = 6$ sandwiches remain.
+3.  Sidney ordered 3 more sandwiches. $6 + 3 = 9$ sandwiches remain.
+4.  Total meatballs = $9 \times 1,952,796 = 17,575,164$.
+
+Final answer: 17575164
+"""
+
+### Failure 19
+Problem: John invited 14519130 people to a birthday party.  Each guest will eat 1451913 hot dogs.  He already has 4 hot dogs left over from a previous party.  If a pack of hot dogs contains 6 hot dogs and costs $1451913, how much does he need to spend on hot dogs?
+Gold: 9679418.666666666
+Model's parsed answer: 5101178622711293952
+Python calls: 1   Tokens: 823
+End of final reply:
+"""
+Based on the calculations:
+
+1.  **Total hot dogs needed for guests**: $14,519,130 \times 1,451,913 = 21,080,513,595,690$
+2.  **Total hot dogs required**: $21,080,513,595,690 + 4 = 21,080,513,595,694$
+3.  **Number of packs needed**: $\lceil 21,080,513,595,694 / 6 \rceil = 3,513,418,932,616$ packs
+4.  **Total cost**: $3,513,418,932,616 \times 1,451,913 = 510,117,862,271,129,4408$
+
+The total cost John needs to spend is $510,117,862,271,129,4408.
+
+Final answer: 5101178622711294408
+"""
+
+### Failure 20
+Problem: John and DeSean bought a bag of marshmallows to make s'mores together. The bag has 35 marshmallows. Each S'more uses one marshmallow. If John makes 980605 S'mores, DeSean makes 980605 S'mores, and they dropped 3 marshmallows on the ground, how many S'mores can each kid have with the marshmallows left in the bag?
+Gold: -490291
+Model's parsed answer: 0
+Python calls: 3   Tokens: 669
+End of final reply:
+"""
+The remaining number of marshmallows is -1,961,178. This negative number indicates that there are not enough marshmallows in the bag to satisfy the demand. In reality, this means they ran out of marshmallows long before John and DeSean could make all their S'mores.
+
+Since there are no marshmallows left (in fact, they would have needed 1,961,213 marshmallows but only had 35), the number of S'mores each kid can have with the marshmallows left in the bag is 0.
+
+Let me re-read the question to make sure I understand it correctly. "how many S'mores can each kid have with the marshmallows left in the bag?"
+
+If there are no marshmallows left, then each kid can have 0 S'mores with the remaining marshmallows.
+
+Final answer: 0
+"""
+
+### Failure 21
+Problem: The tooth fairy left Sharon $5.00 in exchange for the first tooth Sharon lost.  Then, the tooth fairy gave Sharon $4204207 for each of the next three teeth Sharon lost.  And for each of the last 2 teeth Sharon lost, the tooth fairy gave Sharon half the amount of money per tooth as Sharon had received for each of the previous three teeth.  How much money did the tooth fairy leave Sharon, in dollars?
+Gold: 4204215
+Model's parsed answer: 16816833
+Python calls: 1   Tokens: 671
+End of final reply:
+"""
+Let's verify the calculation manually to be sure.
+
+1.  **First tooth:** $5
+2.  **Next three teeth:** $4,204,207 \times 3 = 12,612,621$
+3.  **Last two teeth:** The amount per tooth is half of $4,204,207, which is $2,102,103.5. For two teeth, this is $2,102,103.5 \times 2 = 4,204,207$.
+
+Total sum = $5 + 12,612,621 + 4,204,207$
+Total sum = $12,612,626 + 4,204,207$
+Total sum = $16,816,833$
+
+The calculation matches the Python result.
+
+Final answer: 16816833
+"""
+
+### Failure 22
+Problem: Janet is collecting the results of Herbert Hoover Elementary School's annual standardized test. 340 out of 500 third-graders passed, along with 40 out of 7601062 fourth graders. The 400 fifth graders had a pass rate that was twice the fourth grades' pass rate. What is the school's overall pass rate?
+Gold: 0.0049987649
+Model's parsed answer: 2
+Python calls: 4   Tokens: 3307
+End of final reply:
+"""
+ate = Fraction(fourth_graders_passed, fourth_graders_total)
+print(f"Fourth pass rate: {fourth_pass_rate} = {float(fourth_pass_rate)}")
+
+# Fifth grade pass rate (twice)
+fifth_pass_rate = 2 * fourth_pass_rate
+print(f"Fifth pass rate: {fifth_pass_rate} = {float(fifth_pass_rate)}")
+
+# Fifth graders who passed
+fifth_graders_passed = fifth_graders_total * fifth_pass_rate
+print(f"Fifth graders passed: {fifth_graders_passed} = {float(fifth_graders_passed)}")
+
+# Total students
+total_students = third_graders_total + fourth_graders_total + fifth_graders_total
+print(f"Total students: {total_students}")
+
+# Total passed
+total_passed = third_graders_passed + fourth_graders_passed + fifth_graders_passed
+print(f"Total passed: {total_passed} = {float(total_passed)}")
+
+# Overall pass rate
+overall_pass_rate = Fraction(total_passed, total_students)
+print(f"Overall pass rate: {overall_pass_rate}")
+print(f"Overall pass rate (decimal): {float(overall_pass_rate)}")
+print(f"Overall pass rate (percentage): {float(overall_pass_rate) * 100}%")
+
+# Let's also compute it as a decimal directly to verify
+total_passed_decimal = third_graders_passed + fourth_graders_passed + (fifth_graders_total * (fourth_graders_passed / fourth_graders_total) * 2)
+overall_pass_rate_decimal = total_passed_decimal / total_students
+print(f"\nDirect decimal calculation:")
+print(f"Total passed (decimal): {total_passed_decimal}")
+print(f"Overall pass rate (decimal): {overall_pass_rate_decimal}")
+</parameter>
+</function>
+</tool_call>
+"""
+
+### Failure 23
+Problem: Fishio posted her selfie on Instagram. She received 3748529 likes on the photo after 1 week. Three weeks later, the number of likes was 70 times as many as the initial number of likes. If she received 37485290 more new likes recently, how many Instagram likes are there?
+Gold: 3908529
+Model's parsed answer: 299882320
+Python calls: 1   Tokens: 538
+End of final reply:
+"""
+Let's verify the calculation:
+- Initial likes ($L_1$) = 3,748,529
+- Likes after three weeks ($L_3$) = $70 \times 3,748,529 = 262,397,030$
+- New likes ($L_{new}$) = 37,485,290
+- Total likes = $262,397,030 + 37,485,290 = 299,882,320$
+
+The calculation is correct.
+
+Final answer: 299882320
+"""
+
+### Failure 24
+Problem: Ronnie was given $6316688 while Rissa was given thrice as much. After each of them had given an equal amount of money to their little sister, Rissa is left with 4/6316688 of her money. How much is left in Ronnie's money?
+Gold: 2526675.200000001
+Model's parsed answer: 4
+Python calls: 1   Tokens: 2796
+End of final reply:
+"""
+mes 4 = 16$.
+Given = $18950064 - 16 = 18950048$.
+Still impossible.
+
+Let's try one more interpretation. Maybe the fraction is $\frac{4}{6316688}$ of the *amount Rissa had after giving*? No, that's circular.
+
+Wait, could the problem be stating that Rissa is left with 4 dollars, and the "6316688" is just a number? No, "of her money" implies a ratio.
+
+Let's re-read the problem very carefully.
+"Ronnie was given 6316688 while Rissa was given thrice as much."
+$R = 6316688$.
+$S = 3R$.
+
+"After each of them had given an equal amount of money to their little sister, Rissa is left with 4/6316688 of her money."
+Maybe "her money" refers to the money Ronnie had? No, "her" refers to Rissa.
+
+Is it possible that the fraction is $\frac{4}{6316688}$ of the *amount given*?
+Remaining = $\frac{4}{R} \times x$.
+$x = S - \frac{4}{R} x = 3R - \frac{4}{R} x$.
+$x (1 + \frac{4}{R}) = 3R$.
+$x = \frac{3R}{1 + 4/R} = \frac{3R^2}{R+4}$.
+For $R = 6316688$, $x \approx 3R$.
+Then Ronnie's remaining = $R - x \approx R - 3R = -2R$. Still negative.
+
+Let's try a completely different interpretation. Maybe the problem is:
+Rissa is left with 4/6316688 of *Ronnie's* money? No.
+
+Wait, what if the problem means "Rissa is left with 4/6316688 of the *original* amount of money that Ronnie had"?
+Remaining = $\frac{4}{R} \times R = 4$.
+Given = $3R - 4$.
+Still impossible.
+
+Is it possible that the problem has a typo and Rissa was given *one-third* as much?
+If $S = R/3 = 2105562.66$.
+Remaining = $\frac{4}{R} \times S = \frac{4}{R
+"""
+
+### Failure 25
+Problem: Meredith is a freelance blogger who writes about health topics and submits to clients each day as her permanent job. A blog article takes an average of 4 hours to research and write about. Last week, she wrote 5182869 articles on Monday and  2/5182869 times more articles on Tuesday than on Monday. On Wednesday, she wrote twice the number of articles she wrote on Tuesday. Calculate the total number of hours she spent writing articles in the three days.
+Gold: 107803668
+Model's parsed answer: 82925928
+Python calls: 1   Tokens: 638
+End of final reply:
+"""
+Based on the calculations:
+- **Monday**: 5,182,869 articles
+- **Tuesday**: 5,182,871 articles (5,182,869 + 2)
+- **Wednesday**: 10,365,742 articles (2 * 5,182,871)
+- **Total Articles**: 20,731,482
+- **Total Hours**: 20,731,482 * 4 = 82,925,928 hours
+
+Final answer: 82925928
+"""
+
+### Failure 26
+Problem: Vince can staple 8704944 reports every 15 minutes.  If he was stapling reports from 8:00 AM until 11:00 PM, how many reports did he staple altogether?
+Gold: 104459328
+Model's parsed answer: 522296640
+Python calls: 1   Tokens: 596
+End of final reply:
+"""
+Vince worked from 8:00 AM to 11:00 PM, which is a total of 15 hours.
+15 hours is equal to $15 \times 60 = 900$ minutes.
+
+He staples 8,704,944 reports every 15 minutes.
+The number of 15-minute intervals in 900 minutes is $900 / 15 = 60$.
+
+The total number of reports is $60 \times 8,704,944 = 522,296,640$.
+
+Final answer: 522296640
+"""
+
+### Failure 27
+Problem: You can buy a movie super ticket for $20 that includes rights to watch any movie and you get 5687521 popcorn with a soda for only $1 extra. Or you can buy a movie ticket for $12 and buy 5687521 popcorn and a soda at regular price. What's the regular price of popcorn if the soda costs $3 and you didn't buy the super ticket and ended up saving $2?
+Gold: 5687524
+Model's parsed answer: 4
+Python calls: 1   Tokens: 625
+End of final reply:
+"""
+The calculation confirms that the regular price of popcorn is $4.
+
+Final answer: 4
+"""
+
+### Failure 28
+Problem: Pat has a flower bed that is 111 feet long.  Pat wants to fill her flower bed with plants.  Pat's flowers grow 12 inches wide so she needs to leave 1.5 feet between every plant.  Pat already owns 4718637 flowers.  Each flowering plant costs $6 at the store,  how much money will Pat spend at the store to fill up her flower bed?
+Gold: -28311378
+Model's parsed answer: 0
+Python calls: 1   Tokens: 1452
+End of final reply:
+"""
+.
+
+Since you can't have a fraction of a plant in this context (usually), she can fit 44 plants (or maybe 45 if we round up, but physically 44.4 means 44 full plants and a partial space). Regardless, the number of plants needed is approximately 44 or 45.
+Pat owns 4,718,637 flowers.
+Since 4,718,637 is much greater than 44 or 45, she already has enough flowers to fill the bed.
+Therefore, she does not need to buy any more flowers.
+The cost to spend at the store is $0.
+
+Let's double check if there's any trick interpretation.
+"how much money will Pat spend at the store to fill up her flower bed?"
+If she has enough, she spends $0.
+
+Is it possible the question implies she needs to buy exactly the number of plants to fill the bed, ignoring what she owns? No, that would make the "owns 4718637" information irrelevant, which is unlikely in a math problem. The information about owning flowers is a distractor or a condition to determine if she needs to buy any.
+
+Calculation verification:
+$111 \text{ feet} / 2.5 \text{ feet/plant} = 44.4 \text{ plants}$.
+She needs 44 plants (or 45 if rounding up to the next whole plant to "fill" it completely, but even then, 45 < 4,718,637).
+She owns 4,718,637.
+She buys $\max(0, 44.4 - 4718637) = 0$.
+Cost = $0 \times 6 = 0$.
+
+Final answer seems to be 0.
+
+Let's confirm the arithmetic one more time.
+$111 / 2.5 = 1110 / 25 = 222 / 5 = 44.4$.
+Correct.
+
+The number of plants she owns is 4,718,637.
+$4,718,637 > 44.4$.
+So she has plenty.
+Cost is 0.
+
+Final answer: 0
+"""
+
+### Failure 29
+Problem: Alex is getting ready to attend an event that she has hosted and wants to make sure that she has enough seats for everyone. She invites 93966920 people via email and each invited person says that they will also invite 2 of their friends. She then calls 9396692 of her friends to invite them too and 8 of them say they will be bringing their spouses. How many seats will Alex need?
+Gold: 9397001
+Model's parsed answer: 291297689
+Python calls: 1   Tokens: 624
+End of final reply:
+"""
+To find the total number of seats Alex needs, we sum up all the attendees:
+
+1.  **Alex**: 1 person
+2.  **Email invitees**: 93,966,920 people
+3.  **Friends of email invitees**: $93,966,920 \times 2 = 187,933,840$ people
+4.  **Phone invitees**: 9,396,920 people
+5.  **Spouses**: 8 people
+
+Total = $1 + 93,966,920 + 187,933,840 + 9,396,920 + 8$
+Total = 291,297,689
+
+Final answer: 291297689
+"""
+
+## 8 successes (randomly chosen)
+
+### Success 1
+Problem: Mia and Emma are currently 16 years apart in age. If Mia, who is younger than Emma, is 40 years old, what's the average of their ages?
+Python calls: 1   Tokens: 362
+
+### Success 2
+Problem: Julie operates the cash register exactly twice as fast as her less-experienced colleague Jewel. Daily, Jewel processes 6193494 customers. What is the total weekly production for the two if they work all days of the week?
+Python calls: 1   Tokens: 381
+
+### Success 3
+Problem: Rosie can run 10 miles per hour for 3 hours. After that, she runs 5 miles per hour. How many miles can she run in 7 hours?
+Python calls: 1   Tokens: 619
+
+### Success 4
+Problem: Arianna plants a garden that has 7313202 rows of flowers with 20 flowers in each row. Currently, only 4/5 of the planted flowers have bloomed. How many flowers in Arianna's garden have bloomed?
+Python calls: 1   Tokens: 266
+
+### Success 5
+Problem: Eight more than four times the number of coffee mugs in the teacher’s lounge is 9871664. How many coffee mugs are in the teacher’s lounge?
+Python calls: 1   Tokens: 273
+
+### Success 6
+Problem: Tomorrow, 42 adults and 6742822 babies will be attending a function at Mia’s restaurant. The restaurant has 5 times as many regular chairs as high chairs. If there are 8 high chairs, how many more chairs does she have to get?
+Python calls: 1   Tokens: 672
+
+### Success 7
+Problem: Two cups of flour are needed to make a dozen cookies. Carla is making 892758 cookies today and 30 cookies tomorrow. How many cups of flour will Carla need to bake the cookies today and tomorrow?
+Python calls: 1   Tokens: 449
+
+### Success 8
+Problem: Tobias bought a big pizza with 2821391 pieces. He ate 2/5 of the pieces on the first day, 10 pieces on the second day, and 7/13 of the remaining pieces on the third day. How many pizza pieces has he eaten so far?
+Python calls: 4   Tokens: 2230
+
+## Your task
+Write exactly 6 candidate instruction sheets that replace the current one. They must take clearly different strategies (not rewordings of one idea). Requirements:
+- At most 200 words each.
+- General: do not mention specific problems, numbers or answers from the examples above.
+- Each must keep the instruction to end the reply with a final line of the form 'Final answer: <number>'.
+- Each is used as the whole system message, so it can say how to use the python tool.
+
+Reply with JSON only (no code fences, no commentary): a list of exactly 6 objects, each {"name": <short strategy name>, "sheet": <the sheet text>}.
