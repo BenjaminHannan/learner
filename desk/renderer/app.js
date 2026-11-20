@@ -451,6 +451,20 @@
   // Ben Oct 28: anything that needs him sits right above the text box, light, and leaves a one-line record in the chat once answered
   const dock = () => $('#askDock');
   function settleDock(c, label) { setTimeout(() => c.remove(), 900); try { ensureActTracked().cards.append(el('div', 'dim small', label)); } catch (e) { /* no group yet */ } }
+  async function showHabitOffer() {
+    if (!thread || thread.helper || isCall(thread) || !settings.onboarded || document.hidden || !$('#settings').hidden) return;
+    const offer = await desk.habit.offer().catch(() => null);
+    if (!offer || !thread || thread.helper || isCall(thread) || document.hidden || !$('#settings').hidden || dock().querySelector('.habit-offer')) return;
+    const c = card('habit-offer', 'A possible Mote');
+    c.append(el('div', null, 'You checked ' + offer.target + ' on ' + offer.days + ' different days. Want me to make a Mote that does it every morning at 8:00?'));
+    const btns = el('div', 'btns');
+    for (const [label, answer, cls] of [['Yes', 'yes', 'amber-btn'], ['No', 'no', 'ghost']]) {
+      const b = el('button', cls, label);
+      b.onclick = async () => { for (const x of btns.children) x.disabled = true; const result = await desk.habit.respond(offer.key, answer).catch(() => ({ ok: false })); btns.remove(); c.append(el('div', 'dim small', result.ok ? (answer === 'yes' ? 'Mote created: ' + result.name : 'Okay, I won’t offer this again.') : (result.error || 'Could not save your answer.'))); if (result.stopped) settings.habitOffers = false; };
+      btns.append(b);
+    }
+    c.append(btns); dock().append(c);
+  }
   function onApproval(ev) {
     const host = dock();
     const c = card(ev.danger ? 'danger' : '', ev.danger ? 'Risky command: needs your OK' : 'Needs your OK');
@@ -862,6 +876,7 @@
     errorUntil = 0; doneUntil = 0; refreshMood();
     closeDrawer(); loadThreads();
     BrowserPanel.threadChanged();
+    showHabitOffer();
     try { localStorage.setItem('lastThread', t.id); } catch (e) { /* ignore */ }
   }
   // New chat button / Cmd+N: a run in progress is stopped first, so the button always works (Ben Oct 28)
@@ -870,7 +885,7 @@
     const t = await desk.threads.create();
     try { settings = await desk.settings.get(); paintSegs(); } catch (e) { /* keep the current pills */ } // a new thread starts on the default pill
     thread = { id: t.id, title: t.title, helper: null };
-    paintTitle(t); renderThread(await withHistory(t)); setRunning(false); closeDrawer(); loadThreads(); BrowserPanel.threadChanged(); input.focus();
+    paintTitle(t); renderThread(await withHistory(t)); setRunning(false); closeDrawer(); loadThreads(); BrowserPanel.threadChanged(); showHabitOffer(); input.focus();
   }
   function ago(ts) {
     const m = Math.round((Date.now() - ts) / 60000);
@@ -962,10 +977,11 @@
   $('#updateLater').onclick = () => { if (upd) updLater = upd.version; $('#updateBar').hidden = true; };
   desk.onUpdate(paintUpdate); desk.update.status().then(paintUpdate).catch(() => {});
   if (window.Side) Side.init(desk, (text) => { input.value = text; autosize(); input.focus(); input.setSelectionRange(text.length, text.length); });
-  desk.onHelpers(paintAgents); desk.helpers.list().then(paintAgents).catch(() => {});
+  desk.onHelpers((list) => { paintAgents(list); showHabitOffer(); }); desk.helpers.list().then(paintAgents).catch(() => {});
   desk.onOpenThread((id) => { $('#settings').hidden = true; openThread(id); });
   desk.onNewThread(() => freshChat());
-  desk.onFocusComposer(() => { $('#settings').hidden = true; input.focus(); });
+  desk.onFocusComposer(() => { $('#settings').hidden = true; input.focus(); showHabitOffer(); });
+  window.addEventListener('focus', () => showHabitOffer());
   function openDrawer() { document.body.classList.add('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'false'); loadThreads(); desk.helpers.list().then(paintAgents); }
   function closeDrawer() { document.body.classList.remove('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'true'); }
   $('#btnThreads').onclick = () => document.body.classList.contains('drawer-open') ? closeDrawer() : openDrawer();
@@ -1084,6 +1100,7 @@
       { key: 'helperMode', type: 'seg', label: 'Routines', help: 'The same choice for the things Glim does on its own, on a schedule.', options: [['ask', 'Ask first'], ['hands-off', 'Hands-off']] },
       { key: 'maxSteps', type: 'number', label: 'Max steps per task', help: 'Model calls before Glim stops and asks if you want it to continue. 0 = no limit (the default).', min: 0, max: 1000 },
       { key: 'verify', type: 'toggle', label: 'Double-check my work before saying done (a little slower)', help: 'After Glim changes something, a quick second look checks the result matches what you asked. Off skips it.' },
+      { key: 'habitOffers', type: 'toggle', label: 'Suggest Motes for habits', help: 'Suggests a Mote for a repeated habit. Turns off after five declines; turn it back on here.' },
       { key: 'followUp', type: 'toggle', label: 'Follow up on its own', help: 'Once a day, when you open Glim, it checks on things you left open and offers quick choices. Off: it only answers you.' },
       { type: 'danger', label: 'Always asks first (danger list)', help: 'Even in Hands-off, shell commands like these always need your OK. This list is fixed for safety.' }
     ] },

@@ -1499,6 +1499,11 @@ class Sleeper:
             self.lessons_stage(week, d, st)
             self.rated_stage(week, d, st)
             self.extras(week, d, st)
+            if cfg.use_habits and not dry_run:
+                try:
+                    L_mod.write_offer_habits(self.paths.userdata_dir, week, d, cfg.habit_min)
+                except OSError:
+                    pass  # an unavailable app-data folder must not stop sleep
             if "lesson_holdout_done" not in N:
                 self.hold_lessons(d, st)
                 N["lesson_holdout_done"] = True
