@@ -1,0 +1,212 @@
+{
+  "experiment": "sequential-retention-rehearsal-wave1-v1",
+  "status": "INCOMPLETE",
+  "verdict": "INCONCLUSIVE",
+  "reason": "Control outer HF watchdog (1050 seconds) stopped the process while the first update was still executing. No completed update or post-training checkpoint was recorded. TOO_FEW, PROMISING and STILL_FORGETS require completed fixed checkpoints.",
+  "completed_updates": 0,
+  "hf_baseline": {
+    "phase": 0,
+    "held": [
+      {
+        "block": 0,
+        "q": "Name the door word assigned to the Aster station.",
+        "a": "Copperfern",
+        "out": "Aster Station's door word is \"Astra\" or something else? I need to recall from Star Trek: The Next Generation or similar. In TNG",
+        "hit": false
+      },
+      {
+        "block": 0,
+        "q": "Name the home bay assigned to the Brindle airship.",
+        "a": "Moonhaven",
+        "out": "Brindle Airship Home Bay: 7\n\nNo, that's not correct. I need to recall or know from a specific source? The user asks",
+        "hit": false
+      },
+      {
+        "block": 0,
+        "q": "Name the vault label assigned to the Cobalt library.",
+        "a": "Sunwillow",
+        "out": "Cobalt-01\n\nThe vault label for the Cobalt library is typically \"Cobalt\" or a specific code like \"COBALT-V1",
+        "hit": false
+      },
+      {
+        "block": 1,
+        "q": "Name the access word assigned to the Dapple clocktower.",
+        "a": "Mistbrook",
+        "out": "Dapple Clock Tower's access word is \"Dapple\". However, this seems like a specific trivia question. I need to recall if there's a",
+        "hit": false
+      },
+      {
+        "block": 1,
+        "q": "Name the call sign assigned to the Ember courier.",
+        "a": "Pinecrest",
+        "out": "Ember Courier is a fictional entity from the TV show \"The Good Place\" or similar? Actually, I need to recall: In some contexts, \"",
+        "hit": false
+      },
+      {
+        "block": 1,
+        "q": "Name the room assigned to the Fennel garden.",
+        "a": "Starmeadow",
+        "out": "Fennel Garden Room\n\nWait, that doesn't sound right. Let me think again.\n\nThe question: \"Name the room assigned to the Fennel",
+        "hit": false
+      },
+      {
+        "block": 2,
+        "q": "Name the call sign assigned to the Glimmer rover.",
+        "a": "Ashwater",
+        "out": "Glimmer Rover is a fictional or specific mission? I need to recall: In some contexts, \"Glimmer\" might refer to a satellite or probe",
+        "hit": false
+      },
+      {
+        "block": 2,
+        "q": "Name the bay assigned to the Harbor lantern workshop.",
+        "a": "Rosecliff",
+        "out": "Harbor Lantern Workshop is located in **Bay of Foggy Point**. (This is a fictional or specific reference; no real-world data found, but",
+        "hit": false
+      },
+      {
+        "block": 2,
+        "q": "Name the door word assigned to the Iris pavilion.",
+        "a": "Oakwhisper",
+        "out": "Iris Pavilion is a location in the novel \"The Time Machine\" by H.G. Wells? Actually, I need to recall: In some contexts,",
+        "hit": false
+      }
+    ],
+    "general": [
+      {
+        "q": "What is the capital of France?",
+        "a": [
+          "paris"
+        ],
+        "out": "Paris.",
+        "hit": true
+      },
+      {
+        "q": "Which planet is closest to the Sun?",
+        "a": [
+          "mercury"
+        ],
+        "out": "Mercury.",
+        "hit": true
+      },
+      {
+        "q": "What is the chemical symbol for gold?",
+        "a": [
+          "au"
+        ],
+        "out": "E Au",
+        "hit": true
+      },
+      {
+        "q": "How many minutes are in an hour?",
+        "a": [
+          "60",
+          "sixty"
+        ],
+        "out": "1 hour = 60 minutes.\n\n**Answer:** 60",
+        "hit": false
+      },
+      {
+        "q": "What is 6 * 7?",
+        "a": [
+          "42",
+          "forty-two",
+          "forty two"
+        ],
+        "out": "6 * 7 = 42",
+        "hit": true
+      },
+      {
+        "q": "What is the square root of 64?",
+        "a": [
+          "8",
+          "eight"
+        ],
+        "out": "The square root of 64 is 8.\n\n\\boxed{8}",
+        "hit": false
+      },
+      {
+        "q": "What is the largest ocean on Earth?",
+        "a": [
+          "pacific"
+        ],
+        "out": "The Pacific Ocean is the largest ocean on Earth.\n\n**Answer:** Pacific Ocean",
+        "hit": true
+      },
+      {
+        "q": "Which continent is Egypt in?",
+        "a": [
+          "africa"
+        ],
+        "out": "Egypt is in Africa.",
+        "hit": true
+      }
+    ],
+    "held_hits": 0,
+    "general_hits": 6,
+    "elapsed_s": 359.6721073340159
+  },
+  "learned": null,
+  "kept": null,
+  "harm": null,
+  "control": {
+    "learned": 3,
+    "kept": 0,
+    "hf_general_start": 6,
+    "hf_general_final": 6,
+    "native_general_start": 6,
+    "native_general_final": 7
+  },
+  "native": {
+    "status": "not run",
+    "reason": "No completed phase; archived native harness requires adapter GGUF export, which was prohibited."
+  },
+  "cpu_run": {
+    "runtime": {
+      "torch": "2.14.1",
+      "transformers": "5.21.0",
+      "peft": "0.21.2",
+      "threads": 2,
+      "interop_threads": 2,
+      "cuda": null
+    },
+    "pre_training_memory": {
+      "available_bytes": 10367139840,
+      "pressure_level": 1
+    },
+    "watch": {
+      "samples": 509,
+      "initial_available_gib": 12.653,
+      "minimum_available_gib": 8.127,
+      "max_pressure_level": 1,
+      "peak_sampled_process_rss_gib": 3.836,
+      "exit_code": -15,
+      "child_reaped": true
+    },
+    "outer_watchdog_seconds": 1050
+  },
+  "failed_initial_launch": {
+    "status": "failed before baseline or training",
+    "reason": "Archived backend selected MPS automatically; CPU assertion failed after model loaded. GPU was used briefly in violation of CPU-only instruction. The owned process exited; corrected run forced CPU before loading.",
+    "watch": {
+      "samples": 11,
+      "initial_available_gib": 11.766,
+      "minimum_available_gib": 7.533,
+      "max_pressure_level": 2,
+      "peak_sampled_process_rss_gib": 4.651,
+      "exit_code": 1,
+      "child_reaped": true
+    }
+  },
+  "pre_registration_commit": "74ed64ccbc",
+  "preregistration_sha256": "140bfa0e13364d53954a10b6f7b469323e35f602842652b920cbc76f344d0993",
+  "limitations": [
+    "No retention or harm result can be inferred from an incomplete run.",
+    "Native evaluation not performed.",
+    "CPU-only constraint was violated by the initial failed launch; subsequent run was forced to CPU.",
+    "Small synthetic test does not establish real-night behavior."
+  ],
+  "cleanup": {
+    "owned_processes_reaped": true,
+    "no_adapter_export_or_promotion": true
+  }
+}
