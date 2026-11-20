@@ -1,0 +1,145 @@
+{
+ "experiment": "never-learned-probe",
+ "created_before_baseline_utc": "2026-10-31T02:24:23.462873+00:00",
+ "blocks": [
+  [
+   [
+    "What is the fictional Aster station door word?",
+    "Copperfern",
+    "Name the door word assigned to the Aster station."
+   ],
+   [
+    "What is the fictional Brindle airship home bay?",
+    "Moonhaven",
+    "Name the home bay assigned to the Brindle airship."
+   ],
+   [
+    "What is the fictional Cobalt library vault label?",
+    "Sunwillow",
+    "Name the vault label assigned to the Cobalt library."
+   ]
+  ],
+  [
+   [
+    "What is the fictional Dapple clocktower access word?",
+    "Mistbrook",
+    "Name the access word assigned to the Dapple clocktower."
+   ],
+   [
+    "What is the fictional Ember courier call sign?",
+    "Pinecrest",
+    "Name the call sign assigned to the Ember courier."
+   ],
+   [
+    "What is the fictional Fennel garden room name?",
+    "Starmeadow",
+    "Name the room assigned to the Fennel garden."
+   ]
+  ],
+  [
+   [
+    "What is the fictional Glimmer rover call sign?",
+    "Ashwater",
+    "Name the call sign assigned to the Glimmer rover."
+   ],
+   [
+    "What is the fictional Harbor lantern workshop bay?",
+    "Rosecliff",
+    "Name the bay assigned to the Harbor lantern workshop."
+   ],
+   [
+    "What is the fictional Iris pavilion door word?",
+    "Oakwhisper",
+    "Name the door word assigned to the Iris pavilion."
+   ]
+  ]
+ ],
+ "steps_per_block": 24,
+ "seed": "per run: 1 or 2 (wave 1 used 0)",
+ "lr": 0.0002,
+ "schedule": "fresh24-step cosine optimizer perblock; rolling adapter carries across3blocks",
+ "replay": "Generic prompt-KL unchanged; at phase 1 all 3 current cards; phases 2 and 3 sample 3 distinct cards uniformly without replacement from all current and earlier cards, using separate Random(seed); held cards never enter pool.",
+ "model": "exact cached HF, real lfm3_mps profile, automatic MPS FP16",
+ "lora": "r8/scale2 unchanged profile",
+ "tok_budget": 256,
+ "max_seq_len": 256,
+ "gen_batch": 1,
+ "generation_tokens": 32,
+ "threads": "2 (as control; MPS training)",
+ "HF_inner_operation_budget_s": "per phase: measured first update time \u00d7 24 + 120 seconds, starting at first update; absolute total cap 1800 seconds",
+ "HF_outer_watchdog_s": "1800 seconds total; per-phase limit above",
+ "memory_cap_gib": 8,
+ "min_system_free_gib": 8,
+ "evaluation": "baseline and each fixed24 phase:ALL9held+same8 evenly spread general, strict4 question-aware, record individual old-correct and general losses",
+ "descriptive_criteria": {
+  "new_block_gain_reference": "current block after phase vs immediately preceding checkpoint",
+  "previously_correct_old_fact_losses_max_descriptive": 0,
+  "previously_correct_general_losses_max_descriptive": 0,
+  "new_block_gain_min_descriptive": 2
+ },
+ "native": "Native evaluation if feasible without exporting any adapter; no adapter conversion or export authorized.",
+ "limitations": [
+  "One tiny fictional seed; not full production-night reproduction",
+  "No adapter promotion or export",
+  "Native evaluation may be unavailable because native serving requires GGUF adapter conversion."
+ ],
+ "min_available_start_gib": 7,
+ "min_available_during_run_gib": 4,
+ "memory_pressure_start": "not critical",
+ "memory_measurement": "vm_stat free + inactive + purgeable; speculative is included in free on macOS and must not be double-counted",
+ "scoring": {
+  "scope": "only facts from blocks 1 and 2, seeds 1 and 2 only for the verdict (seed 0 reported separately)",
+  "learned": "correct just after own block",
+  "kept": "learned and correct after block 3",
+  "PASS": "summed over seeds 1+2: ON kept >= 2x OFF kept AND each arm has >= 4 learned in total; if OFF kept == 0, ON kept must be >= 2",
+  "TOO_FEW": "either arm has < 4 learned in total over seeds 1+2",
+  "FAIL": "OFF kept >= ON kept (proves the claim wrong)",
+  "HARM": "in any run final general hits > 2 below that run baseline",
+  "order_of_evaluation": "TOO_FEW first, then HARM reported alongside, then FAIL, then PASS; anything else (enough learned, ON>OFF but under 2x) = INCONCLUSIVE",
+  "also_report": "3-seed totals including wave 1 (seed 0: ON 3 learned 3 kept, OFF 3 learned 0 kept); not used in verdict"
+ },
+ "absolute_total_cap_s": 1800,
+ "disk_safety_r4": "Before start require at least 4 GiB free on /System/Volumes/Data; abort cleanly during run if free space drops below 2 GiB.",
+ "disk_safety_r5": "Start only if >=4 GiB free on /System/Volumes/Data; abort cleanly (in watcher and in run_hf before every step/eval) if free drops under 2 GiB.",
+ "arms": {
+  "on": "re-study ON: exactly the r3 rule (phases 2,3 sample 3 distinct cards from all current+earlier cards).",
+  "off": "re-study OFF: phases 2,3 train on the current block 3 cards only (no earlier cards). Everything else identical, same MPS/FP16 device, run after ON if >=600 s of the 1800 s total cap remain; OFF cap = 1800 - elapsed since ON start."
+ },
+ "source": "src copied from /Users/ben-hannan/learner-ops/premonition-research-20261029.noindex/sequential-control/src; all 33 manifest hashes verified before loading (run_hf asserts).",
+ "verdict_comparison": "Primary verdict from ON arm on the fixed pass marks; OFF arm scored with same marks; report ON vs OFF on MPS as the fair comparison. HARM: final general hits more than 2 below baseline 6 (i.e. <4).",
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "run_order": [
+  [
+   "on",
+   1
+  ],
+  [
+   "off",
+   1
+  ],
+  [
+   "on",
+   2
+  ],
+  [
+   "off",
+   2
+  ]
+ ],
+ "seed_controls": "One integer S sets, exactly as r5 did with S=0: python random.seed(S), torch.manual_seed(S) (this fixes the LoRA A-matrix init and any torch RNG), the replay-context sampler rng=Random(S) (picks 4 generic prompt contexts per step), and the rehearsal card sampler card_rng=Random(S) (picks 3 distinct cards in phases 2-3, ON arm). Facts, held-out questions, lr, steps, grader and general questions are the same for every seed. The only code change vs r5 is run_hf.py/watch_run.py take --seed (default 0 = identical to r5); the 4 literal 0 seeds became the seed variable.",
+ "safety": "per run: free disk>=4GiB, available memory>=7GiB, pressure<4; abort disk<2GiB; 30 min total cap; isolated scratch /tmp root; no app touch; nothing promoted; scratch checkpoints deleted at end.",
+ "purpose": "Measurement only. Same training as wave2/r5 ON arm; evaluate() also asks each fact its TRAINING wording (allfacts[i][0], same system prompt used in training) and logs train_out/train_hit next to the scored paraphrase. Training, seeds, grader, general questions unchanged.",
+ "arm": "on",
+ "pass_marks": {
+  "reproduction": "scored-paraphrase held_hits per phase and general_hits per phase equal existing reports exactly: s0 held 0/1/4/4 general 6/7/5/6; s1 held 0/1/3/4 general 6/7/6/6; s2 held 0/1/3/4 general 6/7/4/4",
+  "TRANSFER": "at own-block checkpoint (phase 1 for Copperfern and Sunwillow; phase 2 for Starmeadow) training wording correct for >=2 of the 3 hard facts in >=2 of 3 seeds while the scored paraphrase is wrong",
+  "UNDERFIT": ">=2 of 3 hard facts wrong under the training wording too, in >=2 of 3 seeds",
+  "WRONG": "Starmeadow also wrong under its training wording at phase 2 (disproves memorised-but-not-transferred reading)",
+  "MIXED": "anything else, e.g. 2 facts each way"
+ },
+ "note_real_recipe": "Real nightly recipe generates k paraphrases plus k Q&A pairs per fact in both directions (prompts.py:47-50, recipe.py:3, recipe.py:1024); this harness uses one wording per fact, so it overstates paraphrase failure."
+}

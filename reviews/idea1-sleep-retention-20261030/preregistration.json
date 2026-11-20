@@ -1,0 +1,100 @@
+{
+  "experiment": "sequential-retention-rehearsal-wave1-v1",
+  "created_before_baseline_utc": "2026-10-30T21:45:07.691888+00:00",
+  "absolute_stop_utc": "2026-10-30T22:15:07.691888+00:00",
+  "blocks": [
+    [
+      [
+        "What is the fictional Aster station door word?",
+        "Copperfern",
+        "Name the door word assigned to the Aster station."
+      ],
+      [
+        "What is the fictional Brindle airship home bay?",
+        "Moonhaven",
+        "Name the home bay assigned to the Brindle airship."
+      ],
+      [
+        "What is the fictional Cobalt library vault label?",
+        "Sunwillow",
+        "Name the vault label assigned to the Cobalt library."
+      ]
+    ],
+    [
+      [
+        "What is the fictional Dapple clocktower access word?",
+        "Mistbrook",
+        "Name the access word assigned to the Dapple clocktower."
+      ],
+      [
+        "What is the fictional Ember courier call sign?",
+        "Pinecrest",
+        "Name the call sign assigned to the Ember courier."
+      ],
+      [
+        "What is the fictional Fennel garden room name?",
+        "Starmeadow",
+        "Name the room assigned to the Fennel garden."
+      ]
+    ],
+    [
+      [
+        "What is the fictional Glimmer rover call sign?",
+        "Ashwater",
+        "Name the call sign assigned to the Glimmer rover."
+      ],
+      [
+        "What is the fictional Harbor lantern workshop bay?",
+        "Rosecliff",
+        "Name the bay assigned to the Harbor lantern workshop."
+      ],
+      [
+        "What is the fictional Iris pavilion door word?",
+        "Oakwhisper",
+        "Name the door word assigned to the Iris pavilion."
+      ]
+    ]
+  ],
+  "steps_per_block": 24,
+  "seed": 0,
+  "lr": 0.0002,
+  "schedule": "fresh24-step cosine optimizer perblock; rolling adapter carries across3blocks",
+  "replay": "Generic prompt-KL unchanged; at phase 1 all 3 current cards; phases 2 and 3 sample 3 distinct cards uniformly without replacement from all current and earlier cards, using separate Random(0); held cards never enter pool.",
+  "model": "exact cached HF bf16 CPU",
+  "lora": "r8/scale2 unchanged profile",
+  "tok_budget": 256,
+  "max_seq_len": 256,
+  "gen_batch": 1,
+  "generation_tokens": 32,
+  "threads": 2,
+  "HF_inner_operation_budget_s": 1010,
+  "HF_outer_watchdog_s": 1050,
+  "memory_cap_gib": 8,
+  "min_system_free_gib": 8,
+  "evaluation": "baseline and each fixed24 phase:ALL9held+same8 evenly spread general, strict4 question-aware, record individual old-correct and general losses",
+  "descriptive_criteria": {
+    "new_block_gain_reference": "current block after phase vs immediately preceding checkpoint",
+    "previously_correct_old_fact_losses_max_descriptive": 0,
+    "previously_correct_general_losses_max_descriptive": 0,
+    "new_block_gain_min_descriptive": 2
+  },
+  "native": "Native evaluation if feasible without exporting any adapter; no adapter conversion or export authorized.",
+  "limitations": [
+    "One tiny fictional seed; not full production-night reproduction",
+    "No adapter promotion or export",
+    "Native evaluation may be unavailable because native serving requires GGUF adapter conversion."
+  ],
+  "min_available_start_gib": 7,
+  "min_available_during_run_gib": 5.5,
+  "memory_pressure_start": "not critical",
+  "memory_measurement": "vm_stat free + inactive + purgeable; speculative is included in free on macOS and must not be double-counted",
+  "scoring": {
+    "scope": "only facts from blocks 1 and 2",
+    "learned": "correct just after own block",
+    "kept": "learned and correct after block 3",
+    "TOO_FEW": "learned < 2",
+    "PROMISING": "learned >= 2 and kept >= 2",
+    "STILL_FORGETS": "learned >= 2 and kept < 2",
+    "HARM": "final general hits < 4 (starting reference 6); separately report actual baseline"
+  }
+}
