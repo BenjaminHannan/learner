@@ -1,0 +1,19 @@
+**(a) Frozen / still changing**
+Only the 4 intended modules (`action_emb`, `cell.action_in`, `cell.action_pos`, `cell.imagine_out`) are trainable (`forecast4.py:61-63`); `m.head` is deleted (`:8`), `dec` (BN) is unused (`:9-15`), `m.read` sets `noise=False` (`wm_fit.py:62-63`), and `fit_readout()` runs once (`forecast4.py:57`).
+- `forecast4.py:63,65` **[suggested]**: `m.train()` puts `MC=refmean()`, `real_board()`, and `_trunk` in train mode during training, while `fit_readout()` (`:41,52`) and scoring (`:74`) use `m.eval()`. *Why it matters*: None of the trainable layers depend on `training`. If unshown `SparseMoE`/`ClockEncoder` has any train-mode behavior (dropout/jitter/stats), `real_board`/`refmean` drift from `M0`/eval. Per-step `MC=refmean()` and un-guarded `real_board` + `10*l_rec` (`:65,68-69`, zero grad) also waste compute. *Fix*: Keep `m.eval()`, wrap `real_board` (`:65`) in `torch.no_grad()`, and drop per-step `MC=refmean()` and `l_rec`.
+
+**(b) Gradients to `imagine_out` & action reaching `hn`**
+Action reaches `hn[:, :R]` via both `ha` (`imagine_head6.py:32-33`) and unmasked `enc_act` context (`forecast4.py:27-32`). At `s=0`, `l_row` updates zero-init `imagine_out[2]`, so `imagine_out[0]` and action params receive `l_row` grads from `s=1` (and `l_img` from `s=101`).
+- `forecast4.py:69-70` **[shown]**: At `s=0`, `w_img=0` and `imagine_out[2].weight==0`, so `l_img`/`l_row` send exact zero gradient to `action_emb`, `action_in`, `action_pos`, and `imagine_out[0]`. *Why it matters*: Logged `action_emb_grad_step0` (`:70`) comes solely from `0.01*o.aux_loss` (false positive for prediction-to-action gradient flow), and `w_img=0` for `s<=100` (a trunk-warmup leftover) makes `<=100`-step runs ignore `l_img`. *Fix*: Set `w_img=1.0` (trunk is frozen) and log `action_emb` grad from `l_img` alone at `s=1`.
+
+**(c) Zero-init & `imagine_scale` `[R,D]` broadcast**
+Zero-init `l2` + random `l1` (`imagine_head6.py:16-17`) and `[N,R,D]*[R,D]` broadcast (`:39`) are correct.
+- `forecast4.py:57,74` **[shown]**: `m.cell.imagine_scale = SD[0,0].detach().clone()` is a plain attribute, not a buffer. *Why it matters*: `state_dict()` (`:74`) drops `imagine_scale`, so reloading `model.pt` crashes (`AttributeError`) in `damped_imagine` (in-script score is unaffected). *Fix*: Use `m.cell.register_buffer("imagine_scale", SD[0,0].detach().clone())` (and register a placeholder buffer in `add_head`).
+
+**(d) Scoring / verdict vs marks**
+- `forecast4.py:115` **[shown]**: `std_ratio_by_first_action` skips actions with `<20` samples (vs `<2` in `wm_fit.py:320`). *Why it matters*: Rare held-out actions (2–19 samples) bypass the `0.25–2` check, and `all([])` vacuously passes. *Fix*: Filter `>=2` and require a non-empty list.
+- `forecast4.py:122` **[shown]**: `PARTIAL` triggers even when `k=3,5` `E/B` pass while `k=5` shuffle fails (`nboth<12`); `ceil>0.95` is dead (both `PASS`/`PARTIAL` require `ceil<=0.70`), and `k1` `shuffle_pooled>=1.05` (`wm_fit.py:345`) is unchecked. *Why it matters*: Action-blind rollouts earn `PARTIAL` instead of `FAIL`. *Fix*: Require `not (k3["E_over_B"]<=0.90 and k5["E_over_B"]<=0.95)` for `PARTIAL` and check `k1["shuffle_pooled"]>=1.05`.
+- `forecast4.py:98-99,109,118` **[shown]**: `sh` permutes whole `k`-step action blocks instead of per-step actions (`wm_fit.py:192-202`), and `nboth` zips `wr` positionally instead of by world ID (`wm_fit.py:309`). *Why it matters*: Alters the `k=5` shuffle null distribution and misaligns worlds if any lacks `k=5` windows. *Fix*: Use `W.shuffle_actions(he)` and dict-key `wr` by `int(w)`.
+
+**(e) Held-out leakage**
+No bug found **[shown]**: `he` is untouched until `forecast4.py:79` (post-training/eval). Training, readout, `SD`, `RF`, and baselines use only `tr` (`--init` checkpoint provenance is outside shown code).
