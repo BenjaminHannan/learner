@@ -1,0 +1,8 @@
+# T1SDR 6-seed confirm, seeds 202 and 203 on BensPC (RTX 5070 Ti): the same lines as 80-pc-t1sdr-confirm.txt. Their Vast box (54860324) was
+# destroyed before its first job started (slow image download), and the project asked not to rent more, so these two seeds run on the PC.
+# Seeds 204 and 205 run on Vast (custom_io/queue/t1c2). Code: branch head; custom_io/models, train.py, data.py, evalx.py and analyze.py are
+# unchanged since the q70 pin f6d724cffc. Judge: see 80-pc-t1sdr-confirm.txt (add this queue's results dir).
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\80b-pc-t1sdr-s202-203.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# MEM 6000
+T1SDR_s202 --model tool --cfg '{"span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 202 --log-every 500 --final-eval --save-preds
+T1SDR_s203 --model tool --cfg '{"span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 203 --log-every 500 --final-eval --save-preds

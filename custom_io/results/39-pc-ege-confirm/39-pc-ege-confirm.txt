@@ -1,0 +1,17 @@
+# BensPC RTX 5070 Ti (cuda): EGE 6-seed confirm against plain B2 (PASS-MARKS.md addendum 15, written before any run here). Runs after queue 38.
+# EGE (addendum 4): EmbeddingGemma 2 added before B2's +-4-character window (trainable 3,500,881; whole 274,503,505). Fresh seeds 202-207;
+# plain B2 of seeds 202-205 is queue 33's (same PC, same flags), so only B2_s206 and B2_s207 are new. Needs the same EmbeddingGemma setup as queue 38.
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\39-pc-ege-confirm.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# MEM 7000
+EGE_s202 --model ledger --cfg '{"copy":true,"eg_embed":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 202 --log-every 500 --final-eval
+EGE_s203 --model ledger --cfg '{"copy":true,"eg_embed":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 203 --log-every 500 --final-eval
+EGE_s204 --model ledger --cfg '{"copy":true,"eg_embed":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 204 --log-every 500 --final-eval
+EGE_s205 --model ledger --cfg '{"copy":true,"eg_embed":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 205 --log-every 500 --final-eval
+# MEM 5000
+B2_s206 --model ledger --cfg '{"copy":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 206 --log-every 500 --final-eval
+B2_s207 --model ledger --cfg '{"copy":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 207 --log-every 500 --final-eval
+# MEM 7000
+EGE_s206 --model ledger --cfg '{"copy":true,"eg_embed":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 206 --log-every 500 --final-eval
+EGE_s207 --model ledger --cfg '{"copy":true,"eg_embed":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 207 --log-every 500 --final-eval

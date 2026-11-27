@@ -1,0 +1,1443 @@
+{
+ "config": {
+  "model": "plain_tf",
+  "cfg": {
+   "d_model": 384,
+   "n_layers": 6,
+   "n_heads": 6,
+   "max_ans": 32
+  },
+  "data": "C:\\Users\\benja\\custom-io\\work/plan_b/teach",
+  "big_data": "C:\\Users\\benja\\custom-io\\work\\data_big",
+  "vocab": null,
+  "steps": 16000,
+  "batch": 256,
+  "lr": 0.0007,
+  "warmup": 500,
+  "grad_clip": 1.0,
+  "seed": 300,
+  "order": "shuffled",
+  "device": "auto",
+  "bf16": true,
+  "log_every": 500,
+  "eval_every": 0,
+  "final_eval": true,
+  "english_eval": "custom_io/english_eval",
+  "max_ans": 32,
+  "eval_max": null,
+  "eval_batch": 128,
+  "minutes": null,
+  "out": "C:\\Users\\benja\\custom-io\\work\\results\\35-pc-b1-students\\tft_s300"
+ },
+ "n_params": 10782336,
+ "steps": 16000,
+ "status": "ok",
+ "final_train_loss": 0.00036500060558319094,
+ "train_s": 823.0346255302429,
+ "steps_per_s": 19.44025136207598,
+ "final_eval": null,
+ "lesions": {},
+ "data_manifest_sha256": "40316ed14090e7e438030ce6ed403b9054d19f136e92c1d90c789955a1c3fe9d",
+ "wall_s": 827.7279763221741,
+ "peak_mem_mib": 4135.9,
+ "peak_reserved_mib": 10236.0,
+ "english": {
+  "intact": {
+   "fresh": {
+    "exact": 17.1875,
+    "correct": 33,
+    "n": 192,
+    "by_family": {
+     "giver_recipient_roles": {
+      "correct": 10,
+      "n": 32,
+      "exact": 31.25
+     },
+     "comparative_direction": {
+      "correct": 8,
+      "n": 32,
+      "exact": 25.0
+     },
+     "explicit_negation_with_positive_alternative": {
+      "correct": 7,
+      "n": 32,
+      "exact": 21.875
+     },
+     "event_ordering": {
+      "correct": 4,
+      "n": 32,
+      "exact": 12.5
+     },
+     "unambiguous_descriptive_reference": {
+      "correct": 0,
+      "n": 32,
+      "exact": 0.0
+     },
+     "two_simple_relations_combined": {
+      "correct": 4,
+      "n": 32,
+      "exact": 12.5
+     }
+    },
+    "by_type": {
+     "short_answer": {
+      "correct": 19,
+      "n": 170,
+      "exact": 11.176470588235293
+     },
+     "yes_no": {
+      "correct": 14,
+      "n": 22,
+      "exact": 63.63636363636363
+     }
+    },
+    "by_atype": {
+     "span1": {
+      "correct": 17,
+      "n": 54,
+      "exact": 31.48148148148148
+     },
+     "yes_no": {
+      "correct": 14,
+      "n": 22,
+      "exact": 63.63636363636363
+     },
+     "spanN": {
+      "correct": 2,
+      "n": 114,
+      "exact": 1.7543859649122806
+     },
+     "nonspan": {
+      "correct": 0,
+      "n": 2,
+      "exact": 0.0
+     }
+    },
+    "by_panel": {
+     "source_text": {
+      "correct": 20,
+      "n": 96,
+      "exact": 20.833333333333332
+     },
+     "paraphrase": {
+      "correct": 13,
+      "n": 96,
+      "exact": 13.541666666666666
+     }
+    },
+    "reachable": {
+     "n": 192,
+     "share": 100.0
+    }
+   },
+   "new_r5": {
+    "exact": 16.666666666666668,
+    "correct": 32,
+    "n": 192,
+    "by_family": {
+     "counting_quantity": {
+      "correct": 4,
+      "n": 32,
+      "exact": 12.5
+     },
+     "location_tracking": {
+      "correct": 2,
+      "n": 32,
+      "exact": 6.25
+     },
+     "cause_reason": {
+      "correct": 6,
+      "n": 32,
+      "exact": 18.75
+     },
+     "time_when": {
+      "correct": 2,
+      "n": 32,
+      "exact": 6.25
+     },
+     "attribute_lookup": {
+      "correct": 4,
+      "n": 32,
+      "exact": 12.5
+     },
+     "instrument_purpose": {
+      "correct": 14,
+      "n": 32,
+      "exact": 43.75
+     }
+    },
+    "by_type": {
+     "short_answer": {
+      "correct": 20,
+      "n": 168,
+      "exact": 11.904761904761905
+     },
+     "yes_no": {
+      "correct": 12,
+      "n": 24,
+      "exact": 50.0
+     }
+    },
+    "by_atype": {
+     "span1": {
+      "correct": 3,
+      "n": 58,
+      "exact": 5.172413793103448
+     },
+     "yes_no": {
+      "correct": 12,
+      "n": 24,
+      "exact": 50.0
+     },
+     "spanN": {
+      "correct": 17,
+      "n": 110,
+      "exact": 15.454545454545455
+     }
+    },
+    "by_panel": {
+     "source_text": {
+      "correct": 18,
+      "n": 96,
+      "exact": 18.75
+     },
+     "paraphrase": {
+      "correct": 14,
+      "n": 96,
+      "exact": 14.583333333333334
+     }
+    },
+    "reachable": {
+     "n": 192,
+     "share": 100.0
+    }
+   },
+   "new_r6": {
+    "exact": 9.375,
+    "correct": 18,
+    "n": 192,
+    "by_family": {
+     "speech_quote": {
+      "correct": 2,
+      "n": 32,
+      "exact": 6.25
+     },
+     "weather_condition": {
+      "correct": 2,
+      "n": 32,
+      "exact": 6.25
+     },
+     "price_cost": {
+      "correct": 3,
+      "n": 32,
+      "exact": 9.375
+     },
+     "direction_turn": {
+      "correct": 6,
+      "n": 32,
+      "exact": 18.75
+     },
+     "duration_length": {
+      "correct": 1,
+      "n": 32,
+      "exact": 3.125
+     },
+     "source_origin": {
+      "correct": 4,
+      "n": 32,
+      "exact": 12.5
+     }
+    },
+    "by_type": {
+     "short_answer": {
+      "correct": 5,
+      "n": 172,
+      "exact": 2.9069767441860463
+     },
+     "yes_no": {
+      "correct": 13,
+      "n": 20,
+      "exact": 65.0
+     }
+    },
+    "by_atype": {
+     "spanN": {
+      "correct": 0,
+      "n": 114,
+      "exact": 0.0
+     },
+     "yes_no": {
+      "correct": 13,
+      "n": 20,
+      "exact": 65.0
+     },
+     "span1": {
+      "correct": 5,
+      "n": 58,
+      "exact": 8.620689655172415
+     }
+    },
+    "by_panel": {
+     "source_text": {
+      "correct": 8,
+      "n": 96,
+      "exact": 8.333333333333334
+     },
+     "paraphrase": {
+      "correct": 10,
+      "n": 96,
+      "exact": 10.416666666666666
+     }
+    },
+    "reachable": {
+     "n": 192,
+     "share": 100.0
+    }
+   },
+   "new_pooled": {
+    "exact": 13.020833333333334,
+    "correct": 50,
+    "n": 384,
+    "by_family": {
+     "counting_quantity": {
+      "correct": 4,
+      "n": 32,
+      "exact": 12.5
+     },
+     "location_tracking": {
+      "correct": 2,
+      "n": 32,
+      "exact": 6.25
+     },
+     "cause_reason": {
+      "correct": 6,
+      "n": 32,
+      "exact": 18.75
+     },
+     "time_when": {
+      "correct": 2,
+      "n": 32,
+      "exact": 6.25
+     },
+     "attribute_lookup": {
+      "correct": 4,
+      "n": 32,
+      "exact": 12.5
+     },
+     "instrument_purpose": {
+      "correct": 14,
+      "n": 32,
+      "exact": 43.75
+     },
+     "speech_quote": {
+      "correct": 2,
+      "n": 32,
+      "exact": 6.25
+     },
+     "weather_condition": {
+      "correct": 2,
+      "n": 32,
+      "exact": 6.25
+     },
+     "price_cost": {
+      "correct": 3,
+      "n": 32,
+      "exact": 9.375
+     },
+     "direction_turn": {
+      "correct": 6,
+      "n": 32,
+      "exact": 18.75
+     },
+     "duration_length": {
+      "correct": 1,
+      "n": 32,
+      "exact": 3.125
+     },
+     "source_origin": {
+      "correct": 4,
+      "n": 32,
+      "exact": 12.5
+     }
+    },
+    "by_type": {
+     "short_answer": {
+      "correct": 25,
+      "n": 340,
+      "exact": 7.352941176470588
+     },
+     "yes_no": {
+      "correct": 25,
+      "n": 44,
+      "exact": 56.81818181818182
+     }
+    },
+    "by_atype": {
+     "span1": {
+      "correct": 8,
+      "n": 116,
+      "exact": 6.896551724137931
+     },
+     "yes_no": {
+      "correct": 25,
+      "n": 44,
+      "exact": 56.81818181818182
+     },
+     "spanN": {
+      "correct": 17,
+      "n": 224,
+      "exact": 7.589285714285714
+     }
+    },
+    "by_panel": {
+     "source_text": {
+      "correct": 26,
+      "n": 192,
+      "exact": 13.541666666666666
+     },
+     "paraphrase": {
+      "correct": 24,
+      "n": 192,
+      "exact": 12.5
+     }
+    },
+    "reachable": {
+     "n": 384,
+     "share": 100.0
+    }
+   },
+   "gen_heldout": {
+    "exact": 18.229166666666668,
+    "correct": 35,
+    "n": 192,
+    "by_family": {
+     "giver_recipient_roles": {
+      "correct": 16,
+      "n": 32,
+      "exact": 50.0
+     },
+     "comparative_direction": {
+      "correct": 10,
+      "n": 32,
+      "exact": 31.25
+     },
+     "explicit_negation_with_positive_alternative": {
+      "correct": 6,
+      "n": 32,
+      "exact": 18.75
+     },
+     "event_ordering": {
+      "correct": 3,
+      "n": 32,
+      "exact": 9.375
+     },
+     "unambiguous_descriptive_reference": {
+      "correct": 0,
+      "n": 32,
+      "exact": 0.0
+     },
+     "two_simple_relations_combined": {
+      "correct": 0,
+      "n": 32,
+      "exact": 0.0
+     }
+    },
+    "by_type": {
+     "short_answer": {
+      "correct": 22,
+      "n": 176,
+      "exact": 12.5
+     },
+     "yes_no": {
+      "correct": 13,
+      "n": 16,
+      "exact": 81.25
+     }
+    },
+    "by_atype": {
+     "span1": {
+      "correct": 14,
+      "n": 34,
+      "exact": 41.1764705882353
+     },
+     "spanN": {
+      "correct": 8,
+      "n": 140,
+      "exact": 5.714285714285714
+     },
+     "nonspan": {
+      "correct": 0,
+      "n": 2,
+      "exact": 0.0
+     },
+     "yes_no": {
+      "correct": 13,
+      "n": 16,
+      "exact": 81.25
+     }
+    },
+    "by_panel": {
+     "source_text": {
+      "correct": 18,
+      "n": 96,
+      "exact": 18.75
+     },
+     "paraphrase": {
+      "correct": 17,
+      "n": 96,
+      "exact": 17.708333333333332
+     }
+    },
+    "reachable": {
+     "n": 192,
+     "share": 100.0
+    },
+    "label": "generator kinds, the GEN arm's own distribution"
+   },
+   "in_dist_heldout": {
+    "exact": 92.13483146067416,
+    "correct": 1804,
+    "n": 1958,
+    "by_family": {
+     "object_read": {
+      "correct": 26,
+      "n": 26,
+      "exact": 100.0
+     },
+     "event_ordering": {
+      "correct": 39,
+      "n": 44,
+      "exact": 88.63636363636364
+     },
+     "rule_must": {
+      "correct": 8,
+      "n": 12,
+      "exact": 66.66666666666667
+     },
+     "fear": {
+      "correct": 21,
+      "n": 22,
+      "exact": 95.45454545454545
+     },
+     "title_role": {
+      "correct": 46,
+      "n": 48,
+      "exact": 95.83333333333333
+     },
+     "search_for": {
+      "correct": 48,
+      "n": 48,
+      "exact": 100.0
+     },
+     "replacement": {
+      "correct": 37,
+      "n": 44,
+      "exact": 84.0909090909091
+     },
+     "if_then": {
+      "correct": 13,
+      "n": 16,
+      "exact": 81.25
+     },
+     "permission": {
+      "correct": 37,
+      "n": 42,
+      "exact": 88.0952380952381
+     },
+     "category_member": {
+      "correct": 16,
+      "n": 18,
+      "exact": 88.88888888888889
+     },
+     "owner_possession": {
+      "correct": 34,
+      "n": 38,
+      "exact": 89.47368421052632
+     },
+     "creator": {
+      "correct": 6,
+      "n": 10,
+      "exact": 60.0
+     },
+     "naming": {
+      "correct": 38,
+      "n": 38,
+      "exact": 100.0
+     },
+     "opponent": {
+      "correct": 50,
+      "n": 54,
+      "exact": 92.5925925925926
+     },
+     "two_simple_relations_combined": {
+      "correct": 28,
+      "n": 30,
+      "exact": 93.33333333333333
+     },
+     "role_in_play": {
+      "correct": 19,
+      "n": 24,
+      "exact": 79.16666666666667
+     },
+     "patient_target": {
+      "correct": 25,
+      "n": 28,
+      "exact": 89.28571428571429
+     },
+     "wish": {
+      "correct": 28,
+      "n": 28,
+      "exact": 100.0
+     },
+     "neighbor": {
+      "correct": 33,
+      "n": 40,
+      "exact": 82.5
+     },
+     "dislike": {
+      "correct": 25,
+      "n": 28,
+      "exact": 89.28571428571429
+     },
+     "explicit_negation_with_positive_alternative": {
+      "correct": 21,
+      "n": 24,
+      "exact": 87.5
+     },
+     "habit": {
+      "correct": 48,
+      "n": 48,
+      "exact": 100.0
+     },
+     "topic_about": {
+      "correct": 42,
+      "n": 46,
+      "exact": 91.30434782608695
+     },
+     "agent_action": {
+      "correct": 48,
+      "n": 48,
+      "exact": 100.0
+     },
+     "loser": {
+      "correct": 23,
+      "n": 24,
+      "exact": 95.83333333333333
+     },
+     "object_made": {
+      "correct": 33,
+      "n": 36,
+      "exact": 91.66666666666667
+     },
+     "clothing": {
+      "correct": 38,
+      "n": 38,
+      "exact": 100.0
+     },
+     "language_spoken": {
+      "correct": 54,
+      "n": 58,
+      "exact": 93.10344827586206
+     },
+     "family_relation": {
+      "correct": 36,
+      "n": 38,
+      "exact": 94.73684210526316
+     },
+     "companion_with": {
+      "correct": 21,
+      "n": 22,
+      "exact": 95.45454545454545
+     },
+     "best_friend": {
+      "correct": 52,
+      "n": 54,
+      "exact": 96.29629629629629
+     },
+     "occupation": {
+      "correct": 37,
+      "n": 42,
+      "exact": 88.0952380952381
+     },
+     "teacher_of": {
+      "correct": 24,
+      "n": 30,
+      "exact": 80.0
+     },
+     "comparative_direction": {
+      "correct": 24,
+      "n": 32,
+      "exact": 75.0
+     },
+     "team_member": {
+      "correct": 36,
+      "n": 40,
+      "exact": 90.0
+     },
+     "goal_want": {
+      "correct": 26,
+      "n": 26,
+      "exact": 100.0
+     },
+     "feeling_state": {
+      "correct": 29,
+      "n": 30,
+      "exact": 96.66666666666667
+     },
+     "pronoun_reference": {
+      "correct": 24,
+      "n": 28,
+      "exact": 85.71428571428571
+     },
+     "forgot": {
+      "correct": 24,
+      "n": 26,
+      "exact": 92.3076923076923
+     },
+     "helper": {
+      "correct": 37,
+      "n": 40,
+      "exact": 92.5
+     },
+     "winner": {
+      "correct": 32,
+      "n": 34,
+      "exact": 94.11764705882354
+     },
+     "like_best": {
+      "correct": 44,
+      "n": 48,
+      "exact": 91.66666666666667
+     },
+     "part_whole": {
+      "correct": 13,
+      "n": 20,
+      "exact": 65.0
+     },
+     "found_item": {
+      "correct": 30,
+      "n": 30,
+      "exact": 100.0
+     },
+     "plan_next": {
+      "correct": 27,
+      "n": 28,
+      "exact": 96.42857142857143
+     },
+     "choice_pick": {
+      "correct": 39,
+      "n": 40,
+      "exact": 97.5
+     },
+     "game_played": {
+      "correct": 28,
+      "n": 32,
+      "exact": 87.5
+     },
+     "learned": {
+      "correct": 28,
+      "n": 28,
+      "exact": 100.0
+     },
+     "unambiguous_descriptive_reference": {
+      "correct": 30,
+      "n": 34,
+      "exact": 88.23529411764706
+     },
+     "caretaker": {
+      "correct": 6,
+      "n": 10,
+      "exact": 60.0
+     },
+     "joiner": {
+      "correct": 20,
+      "n": 20,
+      "exact": 100.0
+     },
+     "named_after": {
+      "correct": 29,
+      "n": 32,
+      "exact": 90.625
+     },
+     "ability": {
+      "correct": 26,
+      "n": 26,
+      "exact": 100.0
+     },
+     "container_contents": {
+      "correct": 24,
+      "n": 28,
+      "exact": 85.71428571428571
+     },
+     "lost_item": {
+      "correct": 30,
+      "n": 30,
+      "exact": 100.0
+     },
+     "hobby": {
+      "correct": 30,
+      "n": 32,
+      "exact": 93.75
+     },
+     "giver_recipient_roles": {
+      "correct": 27,
+      "n": 28,
+      "exact": 96.42857142857143
+     },
+     "fact_yes_no": {
+      "correct": 41,
+      "n": 42,
+      "exact": 97.61904761904762
+     },
+     "visitor": {
+      "correct": 26,
+      "n": 28,
+      "exact": 92.85714285714286
+     },
+     "object_eaten": {
+      "correct": 20,
+      "n": 20,
+      "exact": 100.0
+     }
+    },
+    "by_type": {
+     "short_answer": {
+      "correct": 1572,
+      "n": 1712,
+      "exact": 91.82242990654206
+     },
+     "yes_no": {
+      "correct": 232,
+      "n": 246,
+      "exact": 94.3089430894309
+     }
+    },
+    "by_atype": {
+     "spanN": {
+      "correct": 640,
+      "n": 694,
+      "exact": 92.21902017291066
+     },
+     "span1": {
+      "correct": 911,
+      "n": 983,
+      "exact": 92.67548321464903
+     },
+     "yes_no": {
+      "correct": 232,
+      "n": 246,
+      "exact": 94.3089430894309
+     },
+     "nonspan": {
+      "correct": 21,
+      "n": 35,
+      "exact": 60.0
+     }
+    },
+    "by_panel": {
+     "source_text": {
+      "correct": 906,
+      "n": 979,
+      "exact": 92.54341164453524
+     },
+     "paraphrase": {
+      "correct": 898,
+      "n": 979,
+      "exact": 91.72625127681307
+     }
+    },
+    "reachable": {
+     "n": 1958,
+     "share": 100.0
+    }
+   }
+  },
+  "lesions": {
+   "new_pooled": {},
+   "fresh": {}
+  },
+  "preds": {
+   "new_pooled": {
+    "new_counting_quantity_01-source_text-q0": "No",
+    "new_counting_quantity_01-source_text-q1": "Yes",
+    "new_counting_quantity_01-paraphrase-q0": "No",
+    "new_counting_quantity_01-paraphrase-q1": "Yes",
+    "new_counting_quantity_02-source_text-q0": "Yes",
+    "new_counting_quantity_02-source_text-q1": "Yes",
+    "new_counting_quantity_02-paraphrase-q0": "Five balloons",
+    "new_counting_quantity_02-paraphrase-q1": "Yes",
+    "new_counting_quantity_03-source_text-q0": "Yes",
+    "new_counting_quantity_03-source_text-q1": "No",
+    "new_counting_quantity_03-paraphrase-q0": "Yes",
+    "new_counting_quantity_03-paraphrase-q1": "Yes",
+    "new_counting_quantity_04-source_text-q0": "Yes",
+    "new_counting_quantity_04-source_text-q1": "Yes",
+    "new_counting_quantity_04-paraphrase-q0": "Yes",
+    "new_counting_quantity_04-paraphrase-q1": "No",
+    "new_counting_quantity_05-source_text-q0": "Yes",
+    "new_counting_quantity_05-source_text-q1": "Yes",
+    "new_counting_quantity_05-paraphrase-q0": "Yes",
+    "new_counting_quantity_05-paraphrase-q1": "No",
+    "new_counting_quantity_06-source_text-q0": "No",
+    "new_counting_quantity_06-source_text-q1": "Yes",
+    "new_counting_quantity_06-paraphrase-q0": "No",
+    "new_counting_quantity_06-paraphrase-q1": "Yes",
+    "new_counting_quantity_07-source_text-q0": "No",
+    "new_counting_quantity_07-source_text-q1": "Yes",
+    "new_counting_quantity_07-paraphrase-q0": "No",
+    "new_counting_quantity_07-paraphrase-q1": "Yes",
+    "new_counting_quantity_08-source_text-q0": "the shop",
+    "new_counting_quantity_08-source_text-q1": "No",
+    "new_counting_quantity_08-paraphrase-q0": "No",
+    "new_counting_quantity_08-paraphrase-q1": "No",
+    "new_location_tracking_01-source_text-q0": "Yes",
+    "new_location_tracking_01-source_text-q1": "Yes",
+    "new_location_tracking_01-paraphrase-q0": "Yes",
+    "new_location_tracking_01-paraphrase-q1": "Yes",
+    "new_location_tracking_02-source_text-q0": "Dov",
+    "new_location_tracking_02-source_text-q1": "Yes",
+    "new_location_tracking_02-paraphrase-q0": "Yes",
+    "new_location_tracking_02-paraphrase-q1": "Yes",
+    "new_location_tracking_03-source_text-q0": "Yes",
+    "new_location_tracking_03-source_text-q1": "Yes",
+    "new_location_tracking_03-paraphrase-q0": "Yes",
+    "new_location_tracking_03-paraphrase-q1": "Yes",
+    "new_location_tracking_04-source_text-q0": "Yes",
+    "new_location_tracking_04-source_text-q1": "No",
+    "new_location_tracking_04-paraphrase-q0": "Yes",
+    "new_location_tracking_04-paraphrase-q1": "the map",
+    "new_location_tracking_05-source_text-q0": "Yes",
+    "new_location_tracking_05-source_text-q1": "No",
+    "new_location_tracking_05-paraphrase-q0": "Yes",
+    "new_location_tracking_05-paraphrase-q1": "No",
+    "new_location_tracking_06-source_text-q0": "No",
+    "new_location_tracking_06-source_text-q1": "Yes",
+    "new_location_tracking_06-paraphrase-q0": "No",
+    "new_location_tracking_06-paraphrase-q1": "Yes",
+    "new_location_tracking_07-source_text-q0": "northe table",
+    "new_location_tracking_07-source_text-q1": "Jem",
+    "new_location_tracking_07-paraphrase-q0": "north",
+    "new_location_tracking_07-paraphrase-q1": "Jem",
+    "new_location_tracking_08-source_text-q0": "No",
+    "new_location_tracking_08-source_text-q1": "No",
+    "new_location_tracking_08-paraphrase-q0": "Yes",
+    "new_location_tracking_08-paraphrase-q1": "No",
+    "new_cause_reason_01-source_text-q0": "the road",
+    "new_cause_reason_01-source_text-q1": "Yes",
+    "new_cause_reason_01-paraphrase-q0": "the road",
+    "new_cause_reason_01-paraphrase-q1": "Yes",
+    "new_cause_reason_02-source_text-q0": "the grass",
+    "new_cause_reason_02-source_text-q1": "the grass",
+    "new_cause_reason_02-paraphrase-q0": "Yes",
+    "new_cause_reason_02-paraphrase-q1": "Opi",
+    "new_cause_reason_03-source_text-q0": "Yes",
+    "new_cause_reason_03-source_text-q1": "Qui",
+    "new_cause_reason_03-paraphrase-q0": "Yes",
+    "new_cause_reason_03-paraphrase-q1": "Sim",
+    "new_cause_reason_04-source_text-q0": "Tov",
+    "new_cause_reason_04-source_text-q1": "took enered the race",
+    "new_cause_reason_04-paraphrase-q0": "the clasd",
+    "new_cause_reason_04-paraphrase-q1": "entered the ractor",
+    "new_cause_reason_05-source_text-q0": "might",
+    "new_cause_reason_05-source_text-q1": "might rain",
+    "new_cause_reason_05-paraphrase-q0": "rain",
+    "new_cause_reason_05-paraphrase-q1": "rain",
+    "new_cause_reason_06-source_text-q0": "Yas",
+    "new_cause_reason_06-source_text-q1": "told Yas",
+    "new_cause_reason_06-paraphrase-q0": "Yas",
+    "new_cause_reason_06-paraphrase-q1": "the soup",
+    "new_cause_reason_07-source_text-q0": "broke down",
+    "new_cause_reason_07-source_text-q1": "buis",
+    "new_cause_reason_07-paraphrase-q0": "Yes",
+    "new_cause_reason_07-paraphrase-q1": "buis",
+    "new_cause_reason_08-source_text-q0": "Yes",
+    "new_cause_reason_08-source_text-q1": "No",
+    "new_cause_reason_08-paraphrase-q0": "No",
+    "new_cause_reason_08-paraphrase-q1": "No",
+    "new_time_when_01-source_text-q0": "Friday and Joa",
+    "new_time_when_01-source_text-q1": "No",
+    "new_time_when_01-paraphrase-q0": "Frisken FriQen",
+    "new_time_when_01-paraphrase-q1": "No",
+    "new_time_when_02-source_text-q0": "Yes",
+    "new_time_when_02-source_text-q1": "No",
+    "new_time_when_02-paraphrase-q0": "a new six does",
+    "new_time_when_02-paraphrase-q1": "Yes",
+    "new_time_when_03-source_text-q0": "Melks",
+    "new_time_when_03-source_text-q1": "No",
+    "new_time_when_03-paraphrase-q0": "Mel",
+    "new_time_when_03-paraphrase-q1": "No",
+    "new_time_when_04-source_text-q0": "No",
+    "new_time_when_04-source_text-q1": "No",
+    "new_time_when_04-paraphrase-q0": "No",
+    "new_time_when_04-paraphrase-q1": "No",
+    "new_time_when_05-source_text-q0": "Yes",
+    "new_time_when_05-source_text-q1": "Tuesday",
+    "new_time_when_05-paraphrase-q0": "Yes",
+    "new_time_when_05-paraphrase-q1": "On and Rueghen Rueghened Rueghene",
+    "new_time_when_06-source_text-q0": "Yes",
+    "new_time_when_06-source_text-q1": "Yes",
+    "new_time_when_06-paraphrase-q0": "Yes",
+    "new_time_when_06-paraphrase-q1": "Yes",
+    "new_time_when_07-source_text-q0": "Tuesday",
+    "new_time_when_07-source_text-q1": "Tuesday",
+    "new_time_when_07-paraphrase-q0": "On with Tam",
+    "new_time_when_07-paraphrase-q1": "On Tam",
+    "new_time_when_08-source_text-q0": "Yes",
+    "new_time_when_08-source_text-q1": "No",
+    "new_time_when_08-paraphrase-q0": "Yes",
+    "new_time_when_08-paraphrase-q1": "No",
+    "new_attribute_lookup_01-source_text-q0": "a reen",
+    "new_attribute_lookup_01-source_text-q1": "a reen",
+    "new_attribute_lookup_01-paraphrase-q0": "reed",
+    "new_attribute_lookup_01-paraphrase-q1": "a reen",
+    "new_attribute_lookup_02-source_text-q0": "Yes",
+    "new_attribute_lookup_02-source_text-q1": "Yes",
+    "new_attribute_lookup_02-paraphrase-q0": "Yes",
+    "new_attribute_lookup_02-paraphrase-q1": "Yes",
+    "new_attribute_lookup_03-source_text-q0": "a metal",
+    "new_attribute_lookup_03-source_text-q1": "Nim",
+    "new_attribute_lookup_03-paraphrase-q0": "a metal",
+    "new_attribute_lookup_03-paraphrase-q1": "Nild",
+    "new_attribute_lookup_04-source_text-q0": "a big bike",
+    "new_attribute_lookup_04-source_text-q1": "Yes",
+    "new_attribute_lookup_04-paraphrase-q0": "Qua",
+    "new_attribute_lookup_04-paraphrase-q1": "Yes",
+    "new_attribute_lookup_05-source_text-q0": "blue",
+    "new_attribute_lookup_05-source_text-q1": "blue",
+    "new_attribute_lookup_05-paraphrase-q0": "Tiblue",
+    "new_attribute_lookup_05-paraphrase-q1": "Tib",
+    "new_attribute_lookup_06-source_text-q0": "a round",
+    "new_attribute_lookup_06-source_text-q1": "a round",
+    "new_attribute_lookup_06-paraphrase-q0": "Uvo",
+    "new_attribute_lookup_06-paraphrase-q1": "round",
+    "new_attribute_lookup_07-source_text-q0": "scarf",
+    "new_attribute_lookup_07-source_text-q1": "scarf",
+    "new_attribute_lookup_07-paraphrase-q0": "Yima",
+    "new_attribute_lookup_07-paraphrase-q1": "Zul's scarf",
+    "new_attribute_lookup_08-source_text-q0": "larbryed a largen soup",
+    "new_attribute_lookup_08-source_text-q1": "larbrure",
+    "new_attribute_lookup_08-paraphrase-q0": "a large of a large",
+    "new_attribute_lookup_08-paraphrase-q1": "a large of a large",
+    "new_instrument_purpose_01-source_text-q0": "a knife",
+    "new_instrument_purpose_01-source_text-q1": "a knife",
+    "new_instrument_purpose_01-paraphrase-q0": "a knife",
+    "new_instrument_purpose_01-paraphrase-q1": "the rope",
+    "new_instrument_purpose_02-source_text-q0": "a spade",
+    "new_instrument_purpose_02-source_text-q1": "Yes",
+    "new_instrument_purpose_02-paraphrase-q0": "a spade",
+    "new_instrument_purpose_02-paraphrase-q1": "Yes",
+    "new_instrument_purpose_03-source_text-q0": "a brook",
+    "new_instrument_purpose_03-source_text-q1": "a brook",
+    "new_instrument_purpose_03-paraphrase-q0": "a brok",
+    "new_instrument_purpose_03-paraphrase-q1": "a broken by the floor",
+    "new_instrument_purpose_04-source_text-q0": "a bucket",
+    "new_instrument_purpose_04-source_text-q1": "a bucket",
+    "new_instrument_purpose_04-paraphrase-q0": "a bucket",
+    "new_instrument_purpose_04-paraphrase-q1": "the garden",
+    "new_instrument_purpose_05-source_text-q0": "a pencil",
+    "new_instrument_purpose_05-source_text-q1": "a pencil",
+    "new_instrument_purpose_05-paraphrase-q0": "a pencil",
+    "new_instrument_purpose_05-paraphrase-q1": "a pencil",
+    "new_instrument_purpose_06-source_text-q0": "key",
+    "new_instrument_purpose_06-source_text-q1": "the shed",
+    "new_instrument_purpose_06-paraphrase-q0": "the key",
+    "new_instrument_purpose_06-paraphrase-q1": "the key",
+    "new_instrument_purpose_07-source_text-q0": "a towel",
+    "new_instrument_purpose_07-source_text-q1": "a towel",
+    "new_instrument_purpose_07-paraphrase-q0": "a towel",
+    "new_instrument_purpose_07-paraphrase-q1": "a towel",
+    "new_instrument_purpose_08-source_text-q0": "a cloth",
+    "new_instrument_purpose_08-source_text-q1": "a cloth",
+    "new_instrument_purpose_08-paraphrase-q0": "a cloth",
+    "new_instrument_purpose_08-paraphrase-q1": "a cloth",
+    "new2_speech_quote_01-source_text-q0": "the gate",
+    "new2_speech_quote_01-source_text-q1": "Yes",
+    "new2_speech_quote_01-paraphrase-q0": "the gate",
+    "new2_speech_quote_01-paraphrase-q1": "Yes",
+    "new2_speech_quote_02-source_text-q0": "the soup",
+    "new2_speech_quote_02-source_text-q1": "Tuk",
+    "new2_speech_quote_02-paraphrase-q0": "the soup",
+    "new2_speech_quote_02-paraphrase-q1": "tup",
+    "new2_speech_quote_03-source_text-q0": "a book",
+    "new2_speech_quote_03-source_text-q1": "a book",
+    "new2_speech_quote_03-paraphrase-q0": "a book",
+    "new2_speech_quote_03-paraphrase-q1": "a book",
+    "new2_speech_quote_04-source_text-q0": "the step",
+    "new2_speech_quote_04-source_text-q1": "the step",
+    "new2_speech_quote_04-paraphrase-q0": "step",
+    "new2_speech_quote_04-paraphrase-q1": "the step",
+    "new2_speech_quote_05-source_text-q0": "sleep",
+    "new2_speech_quote_05-source_text-q1": "Yes",
+    "new2_speech_quote_05-paraphrase-q0": "a whisper",
+    "new2_speech_quote_05-paraphrase-q1": "Yes",
+    "new2_speech_quote_06-source_text-q0": "reading",
+    "new2_speech_quote_06-source_text-q1": "Dinner",
+    "new2_speech_quote_06-paraphrase-q0": "reading",
+    "new2_speech_quote_06-paraphrase-q1": "Dinner",
+    "new2_speech_quote_07-source_text-q0": "",
+    "new2_speech_quote_07-source_text-q1": "a jacket",
+    "new2_speech_quote_07-paraphrase-q0": "by the by the by the by the by th",
+    "new2_speech_quote_07-paraphrase-q1": "movies",
+    "new2_speech_quote_08-source_text-q0": "tomorrow",
+    "new2_speech_quote_08-source_text-q1": "tomorrow",
+    "new2_speech_quote_08-paraphrase-q0": "reply",
+    "new2_speech_quote_08-paraphrase-q1": "reply",
+    "new2_weather_condition_01-source_text-q0": "Idck",
+    "new2_weather_condition_01-source_text-q1": "Yes",
+    "new2_weather_condition_01-paraphrase-q0": "the dock",
+    "new2_weather_condition_01-paraphrase-q1": "Yes",
+    "new2_weather_condition_02-source_text-q0": "the morning",
+    "new2_weather_condition_02-source_text-q1": "the morning",
+    "new2_weather_condition_02-paraphrase-q0": "a walke",
+    "new2_weather_condition_02-paraphrase-q1": "a windy",
+    "new2_weather_condition_03-source_text-q0": "a picn",
+    "new2_weather_condition_03-source_text-q1": "a sunny",
+    "new2_weather_condition_03-paraphrase-q0": "the afternoon",
+    "new2_weather_condition_03-paraphrase-q1": "Raz",
+    "new2_weather_condition_04-source_text-q0": "Iovel",
+    "new2_weather_condition_04-source_text-q1": "Sov",
+    "new2_weather_condition_04-paraphrase-q0": "the watcher",
+    "new2_weather_condition_04-paraphrase-q1": "Sove",
+    "new2_weather_condition_05-source_text-q0": "the hens",
+    "new2_weather_condition_05-source_text-q1": "the hens",
+    "new2_weather_condition_05-paraphrase-q0": "the hens",
+    "new2_weather_condition_05-paraphrase-q1": "the hens",
+    "new2_weather_condition_06-source_text-q0": "the lawn",
+    "new2_weather_condition_06-source_text-q1": "Yes",
+    "new2_weather_condition_06-paraphrase-q0": "the lawn",
+    "new2_weather_condition_06-paraphrase-q1": "Yes",
+    "new2_weather_condition_07-source_text-q0": "the shop",
+    "new2_weather_condition_07-source_text-q1": "the shop",
+    "new2_weather_condition_07-paraphrase-q0": "the shorm",
+    "new2_weather_condition_07-paraphrase-q1": "the next",
+    "new2_weather_condition_08-source_text-q0": "the air lear",
+    "new2_weather_condition_08-source_text-q1": "the sky",
+    "new2_weather_condition_08-paraphrase-q0": "the air lear",
+    "new2_weather_condition_08-paraphrase-q1": "the air",
+    "new2_price_cost_01-source_text-q0": "No",
+    "new2_price_cost_01-source_text-q1": "Yes",
+    "new2_price_cost_01-paraphrase-q0": "No",
+    "new2_price_cost_01-paraphrase-q1": "Yes",
+    "new2_price_cost_02-source_text-q0": "No",
+    "new2_price_cost_02-source_text-q1": "Yes",
+    "new2_price_cost_02-paraphrase-q0": "Yes",
+    "new2_price_cost_02-paraphrase-q1": "Yes",
+    "new2_price_cost_03-source_text-q0": "No",
+    "new2_price_cost_03-source_text-q1": "No",
+    "new2_price_cost_03-paraphrase-q0": "No",
+    "new2_price_cost_03-paraphrase-q1": "Yes",
+    "new2_price_cost_04-source_text-q0": "No",
+    "new2_price_cost_04-source_text-q1": "No",
+    "new2_price_cost_04-paraphrase-q0": "No",
+    "new2_price_cost_04-paraphrase-q1": "No",
+    "new2_price_cost_05-source_text-q0": "No",
+    "new2_price_cost_05-source_text-q1": "Yes",
+    "new2_price_cost_05-paraphrase-q0": "No",
+    "new2_price_cost_05-paraphrase-q1": "dollar",
+    "new2_price_cost_06-source_text-q0": "the lamp",
+    "new2_price_cost_06-source_text-q1": "the rug",
+    "new2_price_cost_06-paraphrase-q0": "Yes",
+    "new2_price_cost_06-paraphrase-q1": "No",
+    "new2_price_cost_07-source_text-q0": "No",
+    "new2_price_cost_07-source_text-q1": "Yes",
+    "new2_price_cost_07-paraphrase-q0": "No",
+    "new2_price_cost_07-paraphrase-q1": "No",
+    "new2_price_cost_08-source_text-q0": "No",
+    "new2_price_cost_08-source_text-q1": "No",
+    "new2_price_cost_08-paraphrase-q0": "No",
+    "new2_price_cost_08-paraphrase-q1": "No",
+    "new2_direction_turn_01-source_text-q0": "turner",
+    "new2_direction_turn_01-source_text-q1": "No",
+    "new2_direction_turn_01-paraphrase-q0": "the corner",
+    "new2_direction_turn_01-paraphrase-q1": "Yes",
+    "new2_direction_turn_02-source_text-q0": "the skill",
+    "new2_direction_turn_02-source_text-q1": "No",
+    "new2_direction_turn_02-paraphrase-q0": "the skilil",
+    "new2_direction_turn_02-paraphrase-q1": "No",
+    "new2_direction_turn_03-source_text-q0": "the boat",
+    "new2_direction_turn_03-source_text-q1": "the boat",
+    "new2_direction_turn_03-paraphrase-q0": "the boat",
+    "new2_direction_turn_03-paraphrase-q1": "boat",
+    "new2_direction_turn_04-source_text-q0": "turned",
+    "new2_direction_turn_04-source_text-q1": "turned",
+    "new2_direction_turn_04-paraphrase-q0": "a cozkie",
+    "new2_direction_turn_04-paraphrase-q1": "right",
+    "new2_direction_turn_05-source_text-q0": "the ",
+    "new2_direction_turn_05-source_text-q1": "dirg",
+    "new2_direction_turn_05-paraphrase-q0": "the west",
+    "new2_direction_turn_05-paraphrase-q1": "the west",
+    "new2_direction_turn_06-source_text-q0": "the fork",
+    "new2_direction_turn_06-source_text-q1": "the fork",
+    "new2_direction_turn_06-paraphrase-q0": "the fork",
+    "new2_direction_turn_06-paraphrase-q1": "the fork",
+    "new2_direction_turn_07-source_text-q0": "the ladder",
+    "new2_direction_turn_07-source_text-q1": "the ladder",
+    "new2_direction_turn_07-paraphrase-q0": "the ladder",
+    "new2_direction_turn_07-paraphrase-q1": "the ladder",
+    "new2_direction_turn_08-source_text-q0": "the river",
+    "new2_direction_turn_08-source_text-q1": "the river",
+    "new2_direction_turn_08-paraphrase-q0": "the river",
+    "new2_direction_turn_08-paraphrase-q1": "the river",
+    "new2_duration_length_01-source_text-q0": "Yes",
+    "new2_duration_length_01-source_text-q1": "Yes",
+    "new2_duration_length_01-paraphrase-q0": "No",
+    "new2_duration_length_01-paraphrase-q1": "No",
+    "new2_duration_length_02-source_text-q0": "Yes",
+    "new2_duration_length_02-source_text-q1": "Yes",
+    "new2_duration_length_02-paraphrase-q0": "Yes",
+    "new2_duration_length_02-paraphrase-q1": "Yes",
+    "new2_duration_length_03-source_text-q0": "No",
+    "new2_duration_length_03-source_text-q1": "The rain",
+    "new2_duration_length_03-paraphrase-q0": "Yes",
+    "new2_duration_length_03-paraphrase-q1": "Yes",
+    "new2_duration_length_04-source_text-q0": "Tob",
+    "new2_duration_length_04-source_text-q1": "Yes",
+    "new2_duration_length_04-paraphrase-q0": "Yes",
+    "new2_duration_length_04-paraphrase-q1": "Tob",
+    "new2_duration_length_05-source_text-q0": "No",
+    "new2_duration_length_05-source_text-q1": "No",
+    "new2_duration_length_05-paraphrase-q0": "Yes",
+    "new2_duration_length_05-paraphrase-q1": "No",
+    "new2_duration_length_06-source_text-q0": "No",
+    "new2_duration_length_06-source_text-q1": "No",
+    "new2_duration_length_06-paraphrase-q0": "No",
+    "new2_duration_length_06-paraphrase-q1": "No",
+    "new2_duration_length_07-source_text-q0": "Yes",
+    "new2_duration_length_07-source_text-q1": "No",
+    "new2_duration_length_07-paraphrase-q0": "No",
+    "new2_duration_length_07-paraphrase-q1": "No",
+    "new2_duration_length_08-source_text-q0": "No",
+    "new2_duration_length_08-source_text-q1": "the fence",
+    "new2_duration_length_08-paraphrase-q0": "Yes",
+    "new2_duration_length_08-paraphrase-q1": "Yes",
+    "new2_source_origin_01-source_text-q0": "the bread",
+    "new2_source_origin_01-source_text-q1": "Yes",
+    "new2_source_origin_01-paraphrase-q0": "Yes",
+    "new2_source_origin_01-paraphrase-q1": "No",
+    "new2_source_origin_02-source_text-q0": "Yes",
+    "new2_source_origin_02-source_text-q1": "No",
+    "new2_source_origin_02-paraphrase-q0": "Yes",
+    "new2_source_origin_02-paraphrase-q1": "No",
+    "new2_source_origin_03-source_text-q0": "Yes",
+    "new2_source_origin_03-source_text-q1": "Spain",
+    "new2_source_origin_03-paraphrase-q0": "Yes",
+    "new2_source_origin_03-paraphrase-q1": "Spain",
+    "new2_source_origin_04-source_text-q0": "the hidend",
+    "new2_source_origin_04-source_text-q1": "the hives",
+    "new2_source_origin_04-paraphrase-q0": "Yes",
+    "new2_source_origin_04-paraphrase-q1": "Yes",
+    "new2_source_origin_05-source_text-q0": "Yes",
+    "new2_source_origin_05-source_text-q1": "Yes",
+    "new2_source_origin_05-paraphrase-q0": "Yes",
+    "new2_source_origin_05-paraphrase-q1": "Yes",
+    "new2_source_origin_06-source_text-q0": "No",
+    "new2_source_origin_06-source_text-q1": "No",
+    "new2_source_origin_06-paraphrase-q0": "No",
+    "new2_source_origin_06-paraphrase-q1": "No",
+    "new2_source_origin_07-source_text-q0": "Yes",
+    "new2_source_origin_07-source_text-q1": "the hens",
+    "new2_source_origin_07-paraphrase-q0": "Yes",
+    "new2_source_origin_07-paraphrase-q1": "Yes",
+    "new2_source_origin_08-source_text-q0": "Yes",
+    "new2_source_origin_08-source_text-q1": "Yes",
+    "new2_source_origin_08-paraphrase-q0": "Yes",
+    "new2_source_origin_08-paraphrase-q1": "Yes"
+   },
+   "fresh": {
+    "fresh_giver_recipient_01-source_text-q0": "No",
+    "fresh_giver_recipient_01-source_text-q1": "Dax",
+    "fresh_giver_recipient_01-paraphrase-q0": "No",
+    "fresh_giver_recipient_01-paraphrase-q1": "At",
+    "fresh_giver_recipient_02-source_text-q0": "Pim",
+    "fresh_giver_recipient_02-source_text-q1": "No",
+    "fresh_giver_recipient_02-paraphrase-q0": "Pim",
+    "fresh_giver_recipient_02-paraphrase-q1": "No",
+    "fresh_giver_recipient_03-source_text-q0": "Fora",
+    "fresh_giver_recipient_03-source_text-q1": "Kira",
+    "fresh_giver_recipient_03-paraphrase-q0": "Kira",
+    "fresh_giver_recipient_03-paraphrase-q1": "Kira",
+    "fresh_giver_recipient_04-source_text-q0": "On",
+    "fresh_giver_recipient_04-source_text-q1": "On",
+    "fresh_giver_recipient_04-paraphrase-q0": "Dova",
+    "fresh_giver_recipient_04-paraphrase-q1": "Dova",
+    "fresh_giver_recipient_05-source_text-q0": "No",
+    "fresh_giver_recipient_05-source_text-q1": "Fenn",
+    "fresh_giver_recipient_05-paraphrase-q0": "Yes",
+    "fresh_giver_recipient_05-paraphrase-q1": "Gil",
+    "fresh_giver_recipient_06-source_text-q0": "the barn",
+    "fresh_giver_recipient_06-source_text-q1": "Hug",
+    "fresh_giver_recipient_06-paraphrase-q0": "the barn of nails",
+    "fresh_giver_recipient_06-paraphrase-q1": "Inside",
+    "fresh_giver_recipient_07-source_text-q0": "From",
+    "fresh_giver_recipient_07-source_text-q1": "No",
+    "fresh_giver_recipient_07-paraphrase-q0": "From",
+    "fresh_giver_recipient_07-paraphrase-q1": "Yes",
+    "fresh_giver_recipient_08-source_text-q0": "Lark",
+    "fresh_giver_recipient_08-source_text-q1": "Lark",
+    "fresh_giver_recipient_08-paraphrase-q0": "Moro",
+    "fresh_giver_recipient_08-paraphrase-q1": "Lark",
+    "fresh_comparative_direction_01-source_text-q0": "the pewter the clay",
+    "fresh_comparative_direction_01-source_text-q1": "Yes",
+    "fresh_comparative_direction_01-paraphrase-q0": "the pew dreclay",
+    "fresh_comparative_direction_01-paraphrase-q1": "Yes",
+    "fresh_comparative_direction_02-source_text-q0": "No",
+    "fresh_comparative_direction_02-source_text-q1": "the pond",
+    "fresh_comparative_direction_02-paraphrase-q0": "No",
+    "fresh_comparative_direction_02-paraphrase-q1": "the brown duck",
+    "fresh_comparative_direction_03-source_text-q0": "Ayo",
+    "fresh_comparative_direction_03-source_text-q1": "Ayo",
+    "fresh_comparative_direction_03-paraphrase-q0": "Bix",
+    "fresh_comparative_direction_03-paraphrase-q1": "Ayo",
+    "fresh_comparative_direction_04-source_text-q0": "the tall",
+    "fresh_comparative_direction_04-source_text-q1": "the tall",
+    "fresh_comparative_direction_04-paraphrase-q0": "the tall",
+    "fresh_comparative_direction_04-paraphrase-q1": "the tall",
+    "fresh_comparative_direction_05-source_text-q0": "the pine",
+    "fresh_comparative_direction_05-source_text-q1": "No",
+    "fresh_comparative_direction_05-paraphrase-q0": "the pine",
+    "fresh_comparative_direction_05-paraphrase-q1": "No",
+    "fresh_comparative_direction_06-source_text-q0": "the kettle",
+    "fresh_comparative_direction_06-source_text-q1": "the hotter kettle",
+    "fresh_comparative_direction_06-paraphrase-q0": "the steel",
+    "fresh_comparative_direction_06-paraphrase-q1": "the enamel",
+    "fresh_comparative_direction_07-source_text-q0": "Elo",
+    "fresh_comparative_direction_07-source_text-q1": "No",
+    "fresh_comparative_direction_07-paraphrase-q0": "By the firend",
+    "fresh_comparative_direction_07-paraphrase-q1": "No",
+    "fresh_comparative_direction_08-source_text-q0": "the hemp",
+    "fresh_comparative_direction_08-source_text-q1": "the hemp",
+    "fresh_comparative_direction_08-paraphrase-q0": "the hemp",
+    "fresh_comparative_direction_08-paraphrase-q1": "the hemp",
+    "fresh_negation_alternative_01-source_text-q0": "No",
+    "fresh_negation_alternative_01-source_text-q1": "the carrot",
+    "fresh_negation_alternative_01-paraphrase-q0": "No",
+    "fresh_negation_alternative_01-paraphrase-q1": "the lemon",
+    "fresh_negation_alternative_02-source_text-q0": "soup",
+    "fresh_negation_alternative_02-source_text-q1": "No",
+    "fresh_negation_alternative_02-paraphrase-q0": "the menu",
+    "fresh_negation_alternative_02-paraphrase-q1": "No",
+    "fresh_negation_alternative_03-source_text-q0": "a raincoat",
+    "fresh_negation_alternative_03-source_text-q1": "a fraincoat",
+    "fresh_negation_alternative_03-paraphrase-q0": "a gray",
+    "fresh_negation_alternative_03-paraphrase-q1": "yea fear",
+    "fresh_negation_alternative_04-source_text-q0": "the morning sayong",
+    "fresh_negation_alternative_04-source_text-q1": "the morning",
+    "fresh_negation_alternative_04-paraphrase-q0": "the morning",
+    "fresh_negation_alternative_04-paraphrase-q1": "the morning",
+    "fresh_negation_alternative_05-source_text-q0": "tulips",
+    "fresh_negation_alternative_05-source_text-q1": "No",
+    "fresh_negation_alternative_05-paraphrase-q0": "new skills",
+    "fresh_negation_alternative_05-paraphrase-q1": "Yes",
+    "fresh_negation_alternative_06-source_text-q0": "the cabin",
+    "fresh_negation_alternative_06-source_text-q1": "the cabin",
+    "fresh_negation_alternative_06-paraphrase-q0": "the cabed for the hotel",
+    "fresh_negation_alternative_06-paraphrase-q1": "the hotel",
+    "fresh_negation_alternative_07-source_text-q0": "the race",
+    "fresh_negation_alternative_07-source_text-q1": "the race",
+    "fresh_negation_alternative_07-paraphrase-q0": "the race",
+    "fresh_negation_alternative_07-paraphrase-q1": "the race",
+    "fresh_negation_alternative_08-source_text-q0": "the receioract ceion",
+    "fresh_negation_alternative_08-source_text-q1": "the recead",
+    "fresh_negation_alternative_08-paraphrase-q0": "a cordurecture of the memo",
+    "fresh_negation_alternative_08-paraphrase-q1": "the comovied the receio",
+    "fresh_event_ordering_01-source_text-q0": "Pru",
+    "fresh_event_ordering_01-source_text-q1": "the porch",
+    "fresh_event_ordering_01-paraphrase-q0": "Pru",
+    "fresh_event_ordering_01-paraphrase-q1": "the hens",
+    "fresh_event_ordering_02-source_text-q0": "Quill",
+    "fresh_event_ordering_02-source_text-q1": "a loud",
+    "fresh_event_ordering_02-paraphrase-q0": "Quill",
+    "fresh_event_ordering_02-paraphrase-q1": "a loud",
+    "fresh_event_ordering_03-source_text-q0": "listened a tall",
+    "fresh_event_ordering_03-source_text-q1": "the piano",
+    "fresh_event_ordering_03-paraphrase-q0": "Rem listed a piano",
+    "fresh_event_ordering_03-paraphrase-q1": "After",
+    "fresh_event_ordering_04-source_text-q0": "Before hased the poster",
+    "fresh_event_ordering_04-source_text-q1": "the poster",
+    "fresh_event_ordering_04-paraphrase-q0": "Teo",
+    "fresh_event_ordering_04-paraphrase-q1": "gave Sab",
+    "fresh_event_ordering_05-source_text-q0": "No",
+    "fresh_event_ordering_05-source_text-q1": "the soup",
+    "fresh_event_ordering_05-paraphrase-q0": "Yes",
+    "fresh_event_ordering_05-paraphrase-q1": "the salt after",
+    "fresh_event_ordering_06-source_text-q0": "brushed his boots",
+    "fresh_event_ordering_06-source_text-q1": "Yes",
+    "fresh_event_ordering_06-paraphrase-q0": "brushed his boots",
+    "fresh_event_ordering_06-paraphrase-q1": "Yes",
+    "fresh_event_ordering_07-source_text-q0": "fillow the teapot",
+    "fresh_event_ordering_07-source_text-q1": "the teapot",
+    "fresh_event_ordering_07-paraphrase-q0": "tended the teapot",
+    "fresh_event_ordering_07-paraphrase-q1": "After",
+    "fresh_event_ordering_08-source_text-q0": "Xan",
+    "fresh_event_ordering_08-source_text-q1": "the pencil",
+    "fresh_event_ordering_08-paraphrase-q0": "Xan",
+    "fresh_event_ordering_08-paraphrase-q1": "the pencil clock",
+    "fresh_descriptive_reference_01-source_text-q0": "the ck",
+    "fresh_descriptive_reference_01-source_text-q1": "Yes",
+    "fresh_descriptive_reference_01-paraphrase-q0": "the chete ck",
+    "fresh_descriptive_reference_01-paraphrase-q1": "Yes",
+    "fresh_descriptive_reference_02-source_text-q0": "the pin",
+    "fresh_descriptive_reference_02-source_text-q1": "ad",
+    "fresh_descriptive_reference_02-paraphrase-q0": "a hoken pin lad",
+    "fresh_descriptive_reference_02-paraphrase-q1": "pin lad",
+    "fresh_descriptive_reference_03-source_text-q0": "the sack",
+    "fresh_descriptive_reference_03-source_text-q1": "No",
+    "fresh_descriptive_reference_03-paraphrase-q0": "the smooot",
+    "fresh_descriptive_reference_03-paraphrase-q1": "No",
+    "fresh_descriptive_reference_04-source_text-q0": "plug",
+    "fresh_descriptive_reference_04-source_text-q1": "No",
+    "fresh_descriptive_reference_04-paraphrase-q0": "plug",
+    "fresh_descriptive_reference_04-paraphrase-q1": "Yes",
+    "fresh_descriptive_reference_05-source_text-q0": "the hoodeder coat",
+    "fresh_descriptive_reference_05-source_text-q1": "the hook",
+    "fresh_descriptive_reference_05-paraphrase-q0": "the hook corooun lder",
+    "fresh_descriptive_reference_05-paraphrase-q1": "the hooder thooooooun at",
+    "fresh_descriptive_reference_06-source_text-q0": "the spotd",
+    "fresh_descriptive_reference_06-source_text-q1": "the big eg",
+    "fresh_descriptive_reference_06-paraphrase-q0": "the plain",
+    "fresh_descriptive_reference_06-paraphrase-q1": "No",
+    "fresh_descriptive_reference_07-source_text-q0": "the ke nive",
+    "fresh_descriptive_reference_07-source_text-q1": "Yes",
+    "fresh_descriptive_reference_07-paraphrase-q0": "mirr",
+    "fresh_descriptive_reference_07-paraphrase-q1": "Yes",
+    "fresh_descriptive_reference_08-source_text-q0": "collar",
+    "fresh_descriptive_reference_08-source_text-q1": "No",
+    "fresh_descriptive_reference_08-paraphrase-q0": "the colar",
+    "fresh_descriptive_reference_08-paraphrase-q1": "Yes",
+    "fresh_combined_relations_01-source_text-q0": "a plastic",
+    "fresh_combined_relations_01-source_text-q1": "Yes",
+    "fresh_combined_relations_01-paraphrase-q0": "a plate",
+    "fresh_combined_relations_01-paraphrase-q1": "Yes",
+    "fresh_combined_relations_02-source_text-q0": "zellowas",
+    "fresh_combined_relations_02-source_text-q1": "Zeeda",
+    "fresh_combined_relations_02-paraphrase-q0": "yellow",
+    "fresh_combined_relations_02-paraphrase-q1": "Yes",
+    "fresh_combined_relations_03-source_text-q0": "a mil",
+    "fresh_combined_relations_03-source_text-q1": "a name",
+    "fresh_combined_relations_03-paraphrase-q0": "the straw",
+    "fresh_combined_relations_03-paraphrase-q1": "a name",
+    "fresh_combined_relations_04-source_text-q0": "Odo",
+    "fresh_combined_relations_04-source_text-q1": "a radio",
+    "fresh_combined_relations_04-paraphrase-q0": "Odo",
+    "fresh_combined_relations_04-paraphrase-q1": "a ceramic",
+    "fresh_combined_relations_05-source_text-q0": "the bucket",
+    "fresh_combined_relations_05-source_text-q1": "a rust",
+    "fresh_combined_relations_05-paraphrase-q0": "the rust",
+    "fresh_combined_relations_05-paraphrase-q1": "a coton",
+    "fresh_combined_relations_06-source_text-q0": "a rocking",
+    "fresh_combined_relations_06-source_text-q1": "Yes",
+    "fresh_combined_relations_06-paraphrase-q0": "a smal",
+    "fresh_combined_relations_06-paraphrase-q1": "Yes",
+    "fresh_combined_relations_07-source_text-q0": "Pru",
+    "fresh_combined_relations_07-source_text-q1": "a gold onto a denim",
+    "fresh_combined_relations_07-paraphrase-q0": "Pru",
+    "fresh_combined_relations_07-paraphrase-q1": "a gold a denim",
+    "fresh_combined_relations_08-source_text-q0": "a read",
+    "fresh_combined_relations_08-source_text-q1": "Yes",
+    "fresh_combined_relations_08-paraphrase-q0": "an orange",
+    "fresh_combined_relations_08-paraphrase-q1": "No"
+   }
+  },
+  "donor_preds": {}
+ }
+}

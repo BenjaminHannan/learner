@@ -1,0 +1,12 @@
+# BensPC RTX 5070 Ti (cuda): H1 screen, learned rounds on T1 (sealed spec: architecture/redesign-ideas-2026-10-07.md section 8b; PASS-MARKS.md addendum 21).
+# H1 = model 'tool_h1' (3,277,650 params = T1 + a 257-param stop head): the model picks how many thinking rounds a turn gets (stop at p >= 0.5, cap 32).
+# Stop label 'settled' (right now, or no later round is right), sealed by the spec's amendment 1 (section 8c, 3:30 PM ET) before any H1 run.
+# RUN ONLY AFTER queue 40 (the T1 screen) has landed and analyze_t1 does not say PROVED WRONG; if T1 is "not shown", H1 waits.
+# Baseline = queue 40's T1 on the same seeds (same PC, same flags). Seeds 200 and 201 only; B3 copies the marks for its 6-seed confirm.
+# Cost: ~1.9x a T1 run each (CPU timing; each batch runs max(K, longest program + 1) rounds, K drawn from 4/8/16/32). Activations ~1.0x T1's (checkpointed),
+#   so --par 2 like T1; use --par 1 if T1's peak_reserved_mib (q40 RESULT.json) is above 7,000.
+# Judge: python -m custom_io.analyze_h1 --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-pc-t1-screen custom_io/results/49-pc-h1-screen
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\49-pc-h1-screen.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# MEM 6000
+H1_s200 --model tool_h1 --cfg '{"label":"settled"}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval --save-preds
+H1_s201 --model tool_h1 --cfg '{"label":"settled"}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval --save-preds

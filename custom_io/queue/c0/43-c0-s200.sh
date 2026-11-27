@@ -1,0 +1,13 @@
+# MEM 6000
+# PAR 1
+# q43 C0, C0_s200: the same line as custom_io/queue_local, code pinned to 2b1cbd4d7b (the commit the PC chain would have used).
+# Rented RTX 5090 (Ben's Vast OK, 3:00 PM ET 10-07: PC and Mac both busy). Data = the box's seed-1 200k build (train.jsonl sha256 010af671..., the same file as q33's).
+# Box: python3 custom_io/box/vast.py create --offer ID --label cio-c0 --maxpar 2 --qsub /c0 --env "MAXH=6 IDLE_EXIT=1800 END_SLEEP=600 FAIL_SLEEP=1800"
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+SHA=2b1cbd4d7b50921dee52c3993b9fddd1a9a194d2
+P=$J/pin/$JOB; rm -rf $P
+git clone -q --depth 1 --filter=blob:none --no-checkout --sparse -b claude/custom-reader-talker-4x309r https://github.com/BenjaminHannan/learner $P \
+  && git -C $P fetch -q --depth 1 --filter=blob:none origin $SHA && git -C $P sparse-checkout set custom_io && git -C $P checkout -q $SHA || { echo "PIN-FAIL $SHA"; exit 3; }
+[ "$(git -C $P rev-parse HEAD)" = "$SHA" ] || { echo "PIN-FAIL head $(git -C $P rev-parse HEAD)"; exit 3; }
+rm -rf $J/code/$JOB/custom_io && cp -r $P/custom_io $J/code/$JOB/ && echo "custom_io pinned to $SHA"
+run C0_s200 --model plain_tf_steps --cfg '{"cap":107}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval --save-preds

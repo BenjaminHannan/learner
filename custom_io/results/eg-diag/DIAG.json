@@ -1,0 +1,78 @@
+{
+ "rows": 2040,
+ "per_family": 60,
+ "ckpt": "/tmp/claude-0/-home-user-learner/efeefd59-f635-5d03-989e-45808869ca31/scratchpad/ck_C/29-b2-screen/B2_s100/checkpoint.pt",
+ "wiring": {
+  "eval_mode": true,
+  "trainable_params": 0,
+  "padding_max_abs_diff": 0.000457763671875,
+  "state_rms": 88.4955062866211
+ },
+ "P1_spelling": {
+  "eg_linear": {
+   "all": 33.56,
+   "letters": 22.99,
+   "letters_in_1char_pieces": 79.81,
+   "letters_in_longer_pieces": 22.78,
+   "cipher_map_letters": 27.54
+  },
+  "eg_plus_offset_mlp": {
+   "all": 97.98,
+   "letters": 97.39,
+   "letters_in_1char_pieces": 87.5,
+   "letters_in_longer_pieces": 97.43,
+   "cipher_map_letters": 96.33
+  },
+  "b2_reader_linear": {
+   "all": 99.85,
+   "letters": 99.85,
+   "letters_in_1char_pieces": 99.04,
+   "letters_in_longer_pieces": 99.85,
+   "cipher_map_letters": 99.72
+  },
+  "n_test_chars": 42509,
+  "share_of_letters_in_longer_pieces": 99.64
+ },
+ "P2_sameness": {
+  "eg_raw": {
+   "all": {
+    "auc": 0.9502,
+    "same_word_pairs": 9446,
+    "different_word_pairs": 258269,
+    "mean_cos_same": 0.6813,
+    "mean_cos_different": 0.1766,
+    "match_at_1": 82.64,
+    "n_repeats": 6370
+   },
+   "matching_families": {
+    "auc": 0.9382,
+    "same_word_pairs": 3632,
+    "different_word_pairs": 75559,
+    "mean_cos_same": 0.6264,
+    "mean_cos_different": 0.1804,
+    "match_at_1": 73.7,
+    "n_repeats": 2384
+   }
+  },
+  "b2_reader": {
+   "all": {
+    "auc": 0.8205,
+    "same_word_pairs": 9446,
+    "different_word_pairs": 258269,
+    "mean_cos_same": 0.7004,
+    "mean_cos_different": 0.4499,
+    "match_at_1": 79.37,
+    "n_repeats": 6370
+   },
+   "matching_families": {
+    "auc": 0.8922,
+    "same_word_pairs": 3632,
+    "different_word_pairs": 75559,
+    "mean_cos_same": 0.7542,
+    "mean_cos_different": 0.4318,
+    "match_at_1": 83.01,
+    "n_repeats": 2384
+   }
+  }
+ }
+}

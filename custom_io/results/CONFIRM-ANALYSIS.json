@@ -1,0 +1,466 @@
+{
+ "stage": "confirm",
+ "seeds": [
+  200,
+  201,
+  202,
+  203,
+  204,
+  205
+ ],
+ "runs": [
+  "B2_s200",
+  "B2_s201",
+  "B2_s202",
+  "B2_s203",
+  "B2_s204",
+  "B2_s205",
+  "tf_s200",
+  "tf_s201",
+  "tf_s202",
+  "tf_s203",
+  "tf_s204",
+  "tf_s205",
+  "tfsteps_s200",
+  "tfsteps_s201",
+  "tfsteps_s202",
+  "tfsteps_s203",
+  "tfsteps_s204",
+  "tfsteps_s205"
+ ],
+ "skipped": [],
+ "arms": {
+  "B2": {
+   "diffs": {
+    "pooled5_vs_tf": {
+     "n": 6,
+     "mean": 20.336644591611478,
+     "sd": 0.9368383981411548,
+     "ci": [
+      19.353333055518178,
+      21.319956127704778
+     ],
+     "pos": 6,
+     "per_seed": {
+      "200": 20.198675496688743,
+      "201": 19.53642384105961,
+      "202": 19.139072847682115,
+      "203": 20.877483443708606,
+      "204": 20.52980132450331,
+      "205": 21.73841059602649
+     }
+    },
+    "chain5_vs_tf": {
+     "n": 6,
+     "mean": 65.38333333333334,
+     "sd": 2.790997432221446,
+     "ci": [
+      62.453884692291815,
+      68.31278197437487
+     ],
+     "pos": 6,
+     "per_seed": {
+      "200": 65.5,
+      "201": 64.6,
+      "202": 61.599999999999994,
+      "203": 66.9,
+      "204": 63.89999999999999,
+      "205": 69.80000000000001
+     }
+    },
+    "in_dist_vs_tf": {
+     "n": 6,
+     "mean": 14.49754901960784,
+     "sd": 1.6424677785852877,
+     "ci": [
+      12.773604401679075,
+      16.221493637536604
+     ],
+     "pos": 6,
+     "per_seed": {
+      "200": 15.882352941176478,
+      "201": 14.779411764705884,
+      "202": 11.764705882352942,
+      "203": 15.441176470588232,
+      "204": 13.308823529411754,
+      "205": 15.808823529411754
+     }
+    },
+    "variant_vs_tf": {
+     "n": 6,
+     "mean": 14.419191919191917,
+     "sd": 2.6774346415114127,
+     "ci": [
+      11.608939504946488,
+      17.229444333437346
+     ],
+     "pos": 6,
+     "per_seed": {
+      "200": 9.924242424242426,
+      "201": 13.106060606060606,
+      "202": 16.742424242424246,
+      "203": 13.86363636363636,
+      "204": 16.590909090909086,
+      "205": 16.28787878787879
+     }
+    },
+    "pooled5_vs_tfsteps": {
+     "n": 6,
+     "mean": 6.887417218543045,
+     "sd": 1.3338659155916532,
+     "ci": [
+      5.487383077110145,
+      8.287451359975945
+     ],
+     "pos": 6,
+     "per_seed": {
+      "200": 6.175496688741717,
+      "201": 7.185430463576168,
+      "202": 8.36092715231787,
+      "203": 7.78145695364239,
+      "204": 4.602649006622514,
+      "205": 7.21854304635761
+     }
+    },
+    "chain5_vs_tfsteps": {
+     "n": 6,
+     "mean": 5.599999999999997,
+     "sd": 0.33466401061362905,
+     "ci": [
+      5.248734527742903,
+      5.951265472257091
+     ],
+     "pos": 6,
+     "per_seed": {
+      "200": 5.0,
+      "201": 5.699999999999989,
+      "202": 5.8999999999999915,
+      "203": 5.5,
+      "204": 5.599999999999994,
+      "205": 5.900000000000006
+     }
+    },
+    "pooled5_vs_C1": {
+     "n": 6,
+     "mean": 5.86092715231788,
+     "sd": 1.164744218794466,
+     "ci": [
+      4.638404218574923,
+      7.083450086060838
+     ],
+     "pos": 6,
+     "per_seed": {
+      "200": 5.16556291390728,
+      "201": 6.059602649006635,
+      "202": 7.019867549668874,
+      "203": 6.738410596026483,
+      "204": 3.874172185430453,
+      "205": 6.307947019867555
+     }
+    },
+    "chain5_vs_C1": {
+     "n": 6,
+     "mean": 3.2166666666666637,
+     "sd": 0.22286019533928705,
+     "ci": [
+      2.9827511894104584,
+      3.450582143922869
+     ],
+     "pos": 6,
+     "per_seed": {
+      "200": 3.0,
+      "201": 3.1999999999999886,
+      "202": 3.3999999999999915,
+      "203": 2.9000000000000057,
+      "204": 3.3999999999999915,
+      "205": 3.4000000000000057
+     }
+    }
+   },
+   "PASS1": [
+    {
+     "id": "P1.pooled",
+     "desc": "pooled-5 d >= +2.0, CI lo > 0, >= 5 of 6 seeds positive",
+     "value": 20.336644591611478,
+     "op": ">=",
+     "thr": 2.0,
+     "ok": true
+    },
+    {
+     "id": "P1.chain5",
+     "desc": "chain-5 d >= +8, CI lo > 0, McNemar p < 0.01",
+     "value": 65.38333333333334,
+     "op": ">=",
+     "thr": 8.0,
+     "ok": true,
+     "mcnemar": {
+      "b_design_only": 3931,
+      "c_base_only": 8,
+      "p": 0.0,
+      "per_seed_p": {
+       "200": 1.0061459161677026e-191,
+       "201": 9.057309664566443e-191,
+       "202": 7.354491775826673e-186,
+       "203": 8.165126103939127e-202,
+       "204": 1.134518875710357e-188,
+       "205": 2.665330375945814e-208
+      },
+      "note": "discordant counts pooled over seeds"
+     }
+    },
+    {
+     "id": "P1.in_dist",
+     "desc": "in_dist d >= -1.0",
+     "value": 14.49754901960784,
+     "op": ">=",
+     "thr": -1.0,
+     "ok": true
+    }
+   ],
+   "PASS2": [
+    {
+     "id": "P2.steps",
+     "desc": "pooled-5 d vs plain_tf_steps >= +1.0, CI lo > 0",
+     "value": 6.887417218543045,
+     "op": ">=",
+     "thr": 1.0,
+     "ok": true
+    },
+    {
+     "id": "P2.pythia_ft",
+     "desc": "pooled-5 >= 2 above fine-tuned pythia-31m (paired, seeds present)",
+     "value": null,
+     "op": null,
+     "thr": null,
+     "ok": "n/a"
+    },
+    {
+     "id": "P2.smollm_fewshot",
+     "desc": "above 8-shot smollm (no fine-tuning): run missing",
+     "value": null,
+     "op": null,
+     "thr": null,
+     "ok": "n/a"
+    },
+    {
+     "id": "P2.pythia31m_fewshot",
+     "desc": "above 8-shot pythia31m (no fine-tuning): run missing",
+     "value": null,
+     "op": null,
+     "thr": null,
+     "ok": "n/a"
+    }
+   ],
+   "secondary": {
+    "id": "Secondary",
+    "desc": "variant d vs plain_tf >= +2.0, CI lo > 0",
+    "value": 14.419191919191917,
+    "op": ">=",
+    "thr": 2.0,
+    "ok": true
+   },
+   "FAIL": false,
+   "verdict": "PASS-1 (PASS-2 pending: n/a marks)",
+   "complete": true,
+   "evidence": [
+    {
+     "id": "B2.loops1",
+     "desc": "loops:1 chain-5 <= 5",
+     "value": {
+      "200": 1.4,
+      "201": 0.0,
+      "202": 2.9,
+      "203": 0.9,
+      "204": 0.6,
+      "205": 0.9
+     },
+     "op": "<=",
+     "thr": 5,
+     "ok": true,
+     "per_seed_ok": {
+      "200": true,
+      "201": true,
+      "202": true,
+      "203": true,
+      "204": true,
+      "205": true
+     }
+    },
+    {
+     "id": "B2.loops2",
+     "desc": "loops:2 cuts chain-5 by >= 40",
+     "value": {
+      "200": 96.30000000000001,
+      "201": 97.0,
+      "202": 93.1,
+      "203": 96.9,
+      "204": 98.39999999999999,
+      "205": 98.60000000000001
+     },
+     "op": ">=",
+     "thr": 40,
+     "ok": true,
+     "per_seed_ok": {
+      "200": true,
+      "201": true,
+      "202": true,
+      "203": true,
+      "204": true,
+      "205": true
+     }
+    },
+    {
+     "id": "B2.onestep",
+     "desc": "loops:2 one-op families within 5 of intact",
+     "value": {
+      "200": 80.83333333333333,
+      "201": 97.5,
+      "202": 76.66666666666667,
+      "203": 80.0,
+      "204": 80.0,
+      "205": 68.33333333333333
+     },
+     "op": "<=",
+     "thr": 5,
+     "ok": false,
+     "per_seed_ok": {
+      "200": false,
+      "201": false,
+      "202": false,
+      "203": false,
+      "204": false,
+      "205": false
+     }
+    },
+    {
+     "id": "B2.noexec",
+     "desc": "noexec program families <= 10 (extra.noexec.program_families, else chain-5 noexec)",
+     "value": {
+      "200": 0.815347721822542,
+      "201": 0.7673860911270983,
+      "202": 0.5755395683453237,
+      "203": 0.28776978417266186,
+      "204": 0.23980815347721823,
+      "205": 0.28776978417266186
+     },
+     "op": "<=",
+     "thr": 10,
+     "ok": true,
+     "per_seed_ok": {
+      "200": true,
+      "201": true,
+      "202": true,
+      "203": true,
+      "204": true,
+      "205": true
+     }
+    },
+    {
+     "id": "B2.opswap",
+     "desc": "opswap >= 90% outputs equal swapped program value",
+     "value": {
+      "200": 99.87893462469734,
+      "201": 99.8792270531401,
+      "202": 99.87937273823884,
+      "203": 99.87908101571946,
+      "204": 99.8792270531401,
+      "205": 99.87951807228916
+     },
+     "op": ">=",
+     "thr": 90,
+     "ok": true,
+     "per_seed_ok": {
+      "200": true,
+      "201": true,
+      "202": true,
+      "203": true,
+      "204": true,
+      "205": true
+     }
+    }
+   ],
+   "prove_wrong": [
+    {
+     "id": "wrongB2.pooled5",
+     "desc": "B2 - B pooled-5 < 0",
+     "value": null,
+     "op": "<",
+     "thr": 0,
+     "ok": "n/a"
+    },
+    {
+     "id": "wrongB2.copyfams",
+     "desc": "copy-target families rise < +3 vs B (seed mean)",
+     "value": null,
+     "op": "<",
+     "thr": 3,
+     "ok": "n/a"
+    },
+    {
+     "id": "wrongB2.nocopy",
+     "desc": "nocopy moves the copy-target families by < 5 (seed mean of |change|; the copy path is not used)",
+     "value": 33.458333333333336,
+     "op": "<",
+     "thr": 5,
+     "ok": false
+    }
+   ],
+   "wiring": {
+    "200": {
+     "shuffle_state<=10": true,
+     "zero_state<=5": true,
+     "loops:0<=5": true,
+     "loops:2n within 3": true,
+     "donor drop>=20": true,
+     "donor_match number>=50": true,
+     "donor drop string>=20": true
+    },
+    "201": {
+     "shuffle_state<=10": true,
+     "zero_state<=5": true,
+     "loops:0<=5": false,
+     "loops:2n within 3": true,
+     "donor drop>=20": true,
+     "donor_match number>=50": true,
+     "donor drop string>=20": true
+    },
+    "202": {
+     "shuffle_state<=10": true,
+     "zero_state<=5": true,
+     "loops:0<=5": true,
+     "loops:2n within 3": true,
+     "donor drop>=20": true,
+     "donor_match number>=50": true,
+     "donor drop string>=20": true
+    },
+    "203": {
+     "shuffle_state<=10": true,
+     "zero_state<=5": true,
+     "loops:0<=5": false,
+     "loops:2n within 3": true,
+     "donor drop>=20": true,
+     "donor_match number>=50": true,
+     "donor drop string>=20": true
+    },
+    "204": {
+     "shuffle_state<=10": true,
+     "zero_state<=5": true,
+     "loops:0<=5": true,
+     "loops:2n within 3": true,
+     "donor drop>=20": true,
+     "donor_match number>=50": true,
+     "donor drop string>=20": true
+    },
+    "205": {
+     "shuffle_state<=10": true,
+     "zero_state<=5": true,
+     "loops:0<=5": true,
+     "loops:2n within 3": true,
+     "donor drop>=20": true,
+     "donor_match number>=50": true,
+     "donor drop string>=20": true
+    }
+   }
+  }
+ }
+}

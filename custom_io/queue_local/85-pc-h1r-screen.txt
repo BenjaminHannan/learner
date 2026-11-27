@@ -1,0 +1,10 @@
+# BensPC RTX 5070 Ti (cuda): H1R screen = H1 (learned rounds, sealed spec architecture/redesign-ideas-2026-10-07.md sections 8b/8c; PASS-MARKS.md
+# addendum 21 amendment 2) on T1SDR, per MARKS-D0-T1-2026-10-07.md Amendment 10 item 2b. Model 'tool_h1' with T1SDR's cfg + the sealed 'settled'
+# label: 3,314,389 params (T1SDR's 3,314,132 + the 257-param stop head, created last, so every T1SDR weight starts identical at the same seed).
+# Queue 49's lines with only the name and cfg changed; trained from scratch (24000 steps, T1SDR's recipe). Baseline = T1SDR_s200/s201 (queue 70,
+# Vast RTX 5090: the machine differs, printed beside, not a mark). Cost ~1.9x a T1SDR run each (CPU timing, mean over K in 4/8/16/32).
+# Judge: python -m custom_io.analyze_h1 --base T1SDR --results custom_io/results/33-pc-confirm-b2 custom_io/results/70-vast-t1sdr custom_io/results/85-pc-h1r-screen
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\85-pc-h1r-screen.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# MEM 7000
+H1R_s200 --model tool_h1 --cfg '{"label": "settled", "span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval --save-preds
+H1R_s201 --model tool_h1 --cfg '{"label": "settled", "span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval --save-preds

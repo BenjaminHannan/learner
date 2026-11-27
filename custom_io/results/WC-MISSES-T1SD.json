@@ -1,0 +1,2422 @@
+{
+ "length": 8,
+ "answer_lengths": [
+  5,
+  6,
+  7,
+  8,
+  9
+ ],
+ "n_rows": 2793,
+ "device": "cpu fp32",
+ "results": {
+  "T1SD_s200": {
+   "checkpoint": "/mnt/project-files/checkpoints/cio-1007/60-t1sd-s200/T1SD_s200/checkpoint.pt",
+   "breakdown": {
+    "operand": {
+     "1": {
+      "n": 1044,
+      "exact": 99.9
+     },
+     "2": {
+      "n": 1018,
+      "exact": 100.0
+     },
+     "3": {
+      "n": 1077,
+      "exact": 100.0
+     },
+     "4": {
+      "n": 1073,
+      "exact": 100.0
+     },
+     "5": {
+      "n": 1041,
+      "exact": 99.62
+     },
+     "6": {
+      "n": 1082,
+      "exact": 99.26
+     },
+     "7": {
+      "n": 1095,
+      "exact": 99.09
+     },
+     "8": {
+      "n": 1094,
+      "exact": 97.53
+     },
+     "9": {
+      "n": 1074,
+      "exact": 98.79
+     }
+    },
+    "answer": {
+     "1": {
+      "n": 1081,
+      "exact": 99.91
+     },
+     "2": {
+      "n": 1092,
+      "exact": 100.0
+     },
+     "3": {
+      "n": 1098,
+      "exact": 99.73
+     },
+     "4": {
+      "n": 1147,
+      "exact": 99.83
+     },
+     "5": {
+      "n": 1136,
+      "exact": 99.12
+     },
+     "6": {
+      "n": 1151,
+      "exact": 98.96
+     },
+     "7": {
+      "n": 1156,
+      "exact": 97.84
+     },
+     "8": {
+      "n": 1187,
+      "exact": 97.56
+     },
+     "9": {
+      "n": 1133,
+      "exact": 97.62
+     }
+    },
+    "miss_kinds": {
+     "1": {
+      "other_result": 1
+     },
+     "5": {
+      "other_result": 4
+     },
+     "6": {
+      "other_result": 7,
+      "other_number": 1
+     },
+     "7": {
+      "other_number": 5,
+      "other_result": 4,
+      "mid_number": 1
+     },
+     "8": {
+      "mid_number": 12,
+      "other_number": 5,
+      "other_result": 10
+     },
+     "9": {
+      "mid_number": 1,
+      "other_result": 11,
+      "other_number": 1
+     }
+    },
+    "answer_miss_kinds": {
+     "1": {
+      "prompt_number": 1
+     },
+     "3": {
+      "other_result": 3
+     },
+     "4": {
+      "same_entry_operand": 1,
+      "other_result": 1
+     },
+     "5": {
+      "prompt_number": 1,
+      "other_result": 5,
+      "not_span": 3,
+      "same_entry_operand": 1
+     },
+     "6": {
+      "other_result": 10,
+      "same_entry_operand": 1,
+      "not_span": 1
+     },
+     "7": {
+      "other_result": 10,
+      "same_entry_operand": 11,
+      "prompt_number": 4
+     },
+     "8": {
+      "prompt_number": 4,
+      "same_entry_operand": 7,
+      "other_result": 18
+     },
+     "9": {
+      "other_result": 18,
+      "prompt_number": 5,
+      "same_entry_operand": 3,
+      "not_span": 1
+     }
+    },
+    "path_changed": 49,
+    "misses": [
+     {
+      "id": "chain_ops-DI1-215",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "56736108",
+      "got": "56",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "mul 49 4 = 56736108",
+      "earlier": [
+       "56736108"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-389",
+      "tag": "",
+      "call": 1,
+      "side": 0,
+      "want": "18832543",
+      "got": "1",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "div 44 4 = 18832543",
+      "earlier": [
+       "18832543"
+      ]
+     },
+     {
+      "id": "state_update-DI1-80",
+      "tag": "",
+      "call": 4,
+      "side": 0,
+      "want": "94632384",
+      "got": "43083288",
+      "kind": "other_number",
+      "picked_slot": 3,
+      "want_slot": 3,
+      "segment": "sub 43083288 1 = 94632384",
+      "earlier": [
+       "102759267",
+       "3883808",
+       "43083288",
+       "94632384"
+      ]
+     },
+     {
+      "id": "state_update-DI1-378",
+      "tag": "",
+      "call": 3,
+      "side": 0,
+      "want": "23754651",
+      "got": "41",
+      "kind": "other_result",
+      "picked_slot": 1,
+      "want_slot": 2,
+      "segment": "sub 7642 4 = 41",
+      "earlier": [
+       "7642",
+       "41",
+       "23754651"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-278",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "99632145",
+      "got": "66679",
+      "kind": "other_result",
+      "picked_slot": 0,
+      "want_slot": 1,
+      "segment": "add 88 14 = 66679",
+      "earlier": [
+       "66679",
+       "99632145"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-533",
+      "tag": "",
+      "call": 2,
+      "side": 0,
+      "want": "95749382",
+      "got": "10",
+      "kind": "other_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 1291461 10 = 95749382",
+      "earlier": [
+       "1291461",
+       "95749382"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-389",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "43202784",
+      "got": "4",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "div 44 4 = 43202784",
+      "earlier": [
+       "43202784"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-177",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "76743817",
+      "got": "76",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "mul 10 2 = 76743817",
+      "earlier": [
+       "76743817"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-556",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "61356527",
+      "got": "61",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "mul 12 4 = 61356527",
+      "earlier": [
+       "61356527"
+      ]
+     },
+     {
+      "id": "state_update-DI1-71",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "77820120",
+      "got": "77",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 23 1 = 77820120",
+      "earlier": [
+       "77820120"
+      ]
+     },
+     {
+      "id": "state_update-DI1-182",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "94196701",
+      "got": "16",
+      "kind": "other_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 16 6 = 94196701",
+      "earlier": [
+       "94196701"
+      ]
+     },
+     {
+      "id": "state_update-DI1-364",
+      "tag": "|1",
+      "call": 2,
+      "side": 0,
+      "want": "85141484",
+      "got": "52918597",
+      "kind": "other_result",
+      "picked_slot": 0,
+      "want_slot": 1,
+      "segment": "sub 21 2 = 52918597",
+      "earlier": [
+       "52918597",
+       "85141484"
+      ]
+     },
+     {
+      "id": "state_update-DI1-386",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "76000022",
+      "got": "76",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 33 5 = 76000022",
+      "earlier": [
+       "76000022"
+      ]
+     },
+     {
+      "id": "state_update-DI1-408",
+      "tag": "|1",
+      "call": 1,
+      "side": 0,
+      "want": "74580743",
+      "got": "74",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 7 1 = 74580743",
+      "earlier": [
+       "74580743"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-285",
+      "tag": "|1",
+      "call": 2,
+      "side": 0,
+      "want": "48054310",
+      "got": "6",
+      "kind": "other_result",
+      "picked_slot": 0,
+      "want_slot": 1,
+      "segment": "add 37 10 = 6",
+      "earlier": [
+       "6",
+       "48054310"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-297",
+      "tag": "|1",
+      "call": 2,
+      "side": 0,
+      "want": "18562660",
+      "got": "793196",
+      "kind": "other_result",
+      "picked_slot": 0,
+      "want_slot": 1,
+      "segment": "add 30 11 = 793196",
+      "earlier": [
+       "793196",
+       "18562660"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-215",
+      "tag": "|2",
+      "call": 1,
+      "side": 0,
+      "want": "19844792",
+      "got": "1",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "mul 49 4 = 19844792",
+      "earlier": [
+       "19844792"
+      ]
+     },
+     {
+      "id": "state_update-DI1-84",
+      "tag": "|2",
+      "call": 2,
+      "side": 0,
+      "want": "12042135",
+      "got": "8703070",
+      "kind": "other_result",
+      "picked_slot": 0,
+      "want_slot": 1,
+      "segment": "sub 15 7 = 8703070",
+      "earlier": [
+       "8703070",
+       "12042135"
+      ]
+     },
+     {
+      "id": "state_update-DI1-372",
+      "tag": "|2",
+      "call": 1,
+      "side": 0,
+      "want": "66140574",
+      "got": "12",
+      "kind": "other_number",
+      "picked_slot": null,
+      "want_slot": 0,
+      "segment": "A jar holds 12 pears. 6 are added. 5 are added. 2 are added. 6 are removed. How many pears are in the jar now?",
+      "earlier": [
+       "66140574"
+      ]
+     },
+     {
+      "id": "table_calc-DI1-884",
+      "tag": "|2",
+      "call": 1,
+      "side": 0,
+      "want": "13105637",
+      "got": "1",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 6 9 = 13105637",
+      "earlier": [
+       "13105637"
+      ]
+     },
+     {
+      "id": "state_update-DI1-73",
+      "tag": "|3",
+      "call": 2,
+      "side": 0,
+      "want": "34224107",
+      "got": "6610261",
+      "kind": "other_result",
+      "picked_slot": 0,
+      "want_slot": 1,
+      "segment": "add 14 7 = 6610261",
+      "earlier": [
+       "6610261",
+       "34224107"
+      ]
+     },
+     {
+      "id": "state_update-DI1-240",
+      "tag": "|3",
+      "call": 2,
+      "side": 0,
+      "want": "22709242",
+      "got": "8199321",
+      "kind": "other_result",
+      "picked_slot": 0,
+      "want_slot": 1,
+      "segment": "add 9 6 = 8199321",
+      "earlier": [
+       "8199321",
+       "22709242"
+      ]
+     },
+     {
+      "id": "state_update-DI1-245",
+      "tag": "|3",
+      "call": 2,
+      "side": 0,
+      "want": "43030447",
+      "got": "36490387",
+      "kind": "other_result",
+      "picked_slot": 0,
+      "want_slot": 1,
+      "segment": "add 28 5 = 36490387",
+      "earlier": [
+       "36490387",
+       "43030447"
+      ]
+     },
+     {
+      "id": "table_calc-DI1-63",
+      "tag": "|3",
+      "call": 1,
+      "side": 0,
+      "want": "29752724",
+      "got": "2",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "add 3 6 = 29752724",
+      "earlier": [
+       "29752724"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-429",
+      "tag": "|3",
+      "call": 1,
+      "side": 0,
+      "want": "11321841",
+      "got": "11",
+      "kind": "mid_number",
+      "picked_slot": 0,
+      "want_slot": 0,
+      "segment": "mul 20 4 = 11321841",
+      "earlier": [
+       "11321841"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-484",
+      "tag": "|3",
+      "call": 2,
+      "side": 0,
+      "want": "34088066",
+      "got": "79155270",
+      "kind": "other_result",
+      "picked_slot": 0,
+      "want_slot": 1,
+      "segment": "mul 2 2 = 79155270",
+      "earlier": [
+       "79155270",
+       "34088066"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-51",
+      "tag": "|4",
+      "call": 2,
+      "side": 0,
+      "want": "19357964",
+      "got": "91898188",
+      "kind": "other_number",
+      "picked_slot": 1,
+      "want_slot": 1,
+      "segment": "sub 91898188 7 = 19357964",
+      "earlier": [
+       "91898188",
+       "19357964"
+      ]
+     }
+    ],
+    "answer_misses": [
+     {
+      "id": "arith_bare-DI1-6",
+      "tag": "",
+      "want": "45831",
+      "got": "11",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 20,
+      "segment": "A small challenge: 11 * ? = 99",
+      "results": [
+       "45831"
+      ]
+     },
+     {
+      "id": "arith_bare-DI1-183",
+      "tag": "",
+      "want": "49369701",
+      "got": "1275",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 29,
+      "segment": "Read carefully. 927 + ? = 1275",
+      "results": [
+       "49369701"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-94",
+      "tag": "",
+      "want": "92227",
+      "got": "7",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "sub 94 18 = 7",
+      "results": [
+       "7",
+       "92227"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-385",
+      "tag": "",
+      "want": "209699219",
+      "got": "7",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "add 68 12 = 7",
+      "results": [
+       "7",
+       "209699219"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-217",
+      "tag": "",
+      "want": "1047746",
+      "got": "7",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "sub 94 28 = 7",
+      "results": [
+       "7",
+       "1047746"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-451",
+      "tag": "",
+      "want": "372803",
+      "got": "6",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 2,
+      "pos_in_segment": 12,
+      "segment": "sub 55 21 = 6",
+      "results": [
+       "55",
+       "6",
+       "372803"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-10",
+      "tag": "",
+      "want": "3673402",
+      "got": "37",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 15,
+      "segment": "sub 607191075 37 = 3673402",
+      "results": [
+       "607191075",
+       "3673402"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-109",
+      "tag": "",
+      "want": "1309707",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "add 241 10 = 5",
+      "results": [
+       "5",
+       "1309707"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-32",
+      "tag": "",
+      "want": "397006804",
+      "got": "29",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 14,
+      "segment": "mul 25 220 = 29",
+      "results": [
+       "29",
+       "397006804"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-830",
+      "tag": "",
+      "want": "68861",
+      "got": "66541",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 1,
+      "pos_in_segment": 20,
+      "segment": "div 68861 11= = 66541",
+      "results": [
+       "0",
+       "68861",
+       "66541"
+      ]
+     },
+     {
+      "id": "state_update-DI1-79",
+      "tag": "",
+      "want": "4701985",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 13,
+      "segment": "add 1799 2 = 5",
+      "results": [
+       "389809166",
+       "1799",
+       "5",
+       "4701985"
+      ]
+     },
+     {
+      "id": "state_update-DI1-295",
+      "tag": "",
+      "want": "2105102",
+      "got": "9",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 2,
+      "pos_in_segment": 13,
+      "segment": "sub 94807444 9 = 2105102",
+      "results": [
+       "45375",
+       "94807444",
+       "2105102"
+      ]
+     },
+     {
+      "id": "state_update-DI1-397",
+      "tag": "",
+      "want": "95628127",
+      "got": "8",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "sub 94363481 8 = 95628127",
+      "results": [
+       "94363481",
+       "95628127"
+      ]
+     },
+     {
+      "id": "story_addsub-DI1-370",
+      "tag": "",
+      "want": "320929582",
+      "got": "19",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 56,
+      "segment": "Facts: Kit started with 38 boxes. Later, Kit was given 19 more. Question: How many boxes does Kit end up with?",
+      "results": [
+       "320929582"
+      ]
+     },
+     {
+      "id": "story_addsub-DI1-781",
+      "tag": "",
+      "want": "313650384",
+      "got": "13",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 70,
+      "segment": "Try this problem. Ivo started with 36 balloons. Later, Ivo picked up 13 more. How many balloons does Ivo have at the end?",
+      "results": [
+       "313650384"
+      ]
+     },
+     {
+      "id": "story_addsub-DI1-861",
+      "tag": "",
+      "want": "917067747",
+      "got": "18",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 48,
+      "segment": "Cy started with 30 badges. Later, Cy was given 18 more. How many badges does Cy have at the end? State the result only.",
+      "results": [
+       "917067747"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-129",
+      "tag": "",
+      "want": "496808114",
+      "got": "6",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 2,
+      "pos_in_segment": 13,
+      "segment": "sub 469 13 = 6",
+      "results": [
+       "469",
+       "6",
+       "496808114"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-479",
+      "tag": "",
+      "want": "631664117",
+      "got": "9",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 2,
+      "pos_in_segment": 12,
+      "segment": "sub 162 9 = 9",
+      "results": [
+       "162",
+       "9",
+       "631664117"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-32",
+      "tag": "",
+      "want": "68363707",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 14,
+      "segment": "add 24452 3 = 5",
+      "results": [
+       "435177388",
+       "24452",
+       "5",
+       "68363707"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-188",
+      "tag": "",
+      "want": "973962507",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 12,
+      "segment": "add 687 8 = 5",
+      "results": [
+       "537344",
+       "687",
+       "5",
+       "973962507"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-241",
+      "tag": "",
+      "want": "6893672",
+      "got": "7",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 10,
+      "segment": "sub 3 7 = 7",
+      "results": [
+       "68164702",
+       "3",
+       "7",
+       "6893672"
+      ]
+     },
+     {
+      "id": "arith_bare-DI1-57",
+      "tag": "|1",
+      "want": "325158464",
+      "got": "10",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 26,
+      "segment": "Read carefully. 27 - ? = 10",
+      "results": [
+       "325158464"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-410",
+      "tag": "|1",
+      "want": "239817784",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "sub 51 13 = 5",
+      "results": [
+       "5",
+       "239817784"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-502",
+      "tag": "|1",
+      "want": "5044610",
+      "got": "2",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "div 26208764 2 = 5044610",
+      "results": [
+       "26208764",
+       "5044610"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-616",
+      "tag": "|1",
+      "want": "3184424",
+      "got": "2",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "div 78017572 2 = 3184424",
+      "results": [
+       "78017572",
+       "3184424"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-333",
+      "tag": "|1",
+      "want": "346984",
+      "got": "878",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 15,
+      "segment": "sub 124 20 = 878",
+      "results": [
+       "878",
+       "346984"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-564",
+      "tag": "|1",
+      "want": "54253532",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "sub 128 14 = 5",
+      "results": [
+       "5",
+       "54253532"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-515",
+      "tag": "|1",
+      "want": "28527586",
+      "got": "1",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "add 112 31 = 1",
+      "results": [
+       "1",
+       "28527586"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-583",
+      "tag": "|1",
+      "want": "80773802",
+      "got": "22",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "sub 7603577 22 = 80773802",
+      "results": [
+       "7603577",
+       "80773802"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-781",
+      "tag": "|1",
+      "want": "730146",
+      "got": "8",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "add 226 32 = 8",
+      "results": [
+       "8",
+       "730146"
+      ]
+     },
+     {
+      "id": "list_stats-DI1-296",
+      "tag": "|1",
+      "want": "947469142",
+      "got": "6281",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 3,
+      "want_slot": 4,
+      "pos_in_segment": 20,
+      "segment": "min 64 8932306 = 6281",
+      "results": [
+       "6957",
+       "2580675",
+       "8932306",
+       "6281",
+       "947469142"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-62",
+      "tag": "|1",
+      "want": "797178622",
+      "got": "175",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 16,
+      "segment": "div 783151875 175 = 797178622",
+      "results": [
+       "783151875",
+       "797178622"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-89",
+      "tag": "|1",
+      "want": "816543",
+      "got": "182",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 16,
+      "segment": "div 215349682 182 = 816543",
+      "results": [
+       "215349682",
+       "816543"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-841",
+      "tag": "|1",
+      "want": "78544",
+      "got": "44",
+      "kind": "not_span",
+      "span": false,
+      "picked_slot": 0,
+      "want_slot": 0,
+      "pos_in_segment": 15,
+      "segment": "mul 19 9 = 78544",
+      "results": [
+       "78544"
+      ]
+     },
+     {
+      "id": "state_update-DI1-97",
+      "tag": "|1",
+      "want": "45993",
+      "got": "2",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 13,
+      "segment": "add 1526 4 = 2",
+      "results": [
+       "232183",
+       "1526",
+       "2",
+       "45993"
+      ]
+     },
+     {
+      "id": "state_update-DI1-303",
+      "tag": "|1",
+      "want": "8272600",
+      "got": "7",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 3,
+      "want_slot": 3,
+      "pos_in_segment": 13,
+      "segment": "sub 27125402 7 = 8272600",
+      "results": [
+       "3656270",
+       "82168",
+       "27125402",
+       "8272600"
+      ]
+     },
+     {
+      "id": "story_chain3-DI1-504",
+      "tag": "|1",
+      "want": "624259201",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 2,
+      "pos_in_segment": 13,
+      "segment": "sub 5565 9 = 5",
+      "results": [
+       "5565",
+       "5",
+       "624259201"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-240",
+      "tag": "|1",
+      "want": "999947660",
+      "got": "11",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 2,
+      "pos_in_segment": 13,
+      "segment": "add 9127920 11 = 999947660",
+      "results": [
+       "3035615",
+       "9127920",
+       "999947660"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-266",
+      "tag": "|1",
+      "want": "5840048",
+      "got": "16",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 14,
+      "segment": "add 65464571 16 = 5840048",
+      "results": [
+       "65464571",
+       "5840048"
+      ]
+     },
+     {
+      "id": "arith_bare-DI1-9",
+      "tag": "|2",
+      "want": "4398754",
+      "got": "62",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 15,
+      "segment": "Next problem: 62 + ? = 95",
+      "results": [
+       "4398754"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-354",
+      "tag": "|2",
+      "want": "47420",
+      "got": "1",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "add 40 16 = 1",
+      "results": [
+       "1",
+       "47420"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-375",
+      "tag": "|2",
+      "want": "9767574",
+      "got": "9",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "add 61 27 = 9",
+      "results": [
+       "9",
+       "9767574"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-543",
+      "tag": "|2",
+      "want": "617848056",
+      "got": "9",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "sub 68 30 = 9",
+      "results": [
+       "9",
+       "617848056"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-326",
+      "tag": "|2",
+      "want": "520629852",
+      "got": "8",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "sub 84 25 = 8",
+      "results": [
+       "8",
+       "520629852"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-314",
+      "tag": "|2",
+      "want": "5307164",
+      "got": "6",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "add 199 12 = 6",
+      "results": [
+       "6",
+       "5307164"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-395",
+      "tag": "|2",
+      "want": "47753105",
+      "got": "9",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "add 237 6 = 9",
+      "results": [
+       "9",
+       "47753105"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-587",
+      "tag": "|2",
+      "want": "264988",
+      "got": "4",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "add 36 31 = 4",
+      "results": [
+       "4",
+       "264988"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-781",
+      "tag": "|2",
+      "want": "595239236",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "add 226 32 = 5",
+      "results": [
+       "5",
+       "595239236"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-912",
+      "tag": "|2",
+      "want": "475602477",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 11,
+      "segment": "mul 12 6 = 5",
+      "results": [
+       "5",
+       "475602477"
+      ]
+     },
+     {
+      "id": "list_stats-DI1-232",
+      "tag": "|2",
+      "want": "69557750",
+      "got": "2",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 3,
+      "want_slot": 4,
+      "pos_in_segment": 14,
+      "segment": "min 38 6807 = 2",
+      "results": [
+       "5658051",
+       "186940748",
+       "6807",
+       "2",
+       "69557750"
+      ]
+     },
+     {
+      "id": "list_stats-DI1-296",
+      "tag": "|2",
+      "want": "92157625",
+      "got": "46",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 3,
+      "want_slot": 4,
+      "pos_in_segment": 15,
+      "segment": "min 64 8948 = 46",
+      "results": [
+       "2069",
+       "279497358",
+       "8948",
+       "46",
+       "92157625"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-920",
+      "tag": "|2",
+      "want": "20662",
+      "got": "62",
+      "kind": "not_span",
+      "span": false,
+      "picked_slot": 0,
+      "want_slot": 0,
+      "pos_in_segment": 15,
+      "segment": "mul 26 9 = 20662",
+      "results": [
+       "20662"
+      ]
+     },
+     {
+      "id": "state_update-DI1-426",
+      "tag": "|2",
+      "want": "977127",
+      "got": "462808673",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 21,
+      "segment": "sub 7960 7 = 462808673",
+      "results": [
+       "47",
+       "7960",
+       "462808673",
+       "977127"
+      ]
+     },
+     {
+      "id": "state_update-DI1-435",
+      "tag": "|2",
+      "want": "77932742",
+      "got": "5361286",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 2,
+      "pos_in_segment": 16,
+      "segment": "sub 3 3 = 5361286",
+      "results": [
+       "3",
+       "5361286",
+       "77932742"
+      ]
+     },
+     {
+      "id": "story_addsub-DI1-320",
+      "tag": "|2",
+      "want": "72860",
+      "got": "How",
+      "kind": "not_span",
+      "span": false,
+      "picked_slot": 0,
+      "want_slot": 0,
+      "pos_in_segment": 16,
+      "segment": "add 29 12 = 72860",
+      "results": [
+       "72860"
+      ]
+     },
+     {
+      "id": "story_addsub-DI1-358",
+      "tag": "|2",
+      "want": "1733934",
+      "got": "38",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 57,
+      "segment": "Facts: Fay started with 22 tickets. Later, Fay received 38 more. Question: How many tickets does Fay have at the end?",
+      "results": [
+       "1733934"
+      ]
+     },
+     {
+      "id": "story_addsub-DI1-370",
+      "tag": "|2",
+      "want": "70780772",
+      "got": "19",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 56,
+      "segment": "Facts: Kit started with 38 boxes. Later, Kit was given 19 more. Question: How many boxes does Kit end up with?",
+      "results": [
+       "70780772"
+      ]
+     },
+     {
+      "id": "arith_bare-DI1-33",
+      "tag": "|3",
+      "want": "57881224",
+      "got": "18",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 1,
+      "segment": "18 * ? = 306",
+      "results": [
+       "57881224"
+      ]
+     },
+     {
+      "id": "arith_bare-DI1-111",
+      "tag": "|3",
+      "want": "8567595",
+      "got": "16",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 1,
+      "segment": "16 * ? = 272",
+      "results": [
+       "8567595"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-14",
+      "tag": "|3",
+      "want": "42863",
+      "got": "1",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "add 16 30 = 1",
+      "results": [
+       "1",
+       "42863"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-73",
+      "tag": "|3",
+      "want": "538193245",
+      "got": "151393953",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 6,
+      "want_slot": 1,
+      "pos_in_segment": 26,
+      "segment": "div 538193245 8 = 151393953",
+      "results": [
+       "168903",
+       "538193245",
+       "151393953"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-596",
+      "tag": "|3",
+      "want": "2972578",
+      "got": "1",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "add 100 2 = 1",
+      "results": [
+       "1",
+       "2972578"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-108",
+      "tag": "|3",
+      "want": "6843506",
+      "got": "32",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "add 1369731 32 = 6843506",
+      "results": [
+       "1369731",
+       "6843506"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-346",
+      "tag": "|3",
+      "want": "94282591",
+      "got": "1",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "sub 19 15 = 1",
+      "results": [
+       "1",
+       "94282591"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-616",
+      "tag": "|3",
+      "want": "31328826",
+      "got": "8",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "sub 151 31 = 8",
+      "results": [
+       "8",
+       "31328826"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-568",
+      "tag": "|3",
+      "want": "810833763",
+      "got": "8971353",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 17,
+      "segment": "mul 13 2 = 8971353",
+      "results": [
+       "8971353",
+       "810833763"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-601",
+      "tag": "|3",
+      "want": "28899240",
+      "got": "19",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "sub 9911036 19 = 28899240",
+      "results": [
+       "9911036",
+       "28899240"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-697",
+      "tag": "|3",
+      "want": "55878027",
+      "got": "26",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "sub 2599447 26 = 55878027",
+      "results": [
+       "2599447",
+       "55878027"
+      ]
+     },
+     {
+      "id": "list_stats-DI1-42",
+      "tag": "|3",
+      "want": "26288504",
+      "got": "914",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 3,
+      "want_slot": 4,
+      "pos_in_segment": 16,
+      "segment": "min 49 9972 = 914",
+      "results": [
+       "648566",
+       "914",
+       "9972",
+       "914",
+       "26288504"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-333",
+      "tag": "|3",
+      "want": "422760249",
+      "got": "7",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "div 108 9 = 7",
+      "results": [
+       "7",
+       "422760249"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-362",
+      "tag": "|3",
+      "want": "544023",
+      "got": "4",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "mul 20 320 = 4",
+      "results": [
+       "4",
+       "544023"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-808",
+      "tag": "|3",
+      "want": "72852612",
+      "got": "164",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "div 655664 164 = 72852612",
+      "results": [
+       "655664",
+       "72852612"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-920",
+      "tag": "|3",
+      "want": "255992",
+      "got": "22",
+      "kind": "not_span",
+      "span": false,
+      "picked_slot": 0,
+      "want_slot": 0,
+      "pos_in_segment": 16,
+      "segment": "mul 26 9 = 255992",
+      "results": [
+       "255992"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-927",
+      "tag": "|3",
+      "want": "6929522",
+      "got": "172",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 16,
+      "segment": "div 132071572 172 = 6929522",
+      "results": [
+       "132071572",
+       "6929522"
+      ]
+     },
+     {
+      "id": "state_update-DI1-118",
+      "tag": "|3",
+      "want": "502650770",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 12,
+      "segment": "sub 149 9 = 5",
+      "results": [
+       "709538",
+       "149",
+       "5",
+       "502650770"
+      ]
+     },
+     {
+      "id": "state_update-DI1-121",
+      "tag": "|3",
+      "want": "72208872",
+      "got": "4",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 3,
+      "want_slot": 4,
+      "pos_in_segment": 16,
+      "segment": "add 9852093 3 = 4",
+      "results": [
+       "82142",
+       "1724",
+       "9852093",
+       "4",
+       "72208872"
+      ]
+     },
+     {
+      "id": "state_update-DI1-207",
+      "tag": "|3",
+      "want": "80608302",
+      "got": "2",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 2,
+      "pos_in_segment": 13,
+      "segment": "sub 8367 2 = 2",
+      "results": [
+       "8367",
+       "2",
+       "80608302"
+      ]
+     },
+     {
+      "id": "state_update-DI1-305",
+      "tag": "|3",
+      "want": "550297722",
+      "got": "11",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 3,
+      "want_slot": 3,
+      "pos_in_segment": 13,
+      "segment": "add 6041004 11 = 550297722",
+      "results": [
+       "67171",
+       "10576472",
+       "6041004",
+       "550297722"
+      ]
+     },
+     {
+      "id": "arith_bare-DI1-146",
+      "tag": "|4",
+      "want": "8339605",
+      "got": "11",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 17,
+      "segment": "Read carefully. 11 + ? = 23",
+      "results": [
+       "8339605"
+      ]
+     },
+     {
+      "id": "arith_bare-DI1-222",
+      "tag": "|4",
+      "want": "970555722",
+      "got": "696",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 16,
+      "segment": "Next problem: 696 + ? = 1539 State the result only.",
+      "results": [
+       "970555722"
+      ]
+     },
+     {
+      "id": "backward_solve-DI1-62",
+      "tag": "|4",
+      "want": "824782",
+      "got": "1",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "add 18 14 = 1",
+      "results": [
+       "1",
+       "824782"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-7",
+      "tag": "|4",
+      "want": "24909643",
+      "got": "6",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "add 14330841 6 = 24909643",
+      "results": [
+       "14330841",
+       "24909643"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-542",
+      "tag": "|4",
+      "want": "3149024",
+      "got": "14",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "sub 8802034 14 = 3149024",
+      "results": [
+       "8802034",
+       "3149024"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-572",
+      "tag": "|4",
+      "want": "3479081",
+      "got": "13",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "sub 90 23 = 13",
+      "results": [
+       "13",
+       "3479081"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-632",
+      "tag": "|4",
+      "want": "34009770",
+      "got": "976",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 15,
+      "segment": "sub 156 32 = 976",
+      "results": [
+       "976",
+       "34009770"
+      ]
+     },
+     {
+      "id": "chain_ops-DI1-766",
+      "tag": "|4",
+      "want": "20732823",
+      "got": "4",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "sub 44 17 = 4",
+      "results": [
+       "4",
+       "20732823"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-157",
+      "tag": "|4",
+      "want": "3547625",
+      "got": "3",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "add 215 32 = 3",
+      "results": [
+       "3",
+       "3547625"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-172",
+      "tag": "|4",
+      "want": "21973707",
+      "got": "1",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 11,
+      "segment": "mul 13 4 = 1",
+      "results": [
+       "1",
+       "21973707"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-349",
+      "tag": "|4",
+      "want": "12810593",
+      "got": "1",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 12,
+      "segment": "mul 10 11 = 1",
+      "results": [
+       "1",
+       "12810593"
+      ]
+     },
+     {
+      "id": "chain_story2-DI1-506",
+      "tag": "|4",
+      "want": "6003498",
+      "got": "17",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "sub 4925613 17 = 6003498",
+      "results": [
+       "4925613",
+       "6003498"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-244",
+      "tag": "|4",
+      "want": "27449217",
+      "got": "106",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "div 455006 106 = 27449217",
+      "results": [
+       "455006",
+       "27449217"
+      ]
+     },
+     {
+      "id": "percent_rate-DI1-261",
+      "tag": "|4",
+      "want": "81942",
+      "got": "102",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 16,
+      "segment": "div 469812702 102 = 81942",
+      "results": [
+       "469812702",
+       "81942"
+      ]
+     },
+     {
+      "id": "state_update-DI1-12",
+      "tag": "|4",
+      "want": "965127",
+      "got": "657",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 3,
+      "want_slot": 4,
+      "pos_in_segment": 15,
+      "segment": "sub 8861 6 = 657",
+      "results": [
+       "416017",
+       "53043",
+       "8861",
+       "657",
+       "965127"
+      ]
+     },
+     {
+      "id": "state_update-DI1-271",
+      "tag": "|4",
+      "want": "81564404",
+      "got": "13",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 13,
+      "segment": "add 923 3 = 13",
+      "results": [
+       "34583",
+       "923",
+       "13",
+       "81564404"
+      ]
+     },
+     {
+      "id": "state_update-DI1-303",
+      "tag": "|4",
+      "want": "775397",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 15,
+      "segment": "sub 573329 8 = 5",
+      "results": [
+       "80289",
+       "573329",
+       "5",
+       "775397"
+      ]
+     },
+     {
+      "id": "state_update-DI1-333",
+      "tag": "|4",
+      "want": "44059673",
+      "got": "1",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 3,
+      "want_slot": 4,
+      "pos_in_segment": 13,
+      "segment": "sub 7347 6 = 1",
+      "results": [
+       "869196",
+       "303807870",
+       "7347",
+       "1",
+       "44059673"
+      ]
+     },
+     {
+      "id": "state_update-DI1-399",
+      "tag": "|4",
+      "want": "881259263",
+      "got": "13",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 3,
+      "want_slot": 4,
+      "pos_in_segment": 11,
+      "segment": "add 0 5 = 13",
+      "results": [
+       "74622",
+       "44011634",
+       "0",
+       "13",
+       "881259263"
+      ]
+     },
+     {
+      "id": "story_addsub-DI1-358",
+      "tag": "|4",
+      "want": "226904262",
+      "got": "Fay",
+      "kind": "not_span",
+      "span": false,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 57,
+      "segment": "Facts: Fay started with 22 tickets. Later, Fay received 38 more. Question: How many tickets does Fay have at the end?",
+      "results": [
+       "226904262"
+      ]
+     },
+     {
+      "id": "story_addsub-DI1-370",
+      "tag": "|4",
+      "want": "59315184",
+      "got": "19",
+      "kind": "prompt_number",
+      "span": true,
+      "picked_slot": null,
+      "want_slot": 0,
+      "pos_in_segment": 56,
+      "segment": "Facts: Kit started with 38 boxes. Later, Kit was given 19 more. Question: How many boxes does Kit end up with?",
+      "results": [
+       "59315184"
+      ]
+     },
+     {
+      "id": "table_calc-DI1-63",
+      "tag": "|4",
+      "want": "282503735",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 0,
+      "want_slot": 1,
+      "pos_in_segment": 10,
+      "segment": "add 3 6 = 5",
+      "results": [
+       "5",
+       "282503735"
+      ]
+     },
+     {
+      "id": "table_calc-DI1-557",
+      "tag": "|4",
+      "want": "8874424",
+      "got": "3",
+      "kind": "same_entry_operand",
+      "span": true,
+      "picked_slot": 1,
+      "want_slot": 1,
+      "pos_in_segment": 13,
+      "segment": "add 19621243 3 = 8874424",
+      "results": [
+       "19621243",
+       "8874424"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-132",
+      "tag": "|4",
+      "want": "4206222",
+      "got": "2",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 14,
+      "segment": "sub 30780 4 = 2",
+      "results": [
+       "27738",
+       "30780",
+       "2",
+       "4206222"
+      ]
+     },
+     {
+      "id": "var_chain-DI1-188",
+      "tag": "|4",
+      "want": "961448",
+      "got": "5",
+      "kind": "other_result",
+      "span": true,
+      "picked_slot": 2,
+      "want_slot": 3,
+      "pos_in_segment": 13,
+      "segment": "add 1032 8 = 5",
+      "results": [
+       "930536",
+       "1032",
+       "5",
+       "961448"
+      ]
+     }
+    ]
+   },
+   "fresh": {
+    "operand": {
+     "1": {
+      "n": 1067,
+      "exact": 99.81
+     },
+     "2": {
+      "n": 1045,
+      "exact": 100.0
+     },
+     "3": {
+      "n": 1080,
+      "exact": 100.0
+     },
+     "4": {
+      "n": 1024,
+      "exact": 100.0
+     },
+     "5": {
+      "n": 1021,
+      "exact": 99.51
+     },
+     "6": {
+      "n": 1109,
+      "exact": 99.28
+     },
+     "7": {
+      "n": 1082,
+      "exact": 98.24
+     },
+     "8": {
+      "n": 1083,
+      "exact": 98.61
+     },
+     "9": {
+      "n": 1073,
+      "exact": 99.16
+     }
+    },
+    "answer": {
+     "1": {
+      "n": 1098,
+      "exact": 99.91
+     },
+     "2": {
+      "n": 1117,
+      "exact": 100.0
+     },
+     "3": {
+      "n": 1199,
+      "exact": 99.92
+     },
+     "4": {
+      "n": 1118,
+      "exact": 99.64
+     },
+     "5": {
+      "n": 1078,
+      "exact": 98.79
+     },
+     "6": {
+      "n": 1132,
+      "exact": 98.32
+     },
+     "7": {
+      "n": 1163,
+      "exact": 97.42
+     },
+     "8": {
+      "n": 1175,
+      "exact": 98.04
+     },
+     "9": {
+      "n": 1098,
+      "exact": 97.72
+     }
+    },
+    "miss_kinds": {
+     "1": {
+      "other_result": 2
+     },
+     "5": {
+      "other_result": 5
+     },
+     "6": {
+      "other_result": 8
+     },
+     "7": {
+      "other_number": 12,
+      "other_result": 7
+     },
+     "8": {
+      "other_result": 6,
+      "other_number": 5,
+      "mid_number": 4
+     },
+     "9": {
+      "other_result": 8,
+      "mid_number": 1
+     }
+    },
+    "answer_miss_kinds": {
+     "1": {
+      "other_result": 1
+     },
+     "3": {
+      "other_result": 1
+     },
+     "4": {
+      "other_result": 2,
+      "prompt_number": 1,
+      "same_entry_operand": 1
+     },
+     "5": {
+      "other_result": 4,
+      "prompt_number": 5,
+      "same_entry_operand": 1,
+      "not_span": 3
+     },
+     "6": {
+      "other_result": 13,
+      "same_entry_operand": 3,
+      "prompt_number": 2,
+      "not_span": 1
+     },
+     "7": {
+      "prompt_number": 11,
+      "other_result": 12,
+      "same_entry_operand": 6,
+      "mid_number": 1
+     },
+     "8": {
+      "prompt_number": 3,
+      "other_result": 16,
+      "same_entry_operand": 4
+     },
+     "9": {
+      "prompt_number": 10,
+      "other_result": 14,
+      "same_entry_operand": 1
+     }
+    },
+    "path_changed": 53,
+    "passes": 5
+   },
+   "secs": 614
+  }
+ }
+}

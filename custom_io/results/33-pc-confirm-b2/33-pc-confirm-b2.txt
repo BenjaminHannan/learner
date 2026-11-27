@@ -1,0 +1,24 @@
+# BensPC RTX 5070 Ti (cuda): the B2 confirm (PASS-MARKS.md PASS-1 / PASS-2, fixed before any design trained).
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\33-pc-confirm-b2.txt --device cuda --par 3 --busy C:\Users\benja\GPU-BUSY.txt
+# Seeds 200-205, each seed's B2 / plain_tf / plain_tf_steps trio together so finished seeds pair up early. Same flags as
+# the screen, no time cap. All 18 on this one device (pairs must share a device). B2 screened NO-GO by one wiring check
+# (loops:0 6.76 vs 5 in seed 101; custom_io/results/RESULTS-SCREEN.md); this confirm runs with that flagged to Ben.
+# MEM 6000
+B2_s200 --model ledger --cfg '{"copy":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+tf_s200 --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+tfsteps_s200 --model plain_tf_steps --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+B2_s201 --model ledger --cfg '{"copy":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
+tf_s201 --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
+tfsteps_s201 --model plain_tf_steps --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
+B2_s202 --model ledger --cfg '{"copy":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 202 --log-every 500 --final-eval
+tf_s202 --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 202 --log-every 500 --final-eval
+tfsteps_s202 --model plain_tf_steps --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 202 --log-every 500 --final-eval
+B2_s203 --model ledger --cfg '{"copy":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 203 --log-every 500 --final-eval
+tf_s203 --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 203 --log-every 500 --final-eval
+tfsteps_s203 --model plain_tf_steps --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 203 --log-every 500 --final-eval
+B2_s204 --model ledger --cfg '{"copy":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 204 --log-every 500 --final-eval
+tf_s204 --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 204 --log-every 500 --final-eval
+tfsteps_s204 --model plain_tf_steps --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 204 --log-every 500 --final-eval
+B2_s205 --model ledger --cfg '{"copy":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 205 --log-every 500 --final-eval
+tf_s205 --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 205 --log-every 500 --final-eval
+tfsteps_s205 --model plain_tf_steps --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 205 --log-every 500 --final-eval

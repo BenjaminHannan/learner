@@ -1,0 +1,13 @@
+# T1SDR 6-seed confirm, seeds 202-205 (s200/s201 = queue 70): MARKS-D0-T1-2026-10-07.md Amendment 10 and Note 10a (T1SDR passed its screen on
+# Amendment 10's hair tolerance and on Ben's word, 10:17 AM ET 10-08); marks 1-6 as amended in Amendment 2, no tolerance. PASS-MARKS.md addendum 22
+# amendment 6. T1SDR as built: model 'tool' cfg {"span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25}, 3,314,132 params, recipe
+# unchanged, queue 70's line with only the seed changed. Runs on two rented RTX 5090s, two seeds each (custom_io/queue/t1c1|t1c2/80-t1sdr-*.sh,
+# re-scored at n >= 1000 by 81-wc-t1sdr-*.sh, printed beside, not marks). Judge (its "6-seed confirm" section):
+#   python -m custom_io.analyze_t1s --arm T1SDR --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-vast-t1 custom_io/results/60-vast-t1sd
+#     custom_io/results/70-vast-t1sdr custom_io/results/80-vast-t1sdr-confirm --wc custom_io/results/51-vast-wc-t1 custom_io/results/71-vast-wc-t1sdr
+#     custom_io/results/81-vast-wc-t1sdr-confirm --dev <seed-1 dev-per-cell-40 build>
+# MEM 6000
+T1SDR_s202 --model tool --cfg '{"span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 202 --log-every 500 --final-eval --save-preds
+T1SDR_s203 --model tool --cfg '{"span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 203 --log-every 500 --final-eval --save-preds
+T1SDR_s204 --model tool --cfg '{"span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 204 --log-every 500 --final-eval --save-preds
+T1SDR_s205 --model tool --cfg '{"span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 205 --log-every 500 --final-eval --save-preds

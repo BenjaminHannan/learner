@@ -1,0 +1,7 @@
+# BensPC RTX 5070 Ti (cuda): roadmap 8a first look, the 13-layer LLM-recipe arm on C0's settings (roadmap addendum D; no-hardcoding PLAN 3.1).
+# PT13-C0 = plain_tf_steps with C0's exact cfg (steps cap 107, position table 329) at 13 layers, width 256, 4 heads: 10,379,264 params.
+# The first look's 3M pair is queue 43's C0_s200 / C0_s201 (3,271,424 params). Seeds 200 and 201. Scored with and without the C1' calculator.
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\44-pc-8a-pt13-c0.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# MEM 5000
+PT13C0_s200 --model plain_tf_steps --cfg '{"cap":107,"d_model":256,"n_layers":13,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+PT13C0_s201 --model plain_tf_steps --cfg '{"cap":107,"d_model":256,"n_layers":13,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
